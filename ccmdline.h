@@ -214,5 +214,3 @@ class CCmdLine : public _CCmdLine {
 
 #endif //CCMDLINE_H_
 
-
-
