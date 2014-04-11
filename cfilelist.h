@@ -1,0 +1,203 @@
+/*
+cfilelist.h
+Begin: 2003/06/11 (formerly cfilelist.h>
+Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
+Version: $Revision: 1.3 $
+Project: (various)
+Website: http://www.aaronreeves.com/qtclasses
+-------------------------------
+Copyright (C) 2003 - 2006 by Aaron Reeves
+aaron@aaronreeves.com
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
+#ifndef CFILELIST_H_DEFINED
+#define CFILELIST_H_DEFINED
+
+#include <qlist.h>
+#include <qstring.h>
+#include <qstringlist.h>
+
+/**
+This class provides specialized strings for dealing with file names and paths.  Functions for
+manipulating file and path names exist for tasks such as removing path information, returning
+the directory component of a file path, etc.
+
+CPathStrings are closely related to and are used by CFileLists (see @ref CFileList).
+
+@short Specialized strings for file names and paths
+@author Aaron Reeves (aaron@aaronreeves.com)
+@version 2.02
+*/
+class CPathString: public QString {
+    public:
+
+        /**
+        Creates an empty CPathString
+        */
+        CPathString( void ) : QString( ) {}
+
+        /**
+        Creates a new CPathString from a standard QString.
+
+        @param str QString to make into a CPathString.
+        */
+        CPathString( QString str );
+
+        /**
+        Creates a new CQPathString from a char*.
+
+        @param charstr char* used to create the CPathString.
+        */
+        CPathString( char* charstr );
+
+        /**
+        Returns just the file name component of a path.  For example, if the path string is
+        '/home/foo/bar.txt', shortFileName returns 'bar.txt'.
+
+        @return QString containing the file name.
+        */
+        QString shortFileName( void );
+
+        /**
+        Returns the complete path.  For example, if the path string is '/home/foo/bar.txt',
+        longFileName returns '/home/foo/bar.txt'.  This is exactly the same as returning
+        '*this' for the CPathString, but is included for consistency among member function names.
+
+        @return QString containing the complete path name.
+        */
+        QString longFileName( void );
+
+        /**
+        Returns just the directory path associated with a file.  For example, if the path string
+        is '/home/foo/bar.txt', directory returns '/home/foo/'.  Note that the trailing slash is included.
+
+        @return QString containing the directory path.
+        */
+        QString directory( void );
+
+        /**
+        Returns just the directory containing a file.  For example, if the path string is
+        '/home/foo/bar.txt', shortDirectory returns 'foo'.  Note that slashes are not included.
+
+        @return QString indicating the directory.
+        */
+        QString shortDirectory( void );
+
+        QString removeRoot( QString oldRoot );
+
+        QString replaceRoot( QString oldRoot, QString newRoot );
+
+};
+
+/**
+This class provides a quick and convenient way to list all files or subdirectories within a given
+directory.  Directory contents may be listed recursively, and file names may be matched to (right now)
+very primitive file name filters.
+
+The functionality of this class is similar to that provided by QDir::entryList(), except for the option
+of recursive searches, the use of a true pointer list instead of a value list, and the enhanced
+capabilities of CPathStrings over standard QStrings.
+
+CFileList could be extended by including the ability to list files based on matches to some
+regular expression, but this isn't yet an option.
+
+@short Creates a list of files or subdirectories within a given directory
+@author Aaron Reeves (aaron@aaronreeves.com)
+@version 2.02
+*/
+class CFileList : public QList<CPathString*> {
+
+    public:
+
+        /**
+        Constructs an empty CQFileList.  By itself, this form of the constructor isn't very useful,
+        although it is on occasion used internally by other class functions.
+
+        see below for the more commonly used form of the constructor.
+        */
+        CFileList( void );
+
+        /**
+        Provides a list of all files that match 'filter' in the directory specified by 'path'.
+        If 'recurse' is true, the directory contents will be recursively searched.
+
+        @param path QString indicating the directory whose contents will be listed
+        @param filter QString indicating the file name filter to match
+        @param recurse bool indicating whether to list directory contents recursively.
+        */
+        CFileList( QString path, QString filter, bool recurse );
+
+        /**
+        Destroys the file list.  Pointers to list elements (CPathStrings) are NOT deleted.
+
+        Eventually, it might be nice to parameterize the destructor, so that the list may
+        be emptied and all elements deleted as well, but it hasn't been an issue yet.
+        */
+        virtual ~CFileList( void );
+
+        /**
+        Returns a list of all of the directories that contain the files in 'this' list.  For example, if
+        'this' list has the following elements:
+        /home/foo/test1.txt
+        /home/foo/test2.txt
+        /home/bar/test3.txt
+
+        this->directories() will return a list with the following elements:
+        /home/foo/
+        /home/bar/
+
+        Not that 'this' list must exist first: there currently is no way to generate a list of only subdirectories
+        directly, although this some day may be a nice addition.
+
+        @return a new CQFileList* containing only subdirectories
+        */
+        CFileList* directories( void );
+
+        CFileList* files( void );
+
+        /**
+        Displays all of the items in 'this' list by printing them to the debug stream.
+        */
+        void debugList( void );
+        void debug( void ) { debugList(); }
+
+        /**
+        Converts the list to a QStringList (a value list).  See Qt documentation for
+        more details.
+        */
+        QStringList qStringList( void );
+
+        /**
+        Combines the contents of this list the the contents of subList.
+        */
+        void merge( CFileList subList );
+
+        void insert( const QString& file ) { insert( CPathString( file ) ); }
+
+    private:
+
+				CFileList( bool createDirList );
+
+        /**
+        This function does all of the actual work associated with generating list items and adding them to the list.
+        Parameters are identical to the constructor.  File names that match 'filter' are appended to the list.
+        If 'recurse' is true, this function is called recursively for each directory that it encounters.
+
+        @param path QString indicating the directory whose contents will be listed
+        @param filter QString indicating the file name filter to match
+        @param recurse bool indicating whether to list directory contents recursively.
+        */
+        void getFileNames( QString path, QString filter, bool recurse );
+
+				QString _startingDir;
+				CFileList* _dirList;
+				CFileList* _fileList;
+};
+
+#endif //CFILELIST_H_DEFINED
+
+
