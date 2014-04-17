@@ -72,6 +72,14 @@ class CReverseLookupMap {
       return forwardMap.contains( key );
     }
 
+    inline T valueAtIndex( const int i ) {
+      return forwardMap.values().at(i);
+    }
+
+    inline T keyAtIndex( const int i ) {
+      return forwardMap.keys().at(i);
+    }
+
     void clear( void ) {
       forwardMap.clear();
       reverseMap.clear();
