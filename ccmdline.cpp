@@ -57,8 +57,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qtextstream.h>
 #include <qstringlist.h>
 
-#include <qt_general_purpose/qcout.h>
-#include <qt_general_purpose/strutils.h>
+#include <ar_general_purpose/qcout.h>
+#include <ar_general_purpose/strutils.h>
 
 
 CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs ) : _CCmdLine() {

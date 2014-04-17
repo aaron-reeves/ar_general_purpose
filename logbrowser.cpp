@@ -1,10 +1,10 @@
 // http://qt-project.org/wiki/Browser_for_QDebug_output
 
-#include <qt_general_purpose/logbrowser.h>
+#include <ar_general_purpose/logbrowser.h>
  
 #include <QMetaType>
  
-#include <qt_general_purpose/logbrowserdialog.h>
+#include <ar_general_purpose/logbrowserdialog.h>
  
 LogBrowser::LogBrowser(QObject *parent) : QObject(parent) {
   qRegisterMetaType<QtMsgType>("QtMsgType");

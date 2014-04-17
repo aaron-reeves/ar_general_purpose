@@ -1,6 +1,6 @@
 // See http://qt-project.org/wiki/Browser_for_QDebug_output
 
-#include <qt_general_purpose/logbrowserdialog.h>
+#include <ar_general_purpose/logbrowserdialog.h>
  
 #include <QVBoxLayout>
 #include <QHBoxLayout>
