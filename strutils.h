@@ -26,7 +26,7 @@ non-commercial edition in the source distribution.
 #include <tchar.h>
 #endif
 
-#include <qstring.h>
+#include <QtCore>
 
 QString findAndRemove( QString str3, QString str1 );
 QString findAndReplace( QString str3, QString str2, QString str1 );
@@ -44,6 +44,14 @@ QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = tr
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 
 bool isComment( QString s );
+
+/* This function attempts to rebuild a properly formatted comma-separated list from one that
+ * was poorly formatted.  The function needs to know how many parts were expected and must have
+ * a list of regular expressions for matching each part.
+ *
+ * If a new list can be constructed that matches all of the regular expressions, then success is set to true.
+ */
+bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
 
 #ifdef WINDOWS_OR_WHATEVER_IT_IS
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc);

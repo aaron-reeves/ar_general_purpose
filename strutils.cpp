@@ -290,6 +290,68 @@ bool isComment( QString s ) {
 }
 
 
+
+bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts ) {
+  QString newPart;
+  int i;
+  QRegExp re;
+  bool success;
+  bool prevMatchFound;
+
+  // Read one character at a time to assemble a new string.
+  // Keep reading as long as the nth pattern matches the new string.
+  i = 1;
+  re = patternsToMatch.takeAt(0);
+  prevMatchFound = false;
+  while( i < fullLine.length() ) {
+    newPart = fullLine.left(i);
+
+    //qDebug() << "newPart:" << newPart;
+
+    if( !re.exactMatch( newPart ) ) {
+      if( prevMatchFound ) {
+        // We've read one character too many.
+        // Back off, and get out of the loop.
+        --i;
+        break;
+      }
+    }
+    else {
+      // We (still) have a match.  Keep going until we run out of it.
+      prevMatchFound = true;
+    }
+
+    ++i;
+  }
+
+  newPart = fullLine.left(i);
+  if( re.exactMatch( newPart ) ) {
+    //qDebug() << "MATCH FOUND:" << newPart;
+
+    newList.append( newPart );
+    fullLine = fullLine.right( fullLine.length() - newPart.length() - 1 );// The -1 eliminates what is now a leading comma.
+
+    if( 0 < patternsToMatch.count() ) { // Is there more to do?
+      success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1 );
+    }
+    else {
+      success = true;
+    }
+  }
+  else {
+    // There is nothing more we can do.
+    //qDebug() << "Failure trigger: 1";
+    success = false;
+    //newList.clear();
+  }
+
+  // Do we need to double-check anything here?
+  // I don't think so.
+
+  return success;
+}
+
+
 #ifdef WINDOWS_OR_WHATEVER_IT_IS
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp
