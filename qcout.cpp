@@ -19,3 +19,14 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 QTextStream cout( stdout, QIODevice::WriteOnly );
 QTextStream cin( stdin,  QIODevice::ReadOnly );
+
+void cerr( const QString& msg, const bool silent ) {
+  if( !silent )
+    cout << msg << endl << flush;
+}
+
+
+void cerr( const char* msg, const bool silent ) {
+  if( !silent )
+    cout << msg << endl << flush;
+}
