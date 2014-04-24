@@ -33,14 +33,18 @@ QString toTitleCase( QString str ){
 
 
 QString boolToStr( bool val ) {
-  if( val ) {
+  if( val )
     return "-1";
-  }
-  else {
+  else
     return "0";
-  }
 }
 
+QString boolToText( bool val ) {
+  if( val )
+    return "true";
+  else
+    return "false";
+}
 
 bool strToBool( QString val ) {
   val = val.trimmed().toLower();
@@ -212,8 +216,7 @@ QString splitNear( int pos, QString & str, int maxLenAdd, bool usePunct, bool fo
 
 
 
-
-QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
+QStringList prettyPrintedList( const QString srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
   QStringList srcLines, destLines;
   QString padding = "";
   int tenPct;
@@ -256,16 +259,32 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
     }
   }
 
+  for( i = 0; i < destLines.count(); ++i ) {
+    destLines[i].prepend( padding );
+  }
+
+  return destLines;
+}
+
+
+QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
+  QStringList destLines;
+  QString result;
+  int i;
+
+  destLines = prettyPrintedList( srcStr, prefLineLen, usePunct, forceBreak, indent );
+
   // Assemble the final result from destLines
   result = "";
   for( i = 0; i < destLines.count(); ++i ) {
-    result.append( padding );
+    //result.append( padding ); // Now handled by the function above.
     result.append( destLines.at(i) );
     result.append( "\n" );
   }
 
   return result;
 }
+
 
 bool isComment( QString s ) {
   bool result;
@@ -290,8 +309,113 @@ bool isComment( QString s ) {
 }
 
 
-
 bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts ) {
+  QString newPart;
+  int i;
+  QRegExp re;
+  bool success;
+  bool prevMatchFound;
+  bool debug = false;
+
+  re = patternsToMatch.takeAt(0);
+
+  if( debug ) qDebug() << "fullLine (before processing):" << fullLine;
+  if( debug ) qDebug() << "Expression:" << re.pattern();
+
+  // Start with the entire line, and eliminate characters one at a time until the pattern matches the new string.
+  i = 0;
+  prevMatchFound = false;
+  while( i <= fullLine.length() ) {
+    newPart = fullLine.left( fullLine.length() - i );
+
+    if( debug ) qDebug() << "newPart (1):" << newPart;
+
+    if( re.exactMatch( newPart) ) {
+      // We found a match.  Keep going until we run out of it.
+      prevMatchFound = true;
+    }
+    else {
+      if( prevMatchFound ) {
+        // We've shortened the line by one character too many.
+        // Back off, and get out of the loop.
+        --i;
+        break;
+      }
+    }
+    ++i;
+  }
+
+  if( debug ) qDebug() << "Initial match:" << newPart;
+
+  // Now, read forward again one character at a time for as long as the pattern matches the new string.
+  prevMatchFound = false;
+  i = newPart.length();
+  while( i <= fullLine.length() ) {
+    newPart = fullLine.left(i);
+
+    if( debug ) qDebug() << "newPart(2):" << newPart;
+
+    if( !re.exactMatch( newPart ) ) {
+      if( prevMatchFound ) {
+        // We've read one character too many.
+        // Back off, and get out of the loop.
+        --i;
+        break;
+      }
+    }
+    else {
+      // We (still) have a match.  Keep going until we run out of it.
+      prevMatchFound = true;
+    }
+
+    ++i;
+  }
+
+  newPart = fullLine.left(i);
+  if( re.exactMatch( newPart ) ) {
+    if( debug ) qDebug() << "MATCH FOUND:" << newPart;
+
+    newList.append( newPart );
+    if( debug ) qDebug() << "Remaining line (before snip):" << fullLine.right( fullLine.length() - newPart.length() );
+
+    if( debug ) qDebug() << fullLine.length() << newPart.length();
+
+    fullLine = fullLine.right( fullLine.length() - newPart.length() );
+
+    // If there was a match, we may now have a leading comma.  Lop it off, if present.
+    if( fullLine[0] == QChar( ',' ) )
+    //if( !fullLine.isEmpty() && !newPart.isEmpty() )
+      fullLine = fullLine.right( fullLine.length() - 1 );
+
+    if( debug ) qDebug() << "Remaining line:" << fullLine;
+
+    if( 0 < patternsToMatch.count() ) { // Is there more to do?
+      success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1 );
+    }
+    else {
+      if( fullLine.isEmpty() )
+        success = true;
+      else {
+        if( debug ) qDebug() << "There are bits left of the string:" << fullLine;
+        success = false;
+      }
+    }
+  }
+  else {
+    // There is nothing more we can do.
+    //qDebug() << "Failure trigger: 1";
+    success = false;
+    //newList.clear();
+  }
+
+  // Do we need to double-check anything here?
+  // I don't think so.
+
+  return success;
+}
+
+
+bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts ) {
   QString newPart;
   int i;
   QRegExp re;
@@ -335,7 +459,12 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
       success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1 );
     }
     else {
-      success = true;
+      if( fullLine.isEmpty() )
+        success = true;
+      else {
+        //qDebug() << "There are bits left of the string:" << fullLine;
+        success = false;
+      }
     }
   }
   else {

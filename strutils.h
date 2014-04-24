@@ -35,12 +35,14 @@ QString removeLineBreaks( QString str1 );
 
 QString removeDelimiters( const QString& val, QChar delim );
 
-QString boolToStr( bool val );
+QString boolToStr( bool val ); // returns "-1" or "0"
+QString boolToText( bool val ); // returns "true" or "false"
 bool strToBool( QString val );
 
 QString toTitleCase( QString str );
 
 QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
+QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 
 bool isComment( QString s );
@@ -52,6 +54,7 @@ bool isComment( QString s );
  * If a new list can be constructed that matches all of the regular expressions, then success is set to true.
  */
 bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
+bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
 
 #ifdef WINDOWS_OR_WHATEVER_IT_IS
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc);
