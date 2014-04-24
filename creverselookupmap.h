@@ -76,7 +76,7 @@ class CReverseLookupMap {
       return forwardMap.values().at(i);
     }
 
-    inline T keyAtIndex( const int i ) {
+    inline K keyAtIndex( const int i ) {
       return forwardMap.keys().at(i);
     }
 
