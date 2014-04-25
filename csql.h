@@ -124,6 +124,12 @@ class CSqlDatabase {
       DBUpdate
     };
 
+    enum KeyTypes {
+      DBKeyTypePrimary,
+      DBKeyTypeForeign,
+      DBKeyTypeIndex
+    };
+
     // Constructs but does not open a database.  Requires use of properties (dbType, dbName, etc.)
     CSqlDatabase( void );
 
@@ -202,6 +208,8 @@ class CSqlDatabase {
     inline void setPassword( QString val ) { _password = val; }
     inline void setHost( QString val ) { _host = val; }
     inline void setPort( int val ) { _port = val; }
+
+    void debug( void );
 
   protected:
     void initialize( void );
@@ -295,7 +303,7 @@ class CSqlResult {
     void runQuery( const QString &query );
 
     // Shortcut, to avoid having to create a new instance of CSqlResult every time
-    void runQuery( char* query );
+    void runQuery( const char* query );
 
     int unsigned fieldCount( void );
 
@@ -311,12 +319,6 @@ class CSqlResult {
     void debug( void );
     
   private:
-    enum KeyTypes {
-      keyTypePrimary,
-      keyTypeForeign,
-      keyTypeIndex
-    };
-
     // mySQLQuery( const QString& query, bool* success = NULL );
     // jetSQLQuery( const QString& query, bool* success = NULL );
 

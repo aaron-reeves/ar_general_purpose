@@ -250,15 +250,15 @@ void CSqlResult::runSelectQueryLinux( const QString &query, CSqlDatabase* dbConn
 
 
 void CSqlResult::foreignKeys( void ) {
-  this->keys( CSqlResult::keyTypeForeign );
+  this->keys( CSqlDatabase::DBKeyTypeForeign );
 }
 
 void CSqlResult::primaryKeys( void ) {
-  this->keys( CSqlResult::keyTypePrimary );
+  this->keys( CSqlDatabase::DBKeyTypePrimary );
 }
 
 void CSqlResult::indices( void ) {
-  this->keys( CSqlResult::keyTypeIndex );
+  this->keys( CSqlDatabase::DBKeyTypeIndex );
 }
 
 
@@ -271,15 +271,15 @@ void CSqlResult::keys( const int keyType ) {
   bool test;
 
   switch( keyType ) {
-    case CSqlResult::keyTypeForeign:
+    case CSqlDatabase::DBKeyTypeForeign:
       test = adoRecordset_ForeignKeys( _conn->_adoRS );
       //if( test )
       //  qDebug() << "CSqlResult::foreignKeys:" << adoRecordset_GetRecordCount( _conn->_adoRS ) << "items.";
       break;
-    case CSqlResult::keyTypePrimary:
+    case CSqlDatabase::DBKeyTypePrimary:
       test = adoRecordset_PrimaryKeys( _conn->_adoRS );
       break;
-    case CSqlResult::keyTypeIndex:
+    case CSqlDatabase::DBKeyTypeIndex:
       test = adoRecordset_Indices( _conn->_adoRS );
       break;
   }
@@ -1002,6 +1002,8 @@ void CSqlDatabase::open() {
 
   switch( type() ) {
     case DBMSAccess:
+      // FIX ME: make sure that the file exists
+
       // try connecting to the database
       _adoConnStr = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + name() + ";Persist Security Info=False";
 
@@ -1013,6 +1015,11 @@ void CSqlDatabase::open() {
       break;
     case DBMySQL:
       _adoConnStr = "Driver={mySQL ODBC 3.51 Driver};Server=" + host() + ";Port=" + QString( "%1" ).arg( port() ) + ";Database=" + name() + ";Uid=" + user() + ";Pwd=" + password() + ";";
+      //qDebug() << _adoConnStr;
+      break;
+    case DBPostgres:
+      //Driver={PostgreSQL};Server=IP address;Port=5432;Database=myDataBase;Uid=myUsername;Pwd=myPassword;
+      _adoConnStr = "Driver={PostgreSQL};Server=" + host() + ";Port=" + QString( "%1" ).arg( port() ) + ";Database=" + name() + ";Uid=" + user() + ";Pwd=" + password() + ";";
       //qDebug() << _adoConnStr;
       break;
     case DBDbf:
