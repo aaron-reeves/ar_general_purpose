@@ -1,4 +1,4 @@
-This repository includes a variety of general-purpose classes and functions used in a variety of applications.  All are written in C++, and most make use of the open-source, cross-platform application framework Qt (http://qt-project.org).  Many of these files are somewhat dated and may contain obsolete code that is bettter replaced by native Qt functions.
+This repository includes a variety of general-purpose classes and functions used in a variety of applications.  All are written in C++, and most make use of the open-source, cross-platform application framework Qt (http://qt-project.org).  Many of these files are somewhat dated and may contain obsolete code that is better replaced by native Qt functions.
 
 Among the included files are the following:
 
