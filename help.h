@@ -53,6 +53,7 @@ Public License as published by the Free Software Foundation; either version 2 of
  */
 class CHelpItem {
   public:
+    CHelpItem();
     CHelpItem( QString part1, QString part2 );
     CHelpItem( const char* part1, const char* part2 );
 
@@ -69,6 +70,8 @@ class CHelpItemList : public QList<CHelpItem> {
   public:
     CHelpItemList();
     void append( const char* part1, const char* part2 );
+    void append( const QString& part1, const QString& part2 );
+    void append( const CHelpItemList& otherList );
 };
 
 void printHelpList( CHelpItemList list );
