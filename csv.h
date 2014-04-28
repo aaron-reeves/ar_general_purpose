@@ -1,4 +1,10 @@
 /*
+csv.h/cpp
+----------
+Begin: 2014/04/11
+Author (modified version): Aaron Reeves <development@reevesdigital.com>
+------------------------------------------------------------------------
+
 Original code by Naohiro Hasegawa
 From https://github.com/hnaohiro/qt-csv/blob/master/csv.h
 */

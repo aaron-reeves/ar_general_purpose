@@ -1,12 +1,7 @@
 /*
-strutils.cpp
--------------
-Begin: ???
-Last revision: $Date: 2011-10-25 04:57:18 $ $Author: areeves $
-Version number: $Revision: 1.4 $
-Project: Atriplex Distributed Computing System
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
+strutils.h/cpp
+--------------
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2007 - 2014 Aaron Reeves
 

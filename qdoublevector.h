@@ -1,12 +1,8 @@
 /*
-qdoublevector.h
-----------------
+qdoublevector.h/cpp
+-------------------
 Begin: 2013/05/21
-Last revision: $Date: 2011-10-25 05:05:08 $ $Author: areeves $
-Version: $Revision: 1.3 $
-Project: 
-Website: 
-Author: Aaron Reeves <Aaron.Reeves@ucalgary.ca>
+Author: Aaron Reeves <development@reevesdigital.com>
 ------------------------------------------------------
 Copyright (C) 2013 University of Calgary Veterinary Medicine
 

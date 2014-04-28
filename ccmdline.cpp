@@ -1,14 +1,9 @@
 /*
-ccmdLine.h
-----------
+ccmdine.h/cpp
+-------------
 Begin: 2007/02/17
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.6 $
-Project: various
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
---------------------------------------------------
-Modifications Copyright (C) 2007 Aaron Reeves
+Author (for modifications): Aaron Reeves <development@reevesdigital.com>
+-------------------------------------------------------------------------
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or

@@ -1,12 +1,8 @@
 /*
-csql.cpp
---------
+csql.h/cpp
+----------
 Begin: 2004/07/28
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.11 $
-Project: JetSQLConsole
-Website: http://www.aaronreeves.com/jetsqlconsole
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2004 - 2014 Aaron Reeves
 

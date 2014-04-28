@@ -1,12 +1,8 @@
 /*
-cqstringlist.cpp
-----------------
+cqstringlist.h/cpp
+------------------
 Begin: 2003/04/09
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.7 $
-Project: JetSQLConsole
-Website: http://www.aaronreeves.com/jetsqlconsole
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2003 - 2008 Aaron Reeves
 

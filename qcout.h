@@ -1,12 +1,8 @@
 /*
-qcout.h
--------
+qcout.h/cpp
+-----------
 Begin: 2007/03/15
-Last revision: $Date: 2011-11-24 04:26:20 $ $Author: areeves $
-Version number: $Revision: 1.6 $
-Project: Atriplex Distributed Computing System
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2007 - 2008 Aaron Reeves
 

@@ -1,12 +1,8 @@
 /*
-cqstring.h
-----------
+cqstring.h/cpp
+--------------
 Begin: 2003/04/09
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version number: $Revision: 1.4 $
-Project: Atriplex Distributed Computing System
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2003 - 2007 Aaron Reeves
 

@@ -1,12 +1,8 @@
 /*
-log.h
------
+log.h/cpp
+---------
 Begin: 2004/09/04
-Last revision: $Date: 2011-10-25 04:57:18 $ $Author: areeves $
-Version number: $Revision: 1.4 $
-Project: Atriplex Distributed Computing System
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2004 - 2008 Aaron Reeves
 

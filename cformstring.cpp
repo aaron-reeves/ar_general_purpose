@@ -1,13 +1,9 @@
 /*
-cformstring.cpp
+cformstring.h/cpp
 Begin: 2003/06/11 (formerly cqformstring.cpp)
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.3 $
-Project: (various)
-Website: http://www.aaronreeves.com/qtclasses
 -------------------------------
 Copyright (C) 2003 - 2007 by Aaron Reeves
-aaron@aaronreeves.com
+development@reevesdigital.com
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or

@@ -1,22 +1,13 @@
 /*
-strutils.h
------------
-Begin: ???
-Last revision: $Date: 2011-10-25 04:57:18 $ $Author: areeves $
-Version number: $Revision: 1.4 $
-Project: Atriplex Distributed Computing System
-Website: 
-Author: Aaron Reeves <aaron@aaronreeves.com>
+strutils.h/cpp
+--------------
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
-Copyright (C) 2007 - 2008 Aaron Reeves
+Copyright (C) 2007 - 2014 Aaron Reeves
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
-
-As a special exception, the copyright holder gives permission to link this program with Qt non-commercial
-edition, and distribute the resulting executable, without distributing the source code for the Qt
-non-commercial edition in the source distribution.
 */
 
 #ifndef STRUTILS_H

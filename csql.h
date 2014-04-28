@@ -1,12 +1,8 @@
 /*
-csql.h
-------
+csql.h/cpp
+----------
 Begin: 2004/07/28
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.8 $
-Project: JetSQLConsole
-Website: http://www.aaronreeves.com/jetsqlconsole
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2004 - 2014 Aaron Reeves
 
@@ -97,7 +93,7 @@ CSqlDatabase provides functions that are effective at the level of the entire da
 of CSqlDatabase is required for all other CSql* classes.
 
 @short A cross-platform database API patterned on PHP database functions.
-@author Aaron Reeves (aaron@aaronreeves.com)
+@author Aaron Reeves (development@reevesdigital.com)
 @version 0.9.1
 */
 class CSqlDatabase {

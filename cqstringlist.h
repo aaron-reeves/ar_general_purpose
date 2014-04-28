@@ -1,12 +1,8 @@
 /*
-cqstringlist.h
---------------
+cqstringlist.h/cpp
+------------------
 Begin: 2003/04/09
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.5 $
-Project: JetSQLConsole
-Website: http://www.aaronreeves.com/jetsqlconsole
-Author: Aaron Reeves <aaron@aaronreeves.com>
+Author: Aaron Reeves <development@reevesdigital.com>
 --------------------------------------------------
 Copyright (C) 2003 - 2008 Aaron Reeves
 
@@ -29,7 +25,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 This class provides an customized QList containing pointers to QStrings.  See Qt documentation for QList (QPtrList) for more details.
 
 @short
-@author Aaron Reeves (aaron@aaronreeves.com)
+@author Aaron Reeves (development@reevesdigital.com)
 @version 040904
 */
 class CQStringList : public QList<QString*>  {

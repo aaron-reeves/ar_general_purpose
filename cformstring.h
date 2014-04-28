@@ -1,18 +1,15 @@
 /*
-cformstring.h
-Begin: 2003/06/11 (formerly cqformstring.h)
-Last revision: $Date: 2011-10-25 04:57:17 $ $Author: areeves $
-Version: $Revision: 1.2 $
-Project: (various)
-Website: http://www.aaronreeves.com/qtclasses
+cformstring.h/cpp
+Begin: 2003/06/11 (formerly cqformstring.cpp)
 -------------------------------
 Copyright (C) 2003 - 2007 by Aaron Reeves
-aaron@aaronreeves.com
+development@reevesdigital.com
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 */
+
 
 #ifndef CFORMSTRING_H
 #define CFORMSTRING_H
@@ -20,14 +17,14 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstring.h>
 
 /**
-This class provided functions to encode and decode strings according to the"x-www-form-urlencoded"  specification.
+This class provides functions to encode and decode strings according to the"x-www-form-urlencoded"  specification.
 Several functions included in this class are based on Special Edition Using CGI, by Jeffry Dwight and Michael Erwin,
 with Tobin Anthony, Danny Brands, Rod Clark, Mike Ellsworth, David Geller, Galen A. Grimes, Matthew D. Healy,
 Greg Knauss, Robert Niles, Bill Schongar, Crispen A. Scott, K. Mitchell Thompson, and Matt Wright.
 See http://docs.rinet.ru:8083/CGI_Programming/ch22.htm.
 
 @short A class for form-encoding and unencoding strings.
-@author Aaron Reeves (areeves@lamar.colostate.edu or aaron@aaronreeves.com)
+@author Aaron Reeves (areeves@lamar.colostate.edu or development@reevesdigital.com)
 @version 1.0
 */
 class CFormString : public QString  {
