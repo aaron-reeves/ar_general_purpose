@@ -89,6 +89,20 @@ class CPathString: public QString {
 
         QString replaceRoot( QString oldRoot, QString newRoot );
 
+        /**
+         * Returns a shorter path for the file.  If the path string is 'c:/foo/bar/bash/file.txt',
+         * the following values are returned:
+         * trimmedPath( 1 ): 'foo/bar/bash/file.txt'
+         * trimmedPath( 2 ): 'bar/bash/file.txt'
+         * trimmedPath( 3 ): 'bash/file.txt'
+         * trimmedPath( 5 ): (empty string)
+         * trimmedPath( 6 ): (raise exception)
+         *
+         * @param nPathsToTrim number of steps to trim off the path.
+         * @return QString containing the file name, with nPathsToTrim fewer steps in the path
+         */
+        QString pathTrimmed( const int nPathsToTrim );
+
 };
 
 /**

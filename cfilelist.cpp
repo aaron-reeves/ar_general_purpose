@@ -53,6 +53,26 @@ QString CPathString::shortFileName( void ) {
 }
 
 
+QString CPathString::pathTrimmed( const int nPathsToTrim ) {
+  QString result;
+
+  QString temp = this->replace( '\\', '/' );
+  QStringList templ = temp.split( '/' );
+
+  if( nPathsToTrim > templ.count() ) {
+    result = "";
+    qFatal( "Wrong number in CPathString::pathTrimmed()" );
+  }
+  else {
+    for( int i = 0; i < nPathsToTrim; ++i )
+      templ.takeAt(0);
+    result = templ.join( '/' );
+  }
+
+  return result;
+}
+
+
 QString CPathString::directory( void ) {
 	QFileInfo* finfo;
 	QString sfn;
