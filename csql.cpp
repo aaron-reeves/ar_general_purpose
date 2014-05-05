@@ -264,7 +264,7 @@ void CSqlResult::keys( const int keyType ) {
   CSqlRow* row;
   QString* cqstr;
   char strVal[32767];
-  bool test;
+  bool test = false; // until shown otherwise.
 
   switch( keyType ) {
     case CSqlDatabase::DBKeyTypeForeign:

@@ -47,6 +47,12 @@ void showSampleHelpMessage() {
 }
 
 
+CHelpItem::CHelpItem() {
+  _part1 = QString();
+  _part2 = QString();
+}
+
+
 CHelpItem::CHelpItem( QString part1, QString part2 ) {
   _part1 = part1;
   _part2 = part2;
@@ -66,6 +72,22 @@ CHelpItemList::CHelpItemList() : QList<CHelpItem>() {
 
 void CHelpItemList::append( const char* part1, const char* part2 ) {
   QList<CHelpItem>::append( CHelpItem( part1, part2 ) );
+}
+
+
+void CHelpItemList::append( const QString& part1, const QString& part2 ) {
+  QList<CHelpItem>::append( CHelpItem( part1, part2 ) );
+}
+
+
+void CHelpItemList::append( const CHelpItemList& otherList ) {
+  int i;
+  CHelpItem hi;
+
+  for( i = 0; i < otherList.count(); ++i ) {
+    hi = otherList.at(i);
+    this->append( hi.part1(), hi.part2() );
+  }
 }
 
 
