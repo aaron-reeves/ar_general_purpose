@@ -544,11 +544,11 @@ int qCSV::moveNext(){
 
       if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
         _fieldNames.append( tempString );
-        _fieldsLookup.insert( tempString, i ); // index?
+        _fieldsLookup.insert( tempString, i );
       }
       else if ( _containsFieldList && _concatenateDanglingEnds ){
         if ( i < _columnCount )
-          _fieldData.insert( i, tempString ); // index?
+          _fieldData.insert( i, tempString );
         else{
           QString tempStr = _fieldData[ _columnCount ];
           tempStr += ", " + tempString;
@@ -556,7 +556,7 @@ int qCSV::moveNext(){
         }
       }
       else
-        _fieldData.insert( i, tempString ); // index?
+        _fieldData.insert( i, tempString );
     }
 
     if ( _containsFieldList && ( _currentLineNumber == 1 ) ){

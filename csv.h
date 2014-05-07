@@ -51,7 +51,7 @@ class qCSV {
     QVariantList fields( int index );
     int error(){return _error;}
     QString errorMsg(){ return _errorMsg; }
-    int setColumnCount(){ return _columnCount; }
+    int columnCount(){ return _columnCount; }
     QStringList fieldData(){ return _fieldData; }
     int fieldCount(){ return _fieldNames.count(); }
     QStringList fieldNames(){return _fieldNames; }
