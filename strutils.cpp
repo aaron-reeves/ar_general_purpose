@@ -69,6 +69,30 @@ bool strToBool( QString val ) {
 }
 
 
+QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ ) {
+  QString str;
+  int i;
+  int origStrLen;
+
+  str = QString( "%1" ).arg( toPad );
+
+  Q_ASSERT( str.length() <= places );
+
+  //qDebug() << places << str.length() << (places - str.length());
+
+  origStrLen = str.length();
+
+  if( origStrLen < places ) {
+    for( i = 0; i < places - origStrLen; ++i ) {
+      str.prepend( padChar );
+      //qDebug() << i << str;
+    }
+  }
+
+  return str;
+}
+
+
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
 QString findAndRemove( QString str3, QString str1 ) {

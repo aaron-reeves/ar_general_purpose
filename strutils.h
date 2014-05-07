@@ -30,6 +30,8 @@ QString boolToStr( bool val ); // returns "-1" or "0"
 QString boolToText( bool val ); // returns "true" or "false"
 bool strToBool( QString val );
 
+QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
+
 QString toTitleCase( QString str );
 
 QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
