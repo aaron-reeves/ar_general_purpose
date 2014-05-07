@@ -104,9 +104,17 @@ class qCSV {
 
     int _readMode;
 
-    QMap<QString, int> _fieldsLookup;
+    // Key is the field name.
+    // Value is the position of the field in the file (i.e., the column number), starting from 0.
+    QHash<QString, int> _fieldsLookup;
+
+    // List of field names as they were in the original file.
     QStringList _fieldNames;
+
+    // Data for the current row.
     QStringList _fieldData;
+
+    // All rows of data, if an entire file has been read into memory.
     QList<QStringList> _data;
 
     void clearError();

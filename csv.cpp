@@ -266,7 +266,10 @@ void qCSV::debug() {
   qDebug() << "qCSV contents:";
 
   qDebug() << "numFields:" << this->fieldCount();
+  qDebug() << "numFieldNames:" << this->fieldNames().count();
   qDebug() << "numRows:" << this->rowCount();
+
+  qDebug() << this->fieldNames().join( ',' ).prepend( "  " );
 
   if( qCSV_ReadLineByLine == _readMode )
     qDebug() << "(There is nothing to display)";
@@ -381,12 +384,10 @@ QVariantList qCSV::fields( int index ) {
 }
 
 
-QString qCSV::fieldName ( int index ){
+QString qCSV::fieldName( int index ){
   QString ret_val = "";
   if ( _containsFieldList ){
-    if ( !_fieldsLookup.key ( index ).isEmpty() ){
-      ret_val = _fieldsLookup.key ( index );
-    }
+    ret_val = _fieldNames.at( index );
   }
 
   return ret_val;
