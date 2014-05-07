@@ -192,7 +192,13 @@ qCSV::qCSV() {
 }
 
 
-qCSV::qCSV ( const QString& filename, const bool containsFieldList, const QChar& stringToken, const bool stringsContainCommas ) {
+qCSV::qCSV (
+  const QString& filename,
+  const bool containsFieldList,
+  const QChar& stringToken /* = '\0' */,
+  const bool stringsContainCommas /* = true */,
+  const int readMode /* = qCsv::ReadLineByLine */
+) {
   initialize();
 
   _srcFilename = filename;
@@ -203,6 +209,21 @@ qCSV::qCSV ( const QString& filename, const bool containsFieldList, const QChar&
     _usesStringToken = true;
 
   _stringsContainCommas = stringsContainCommas;
+  _readMode = readMode;
+
+  if( qCSV_ReadEntireFile == _readMode ) {
+    this->open();
+
+    //qDebug() << "Reading entire file...";
+    int fieldsRead = 0;
+    while( -1 != fieldsRead ) {
+      //qDebug() << fieldsRead;
+      fieldsRead = moveNext();
+    }
+
+    this->close();
+    //qDebug() << "Done.";
+  }
 }
 
 
@@ -217,6 +238,7 @@ void qCSV::initialize() {
   _containsFieldList = false;
   _stringsContainCommas = true;
   _concatenateDanglingEnds = false;
+  _readMode = qCSV_ReadLineByLine;
 }
 
 
@@ -224,7 +246,10 @@ qCSV::~qCSV() {
   if ( _srcFile.isOpen() )
     _srcFile.close();
 
-  _fields.clear();
+  _fieldsLookup.clear();
+  _fieldNames.clear();
+  _data.clear();
+  _fieldData.clear();
 
   _srcFilename = "";
   _currentLine = "";
@@ -237,14 +262,36 @@ qCSV::~qCSV() {
 }
 
 
+void qCSV::debug() {
+  qDebug() << "qCSV contents:";
+
+  qDebug() << "numFields:" << this->fieldCount();
+  qDebug() << "numRows:" << this->rowCount();
+
+  if( qCSV_ReadLineByLine == _readMode )
+    qDebug() << "(There is nothing to display)";
+  else {
+    for( int i = 0; i < _data.count(); ++i ) {
+      qDebug() << _data.at(i).join( ',' ).prepend( "  " );
+    }
+  }
+}
+
+
 // Accessors
-QString qCSV::field ( int index ){
+QString qCSV::field( int index ){
+  QStringList dataList;
   QString ret_val = "";
   clearError();
 
-  if ( _fieldData.size() > 0 ){
-    if ( _fieldData.contains ( index ) ){
-      ret_val = _fieldData[index];
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
+
+  if ( dataList.size() > 0 ){
+    if ( dataList.size() > index ){
+      ret_val = dataList[index];
     }
     else{
       _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
@@ -260,30 +307,22 @@ QString qCSV::field ( int index ){
 }
 
 
-QString qCSV::field ( QString fName ){
+QString qCSV::field( QString fName ){
+  QStringList dataList;
   QString ret_val = "";
   clearError();
 
-  if ( _containsFieldList ){
-    if ( _fieldData.size() > 0 ){
-      if ( _fields.contains ( fName ) ){
-        int index =  _fields[fName];
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
 
-        ret_val = field ( index );
-        /*
-        if ( index < _fieldData.size() )
-        {
-          ret_val = _fieldData[index];
-        }
-        else
-        {
-          _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-          _errorMsg = "For File Linenumber: " + QString::number( _currentLineNumber ) + ".  Field index, " + QString::number( index ) + " for field: " + fName + ", out of range";
-        }
-        */
-        if ( ret_val.size() <= 0 ){
-          _errorMsg = " Error finding field name: " + fName + ".  " + _errorMsg;
-        }
+  if ( _containsFieldList ){
+    if ( dataList.size() > 0 ){
+      if ( _fieldsLookup.contains( fName ) ){
+        int index = _fieldsLookup.value( fName );
+
+        ret_val = field( index );
       }
       else{
         _error = qCSV_ERROR_INVALID_FIELD_NAME;
@@ -304,15 +343,117 @@ QString qCSV::field ( QString fName ){
 }
 
 
+QVariantList qCSV::fields( QString fName ) {
+  QVariantList result;
+  clearError();
+
+  if ( _containsFieldList ){
+    if ( _fieldsLookup.contains( fName ) ){
+      int index = _fieldsLookup.value( fName );
+
+      result = fields( index );
+    }
+    else{
+      _error = qCSV_ERROR_INVALID_FIELD_NAME;
+      _errorMsg = "Invalid Field Name: " + fName;
+    }
+  }
+  else {
+    _error = qCSV_ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
+  }
+
+  return result;
+}
+
+
+QVariantList qCSV::fields( int index ) {
+  QVariantList result;
+
+  if( qCSV_ReadLineByLine == _readMode )
+    result.append( this->field( index ) );
+  else {
+    for( int i = 0; i < _data.count(); ++ i )
+      result.append( _data.at(i).at(index) );
+  }
+
+  return result;
+}
+
+
 QString qCSV::fieldName ( int index ){
   QString ret_val = "";
   if ( _containsFieldList ){
-    if ( !_fields.key ( index ).isEmpty() ){
-      ret_val = _fields.key ( index );
+    if ( !_fieldsLookup.key ( index ).isEmpty() ){
+      ret_val = _fieldsLookup.key ( index );
     }
   }
 
   return ret_val;
+}
+
+
+int qCSV::rowCount(){
+  int result;
+
+  if( _readMode == qCSV_ReadLineByLine )
+    result = -1;
+  else
+    result = _data.count();
+
+  return result;
+}
+
+
+QStringList qCSV::writeLine( const QStringList& line ) {
+  QStringList output;
+
+  output.clear();
+  foreach (QString value, line) {
+    value.replace("\"", "\"\"");
+
+    if (value.contains(QRegExp(",|\r\n")))
+      output << ("\"" + value + "\"");
+    else
+      output << value;
+  }
+
+  return output;
+}
+
+
+bool qCSV::writeFile( const QString &filename, const QString &codec ) {
+  QStringList output;
+  QStringList header;
+
+  QFile file(filename);
+  if (!file.open(QIODevice::WriteOnly)) {
+    return false;
+  }
+
+  QTextStream out(&file);
+  if( !codec.isEmpty() )
+    out.setCodec(codec.toLatin1());
+
+  // Write the header row first...
+  if( this->_containsFieldList ) {
+    for( int i = 0; i < _fieldNames.count(); ++i ) {
+      header.append( _fieldNames.at(i) );
+    }
+    output = writeLine( header );
+    out << output.join(",") << "\r\n";
+  }
+
+  // Then write the data.
+  foreach (const QStringList &line, _data) {
+    output = writeLine( line );
+    out << output.join(",") << "\r\n";
+  }
+
+
+  file.close();
+
+  return true;
 }
 
 
@@ -371,7 +512,7 @@ bool qCSV::close(){
 
 
 //  Also acts as movefirst...cause a read of a line of data from the csv file.
-//  Returns the number of fields read.
+//  Returns the number of fields read, or -1 at the end of the file.
 int qCSV::moveNext(){
   int ret_val = -1;
   int index = 0;
@@ -382,47 +523,53 @@ int qCSV::moveNext(){
   _fieldData.clear();
 
   _currentLine.clear();
-  _currentLine = _srcFile.readLine ();
+  _currentLine = _srcFile.readLine();
   if ( !_currentLine.isEmpty() ){
     _currentLineNumber++;
 
     if ( _stringsContainCommas )
       fieldList = CSV::parseLine( _currentLine );
     else
-      fieldList = _currentLine.split ( ',' );
+      fieldList = _currentLine.split( ',' );
 
 
     for ( int i = 0; i < fieldList.size(); i++ ){
       index++;
-      QString tempString = fieldList[i];
+      QString tempString = fieldList.at(i);
       tempString = tempString.trimmed();
 
       if ( _usesStringToken ){
-        tempString = tempString.replace ( _stringToken, "" );
+        tempString = tempString.replace( _stringToken, "" );
       }
 
       if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
-        _fields.insert ( tempString, index );
+        _fieldNames.append( tempString );
+        _fieldsLookup.insert( tempString, i ); // index?
       }
       else if ( _containsFieldList && _concatenateDanglingEnds ){
         if ( i < _columnCount )
-          _fieldData.insert ( index, tempString );
+          _fieldData.insert( i, tempString ); // index?
         else{
           QString tempStr = _fieldData[ _columnCount ];
           tempStr += ", " + tempString;
-          _fieldData.insert ( _columnCount, tempStr );
+          _fieldData.insert( _columnCount, tempStr );
         }
       }
       else
-        _fieldData.insert ( index, tempString );
+        _fieldData.insert( i, tempString ); // index?
     }
 
     if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
       _columnCount = index;
+      _fieldData.clear();
       index = ret_val = moveNext();
     }
-    else
+    else {
       ret_val = index;
+      if( qCSV_ReadEntireFile == _readMode ) {
+        _data.append( _fieldData );
+      }
+    }
 
     /*  Save this, below, for a switch to check field list lengths later on....some csv formats,
         such as those created by Microsoft products, unfortunately, make the strings 
@@ -468,9 +615,9 @@ int qCSV::moveNext(){
     }
   }
 
-
   return ret_val;
 }
+
 
 void qCSV::setStringToken ( QChar token ){
   _stringToken = token;
@@ -481,10 +628,6 @@ void qCSV::setStringToken ( QChar token ){
   else
     _usesStringToken = false;
 }
-
-
-
-
 
 
 // Protected members

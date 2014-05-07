@@ -16,31 +16,47 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #include <QMap>
 #include <QString>
 #include <QStringList>
+#include <QVariant>
+#include <QVariantList>
 
 namespace CSV {
   QStringList parseLine( const QString& string );
   QList<QStringList> parseFromString(const QString &string);
   QList<QStringList> parseFromFile(const QString &filename, const QString &codec = "");
   bool write(const QList<QStringList> data, const QString &filename, const QString &codec = "");
-};
+}
+
 
 class qCSV {
   public:
     qCSV();
-    qCSV( const QString& filename, const bool containsFieldList, const QChar& stringToken = '\0', const bool stringsContainCommas = true );
+    qCSV(
+      const QString& filename,
+      const bool containsFieldList,
+      const QChar& stringToken = '\0',
+      const bool stringsContainCommas = true,
+      const int readMode = qCSV::qCSV_ReadLineByLine
+    );
     ~qCSV();
 
+    void debug();
+
     // Accessor Members
-    QString currentLine(){clearError(); return _currentLine;}
+    QString currentLine(){ clearError(); return _currentLine; }
+    int currentLineNumber(){ return _currentLineNumber; }
     QString field ( int index );
     QString field ( QString fName );
     QString fieldName( int index );
+    QVariantList fields( QString fName );
+    QVariantList fields( int index );
     int error(){return _error;}
-    QString errorMsg(){return _errorMsg;}
+    QString errorMsg(){ return _errorMsg; }
     int setColumnCount(){ return _columnCount; }
-    QMap< int, QString > fieldData(){ return _fieldData; }
-    int fieldCount(){ return _fields.size();}
-    QList<QString> fieldNames(){return _fields.keys();}
+    QStringList fieldData(){ return _fieldData; }
+    int fieldCount(){ return _fieldNames.count(); }
+    QStringList fieldNames(){return _fieldNames; }
+    int rowCount();
+    bool writeFile( const QString &filename, const QString &codec = "" );
 
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
@@ -52,6 +68,11 @@ class qCSV {
     void setColumnCount( int set_val ){ _columnCount = set_val;}
     void setStringsContainCommas( bool set_val ){ _stringsContainCommas = set_val;}
     void setConcatenateDanglingEnds( bool set_val ){ _concatenateDanglingEnds = set_val; }
+
+    enum ReadModes {
+      qCSV_ReadLineByLine,
+      qCSV_ReadEntireFile
+    };
 
     enum CSVErrorMessages{
       qCSV_ERROR_NONE,
@@ -81,10 +102,15 @@ class qCSV {
     bool      _stringsContainCommas;
     bool      _concatenateDanglingEnds;
 
-    QMap< QString, int > _fields;
-    QMap< int, QString > _fieldData;
+    int _readMode;
+
+    QMap<QString, int> _fieldsLookup;
+    QStringList _fieldNames;
+    QStringList _fieldData;
+    QList<QStringList> _data;
 
     void clearError();
+    QStringList writeLine( const QStringList& line );
 };
 
 #endif // CSV_H
