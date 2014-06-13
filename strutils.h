@@ -31,6 +31,7 @@ QString boolToText( bool val ); // returns "true" or "false"
 bool strToBool( QString val );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
+QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 
 QString toTitleCase( QString str );
 

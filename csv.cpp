@@ -157,9 +157,26 @@ QList<QStringList> CSV::parseFromFile(const QString &filename, const QString &co
 }
 
 
+QString CSV::writeLine( const QStringList& line ) {
+  QStringList output;
+
+  foreach (QString value, line) {
+    value.replace( "\"", "\"\"" );
+
+    if (value.contains(QRegExp(",|\"\r\n"))) {
+      output << ("\"" + value + "\"");
+    } else {
+      output << value;
+    }
+  }
+
+  return( output.join(",") );
+}
+
+
 bool CSV::write(const QList<QStringList> data, const QString &filename, const QString &codec){
   QFile file(filename);
-  if (!file.open(QIODevice::WriteOnly)) {
+  if (!file.open( QFile::WriteOnly | QFile::Text )) {
     return false;
   }
 
@@ -168,17 +185,8 @@ bool CSV::write(const QList<QStringList> data, const QString &filename, const QS
     out.setCodec(codec.toLatin1());
 
   foreach (const QStringList &line, data) {
-    QStringList output;
-    foreach (QString value, line) {
-      if (value.contains(QRegExp(",|\r\n"))) {
-        output << ("\"" + value + "\"");
-      } else if (value.contains("\"")) {
-        output << value.replace("\"", "\"\"");
-      } else {
-        output << value;
-      }
-    }
-    out << output.join(",") << "\r\n";
+    QString output = writeLine( line );
+    out << output << "\r\n";
   }
 
   file.close();
@@ -266,7 +274,10 @@ void qCSV::debug() {
   qDebug() << "qCSV contents:";
 
   qDebug() << "numFields:" << this->fieldCount();
+  qDebug() << "numFieldNames:" << this->fieldNames().count();
   qDebug() << "numRows:" << this->rowCount();
+
+  qDebug() << this->fieldNames().join( ',' ).prepend( "  " );
 
   if( qCSV_ReadLineByLine == _readMode )
     qDebug() << "(There is nothing to display)";
@@ -381,12 +392,10 @@ QVariantList qCSV::fields( int index ) {
 }
 
 
-QString qCSV::fieldName ( int index ){
+QString qCSV::fieldName( int index ){
   QString ret_val = "";
   if ( _containsFieldList ){
-    if ( !_fieldsLookup.key ( index ).isEmpty() ){
-      ret_val = _fieldsLookup.key ( index );
-    }
+    ret_val = _fieldNames.at( index );
   }
 
   return ret_val;
