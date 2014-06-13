@@ -71,6 +71,15 @@ bool strToBool( QString val ) {
 
 QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ ) {
   QString str;
+
+  str = QString( "%1" ).arg( toPad );
+
+  return leftPaddedStr( str, places, padChar );
+}
+
+
+QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
+  QString str;
   int i;
   int origStrLen;
 
@@ -91,7 +100,6 @@ QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ 
 
   return str;
 }
-
 
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
