@@ -157,9 +157,26 @@ QList<QStringList> CSV::parseFromFile(const QString &filename, const QString &co
 }
 
 
+QString CSV::writeLine( const QStringList& line ) {
+  QStringList output;
+
+  foreach (QString value, line) {
+    value.replace( "\"", "\"\"" );
+
+    if (value.contains(QRegExp(",|\"\r\n"))) {
+      output << ("\"" + value + "\"");
+    } else {
+      output << value;
+    }
+  }
+
+  return( output.join(",") );
+}
+
+
 bool CSV::write(const QList<QStringList> data, const QString &filename, const QString &codec){
   QFile file(filename);
-  if (!file.open(QIODevice::WriteOnly)) {
+  if (!file.open( QFile::WriteOnly | QFile::Text )) {
     return false;
   }
 
@@ -168,17 +185,8 @@ bool CSV::write(const QList<QStringList> data, const QString &filename, const QS
     out.setCodec(codec.toLatin1());
 
   foreach (const QStringList &line, data) {
-    QStringList output;
-    foreach (QString value, line) {
-      if (value.contains(QRegExp(",|\r\n"))) {
-        output << ("\"" + value + "\"");
-      } else if (value.contains("\"")) {
-        output << value.replace("\"", "\"\"");
-      } else {
-        output << value;
-      }
-    }
-    out << output.join(",") << "\r\n";
+    QString output = writeLine( line );
+    out << output << "\r\n";
   }
 
   file.close();

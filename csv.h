@@ -23,6 +23,7 @@ namespace CSV {
   QStringList parseLine( const QString& string );
   QList<QStringList> parseFromString(const QString &string);
   QList<QStringList> parseFromFile(const QString &filename, const QString &codec = "");
+  QString writeLine( const QStringList& line );
   bool write(const QList<QStringList> data, const QString &filename, const QString &codec = "");
 }
 
