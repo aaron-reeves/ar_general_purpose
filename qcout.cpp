@@ -2,7 +2,7 @@
 qcout.h/cpp
 -----------
 Begin: 2007/03/15
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2007 - 2008 Aaron Reeves
 

@@ -2,7 +2,7 @@
 help.h/cpp
 ----------
 Begin: 2014/04/25
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 ----------------------------------------------------
 Copyright (C) 2014 Aaron Reeves
 

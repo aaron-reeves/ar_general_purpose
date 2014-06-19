@@ -2,7 +2,7 @@
 log.h/cpp
 ---------
 Begin: 2004/09/04
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2004 - 2008 Aaron Reeves
 

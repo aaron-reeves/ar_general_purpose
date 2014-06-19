@@ -32,7 +32,7 @@
   here can be found at 
   http://www.programmingunlimited.net/siteexec/content.cgi?page=mingw-seh
   
-  Modifications by A. Reeves <development@reevesdigital.com>, for use
+  Modifications by A. Reeves <aaron.reeves@naadsm.org>, for use
   with the Atriplex distributed computing system:
     - Renamed "seh.hpp" to "seh.h" (2008-03-17) 
     - Removed namespace definitions (2008-03-17) 

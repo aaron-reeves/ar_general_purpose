@@ -2,7 +2,7 @@
 cqstring.h/cpp
 --------------
 Begin: 2003/04/09
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2003 - 2007 Aaron Reeves
 

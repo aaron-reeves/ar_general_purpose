@@ -2,7 +2,7 @@
 cxmldom.h
 ---------
 Begin: 2004/10/03
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2004 - 2007 Aaron Reeves
 

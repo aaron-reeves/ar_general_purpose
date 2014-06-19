@@ -3,7 +3,7 @@ cfilelist.h/cpp
 Begin: 2003/06/11
 -----------------
 Copyright (C) 2003 - 2006 by Aaron Reeves
-development@reevesdigital.com
+aaron.reeves@naadsm.org
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -27,7 +27,7 @@ the directory component of a file path, etc.
 CPathStrings are closely related to and are used by CFileLists (see @ref CFileList).
 
 @short Specialized strings for file names and paths
-@author Aaron Reeves (development@reevesdigital.com)
+@author Aaron Reeves (aaron.reeves@naadsm.org)
 @version 2.02
 */
 class CPathString: public QString {
@@ -118,7 +118,7 @@ CFileList could be extended by including the ability to list files based on matc
 regular expression, but this isn't yet an option.
 
 @short Creates a list of files or subdirectories within a given directory
-@author Aaron Reeves (development@reevesdigital.com)
+@author Aaron Reeves (aaron.reeves@naadsm.org)
 @version 2.02
 */
 class CFileList : public QList<CPathString*> {

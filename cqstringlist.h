@@ -2,7 +2,7 @@
 cqstringlist.h/cpp
 ------------------
 Begin: 2003/04/09
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2003 - 2008 Aaron Reeves
 
@@ -25,7 +25,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 This class provides an customized QList containing pointers to QStrings.  See Qt documentation for QList (QPtrList) for more details.
 
 @short
-@author Aaron Reeves (development@reevesdigital.com)
+@author Aaron Reeves (aaron.reeves@naadsm.org)
 @version 040904
 */
 class CQStringList : public QList<QString*>  {

@@ -3,7 +3,7 @@ cformstring.h/cpp
 Begin: 2003/06/11 (formerly cqformstring.cpp)
 -------------------------------
 Copyright (C) 2003 - 2007 by Aaron Reeves
-development@reevesdigital.com
+aaron.reeves@naadsm.org
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -24,7 +24,7 @@ Greg Knauss, Robert Niles, Bill Schongar, Crispen A. Scott, K. Mitchell Thompson
 See http://docs.rinet.ru:8083/CGI_Programming/ch22.htm.
 
 @short A class for form-encoding and unencoding strings.
-@author Aaron Reeves (areeves@lamar.colostate.edu or development@reevesdigital.com)
+@author Aaron Reeves (areeves@lamar.colostate.edu or aaron.reeves@naadsm.org)
 @version 1.0
 */
 class CFormString : public QString  {
