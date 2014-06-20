@@ -2,7 +2,7 @@
 csv.h/cpp
 ----------
 Begin: 2014/04/11
-Author (modified version): Aaron Reeves <development@reevesdigital.com>
+Author (modified version): Aaron Reeves <aaron.reeves@naadsm.org>
 ------------------------------------------------------------------------
 
 Original code (name space CSV) by Naohiro Hasegawa, https://github.com/hnaohiro/qt-csv/blob/master/csv.h

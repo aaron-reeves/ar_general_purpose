@@ -2,7 +2,7 @@
 csql.h/cpp
 ----------
 Begin: 2004/07/28
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2004 - 2014 Aaron Reeves
 
@@ -93,7 +93,7 @@ CSqlDatabase provides functions that are effective at the level of the entire da
 of CSqlDatabase is required for all other CSql* classes.
 
 @short A cross-platform database API patterned on PHP database functions.
-@author Aaron Reeves (development@reevesdigital.com)
+@author Aaron Reeves (aaron.reeves@naadsm.org)
 @version 0.9.1
 */
 class CSqlDatabase {

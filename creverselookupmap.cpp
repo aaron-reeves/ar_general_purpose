@@ -2,7 +2,7 @@
 creverselookupmap.h/cpp
 -----------------------
 Begin: 2004/02/15
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2004 - 2014 Aaron Reeves
 

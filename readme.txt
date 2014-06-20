@@ -42,6 +42,6 @@ Among the included files are the following:
   - strutils.h/cpp - general-purpose functions for converting, splitting, and printing strings.
   
   
-For further information, please contact Aaron Reeves at development@reevesdigital.com.
+For further information, please contact Aaron Reeves at aaron.reeves@naadsm.org.
 
   

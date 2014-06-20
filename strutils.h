@@ -1,7 +1,7 @@
 /*
 strutils.h/cpp
 --------------
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2007 - 2014 Aaron Reeves
 
