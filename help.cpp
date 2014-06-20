@@ -91,8 +91,8 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 }
 
 
-void printHelpList( CHelpItemList list ) {
-  int i, j;
+void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
+  int i, j, k;
   int maxPart1Len = 0;
   int nPadding;
   QStringList lines;
@@ -117,8 +117,11 @@ void printHelpList( CHelpItemList list ) {
       lines = prettyPrintedList( list[i].part2(), 50, true, true, nPadding );
       if( list[i].part1().length() > maxPart1Len ) {
         cout << list[i].part1() << endl;
-        for( j = 0; j < lines.count(); ++j )
+        for( j = 0; j < lines.count(); ++j ) {
+          for( k = 0; k < extraPadding; ++k )
+            cout << " ";
           cout << lines.at(j) << endl;
+        }
       }
       else {
         line0 = lines.at(0).right( lines.at(0).length() - (list[i].part1().length() + 1) );

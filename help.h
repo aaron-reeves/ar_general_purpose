@@ -74,7 +74,7 @@ class CHelpItemList : public QList<CHelpItem> {
     void append( const CHelpItemList& otherList );
 };
 
-void printHelpList( CHelpItemList list );
+void printHelpList( CHelpItemList list, const int extraPadding = 0 );
 
 void showSampleHelpMessage();
 
