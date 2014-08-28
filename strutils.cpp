@@ -41,6 +41,15 @@ QString boolToText( bool val ) {
     return "false";
 }
 
+
+QString boolToYesNo( bool val ) {
+  if( val )
+    return "Yes";
+  else
+    return "No";
+}
+
+
 bool strToBool( QString val ) {
   val = val.trimmed().toLower();
 
