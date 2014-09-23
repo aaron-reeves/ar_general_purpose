@@ -1,7 +1,7 @@
 /*
 strutils.h/cpp
 --------------
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2007 - 2014 Aaron Reeves
 
@@ -28,6 +28,7 @@ QString removeDelimiters( const QString& val, QChar delim );
 
 QString boolToStr( bool val ); // returns "-1" or "0"
 QString boolToText( bool val ); // returns "true" or "false"
+QString boolToYesNo( bool val ); // returns "Yes" or "No"
 bool strToBool( QString val );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );

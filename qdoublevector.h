@@ -2,7 +2,7 @@
 qdoublevector.h/cpp
 -------------------
 Begin: 2013/05/21
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 ------------------------------------------------------
 Copyright (C) 2013 University of Calgary Veterinary Medicine
 

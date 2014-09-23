@@ -2,7 +2,7 @@
 qintvector.h/cpp
 -----------------
 Begin: 2014/05/08
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 ------------------------------------------------------
 Copyright (C) 2014 SRUC
 

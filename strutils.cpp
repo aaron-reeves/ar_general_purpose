@@ -1,7 +1,7 @@
 /*
 strutils.h/cpp
 --------------
-Author: Aaron Reeves <development@reevesdigital.com>
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
 Copyright (C) 2007 - 2014 Aaron Reeves
 
@@ -40,6 +40,15 @@ QString boolToText( bool val ) {
   else
     return "false";
 }
+
+
+QString boolToYesNo( bool val ) {
+  if( val )
+    return "Yes";
+  else
+    return "No";
+}
+
 
 bool strToBool( QString val ) {
   val = val.trimmed().toLower();
