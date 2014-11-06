@@ -17,7 +17,7 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #include <QRegExp>
 #include <QDebug>
 
-QStringList CSV::parseLine( const QString& string ) {
+QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',' */ ) {
   enum State {Normal, Quote} state = Normal;
   QStringList line;
   QString temp, value;
@@ -30,7 +30,7 @@ QStringList CSV::parseLine( const QString& string ) {
     // Normal state
     if (state == Normal) {
       // comma encountered
-      if (current == ',') {
+      if (current == delimiter ) {
         // add line
         line.append(value.trimmed());
         value.clear();
@@ -69,7 +69,7 @@ QStringList CSV::parseLine( const QString& string ) {
   return line;
 }
 
-QList<QStringList> parse(const QString &string){
+QList<QStringList> parse(const QString &string, const QChar delimiter /* = ',' */){
   enum State {Normal, Quote} state = Normal;
   QList<QStringList> data;
   QStringList line;
@@ -90,7 +90,7 @@ QList<QStringList> parse(const QString &string){
         line.clear();
       }
       // comma
-      else if (current == ',') {
+      else if (current == delimiter) {
         // add line
         line.append(value);
         value.clear();
@@ -138,12 +138,12 @@ QString initString(const QString &string){
 }
 
 
-QList<QStringList> CSV::parseFromString(const QString &string){
-  return parse(initString(string));
+QList<QStringList> CSV::parseFromString(const QString &string , const QChar delimiter /* = ',' */){
+  return parse(initString(string), delimiter );
 }
 
 
-QList<QStringList> CSV::parseFromFile(const QString &filename, const QString &codec){
+QList<QStringList> CSV::parseFromFile(const QString &filename, const QChar delimiter /* = ',' */, const QString &codec){
   QString string;
   QFile file(filename);
   if (file.open(QIODevice::ReadOnly)) {
@@ -153,28 +153,28 @@ QList<QStringList> CSV::parseFromFile(const QString &filename, const QString &co
     string = in.readAll();
     file.close();
   }
-  return parse(initString(string));
+  return parse(initString(string), delimiter );
 }
 
 
-QString CSV::writeLine( const QStringList& line ) {
+QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' */ ) {
   QStringList output;
 
   foreach (QString value, line) {
     value.replace( "\"", "\"\"" );
 
-    if (value.contains(QRegExp(",|\"\r\n"))) {
+    if( value.contains( QRegExp( "|\"\r\n") ) || value.contains( delimiter ) ) {
       output << ("\"" + value + "\"");
     } else {
       output << value;
     }
   }
 
-  return( output.join(",") );
+  return( output.join( delimiter ) );
 }
 
 
-bool CSV::write(const QList<QStringList> data, const QString &filename, const QString &codec){
+bool CSV::write(const QList<QStringList> data, const QString &filename,  const QChar delimiter /* = ',' */, const QString &codec){
   QFile file(filename);
   if (!file.open( QFile::WriteOnly | QFile::Text )) {
     return false;
@@ -185,7 +185,7 @@ bool CSV::write(const QList<QStringList> data, const QString &filename, const QS
     out.setCodec(codec.toLatin1());
 
   foreach (const QStringList &line, data) {
-    QString output = writeLine( line );
+    QString output = writeLine( line, delimiter );
     out << output << "\r\n";
   }
 
@@ -204,7 +204,7 @@ qCSV::qCSV (
   const QString& filename,
   const bool containsFieldList,
   const QChar& stringToken /* = '\0' */,
-  const bool stringsContainCommas /* = true */,
+  const bool stringsContainDelimiters /* = true */,
   const int readMode /* = qCsv::ReadLineByLine */
 ) {
   initialize();
@@ -216,7 +216,7 @@ qCSV::qCSV (
   if ( stringToken != '\0' )
     _usesStringToken = true;
 
-  _stringsContainCommas = stringsContainCommas;
+  _stringsContainDelimiters = stringsContainDelimiters;
   _readMode = readMode;
 
   if( qCSV_ReadEntireFile == _readMode ) {
@@ -244,9 +244,11 @@ void qCSV::initialize() {
   _stringToken = '\0';
   _usesStringToken = false;
   _containsFieldList = false;
-  _stringsContainCommas = true;
+  _stringsContainDelimiters = true;
   _concatenateDanglingEnds = false;
   _readMode = qCSV_ReadLineByLine;
+  _eolDelimiter = " ";
+  _delimiter = ',';
 }
 
 
@@ -526,17 +528,33 @@ int qCSV::moveNext(){
   int ret_val = -1;
   int index = 0;
   QStringList fieldList;
+  QString tmp;
+  int nQuotes;
 
   clearError();
 
   _fieldData.clear();
 
   _currentLine.clear();
-  _currentLine = _srcFile.readLine();
+  nQuotes = 0;
+
+  // The do loop handles situations where end-of-line characters are encountered inside quote marks.
+  do {
+    tmp = _srcFile.readLine();
+    tmp = tmp.trimmed();
+
+    if( !_currentLine.isEmpty() )
+      _currentLine.append( _eolDelimiter );
+
+    _currentLine.append( tmp );
+
+    nQuotes = nQuotes + tmp.count( '\"' );
+  } while( 0 != nQuotes%2 );
+
   if ( !_currentLine.isEmpty() ){
     _currentLineNumber++;
 
-    if ( _stringsContainCommas )
+    if ( _stringsContainDelimiters )
       fieldList = CSV::parseLine( _currentLine );
     else
       fieldList = _currentLine.split( ',' );

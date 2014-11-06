@@ -20,11 +20,11 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #include <QVariantList>
 
 namespace CSV {
-  QStringList parseLine( const QString& string );
-  QList<QStringList> parseFromString(const QString &string);
-  QList<QStringList> parseFromFile(const QString &filename, const QString &codec = "");
-  QString writeLine( const QStringList& line );
-  bool write(const QList<QStringList> data, const QString &filename, const QString &codec = "");
+  QStringList parseLine( const QString& string, const QChar delimiter = ',' );
+  QList<QStringList> parseFromString(const QString &string, const QChar delimiter = ',' );
+  QList<QStringList> parseFromFile(const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
+  QString writeLine( const QStringList& line, const QChar delimiter = ',' );
+  bool write(const QList<QStringList> data, const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
 }
 
 
@@ -45,8 +45,8 @@ class qCSV {
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
     int currentLineNumber(){ return _currentLineNumber; }
-    QString field ( int index );
-    QString field ( QString fName );
+    QString field( int index );
+    QString field( QString fName );
     QString fieldName( int index );
     QVariantList fields( QString fName );
     QVariantList fields( int index );
@@ -67,8 +67,10 @@ class qCSV {
     int moveNext();
     void setStringToken ( QChar token );
     void setColumnCount( int set_val ){ _columnCount = set_val;}
-    void setStringsContainCommas( bool set_val ){ _stringsContainCommas = set_val;}
+    void setStringsContainCommas( bool set_val ){ _stringsContainDelimiters = set_val;}
     void setConcatenateDanglingEnds( bool set_val ){ _concatenateDanglingEnds = set_val; }
+    void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
+    void setDelimiter( const QChar val ) { _delimiter = val; }
 
     enum ReadModes {
       qCSV_ReadLineByLine,
@@ -100,8 +102,10 @@ class qCSV {
     bool      _usesStringToken;
     bool      _containsFieldList;
     int       _columnCount;
-    bool      _stringsContainCommas;
+    bool      _stringsContainDelimiters;
     bool      _concatenateDanglingEnds;
+    QString   _eolDelimiter;
+    QChar     _delimiter;
 
     int _readMode;
 
