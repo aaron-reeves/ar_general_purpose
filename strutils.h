@@ -28,6 +28,7 @@ QString removeDelimiters( const QString& val, QChar delim );
 
 QString boolToStr( bool val ); // returns "-1" or "0"
 QString boolToText( bool val ); // returns "true" or "false"
+QString boolToYesNo( bool val ); // returns "Yes" or "No"
 bool strToBool( QString val );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
