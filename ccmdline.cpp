@@ -366,7 +366,7 @@ QStringList CCmdLine::arguments( const char* pSwitch ) {
   int i;
 
   if( this->hasSwitch( pSwitch ) ) {
-    for( i = 0; i < this->getArgumentCount( pSwitch); ++i ) {
+    for( i = 0; i < this->getArgumentCount( pSwitch ); ++i ) {
       list.append( this->getArgument( pSwitch, i ) );
     }
   }
