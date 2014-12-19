@@ -161,20 +161,20 @@ class CCmdLine : public _CCmdLine {
     bool hasSwitches() { return HasSwitches(); }
 
     /* Was the switch found on the command line? */
-    bool HasSwitch(const char* pSwitch);
-    bool hasSwitch(const char* pSwitch){ return HasSwitch( pSwitch ); }
+    bool HasSwitch( const QString& pSwitch );
+    bool hasSwitch( const QString& pSwitch ){ return HasSwitch( pSwitch ); }
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
-    QString GetSafeArgument(const char *pSwitch, int iIdx, const char* pDefault);
-    QString getSafeArgument(const char *pSwitch, int iIdx, const char* pDefault) { return GetSafeArgument( pSwitch, iIdx, pDefault ); }
+    QString GetSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault);
+    QString getSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault) { return GetSafeArgument( pSwitch, iIdx, pDefault ); }
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
-    QString GetArgument(const char* pSwitch, int iIdx);
-    QString getArgument(const char* pSwitch, int iIdx) { return GetArgument( pSwitch, iIdx ); }
+    QString GetArgument( const QString& pSwitch, int iIdx);
+    QString getArgument( const QString& pSwitch, int iIdx) { return GetArgument( pSwitch, iIdx ); }
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
-    int GetArgumentCount(const char* pSwitch);
-    int getArgumentCount(const char* pSwitch) { return GetArgumentCount( pSwitch ); }
+    int GetArgumentCount(const QString& pSwitch );
+    int getArgumentCount(const QString& pSwitch ) { return GetArgumentCount( pSwitch ); }
 
     /* Returns true if any of the following switches is present: -h, --help, -? */
     bool hasHelp();
@@ -183,7 +183,7 @@ class CCmdLine : public _CCmdLine {
     bool hasVersion();
 
     /* Returns a list of arguments associated with a switch. */
-    QStringList arguments( const char* pSwitch );
+    QStringList arguments( const QString& pSwitch );
 
     /* Returns the original string that contained switches and arguments. */
     QString asString();
@@ -201,7 +201,7 @@ class CCmdLine : public _CCmdLine {
     */
   protected:
     /* Test a parameter to see if it's a switch (form "-x"). */
-    bool IsSwitch(const char* pParam);
+    bool IsSwitch(const QString& pParam);
 
     QString _originalString;
 };
