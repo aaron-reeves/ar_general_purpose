@@ -227,13 +227,13 @@ int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
    where 'x' is one or more characters.
    the first character of a switch must be non-numeric!
 ------------------------------------------------------*/
-bool CCmdLine::IsSwitch( const char* pParam ) {
-   if (pParam==NULL)
+bool CCmdLine::IsSwitch( const QString& pParam ) {
+   if (pParam.isEmpty())
       return false;
 
    // switches must non-empty
    // must have at least one character after the '-'
-   int len = strlen(pParam);
+   int len = pParam.length() ;
    if (len <= 1) {
       return false;
    }
@@ -242,7 +242,7 @@ bool CCmdLine::IsSwitch( const char* pParam ) {
    if (pParam[0]=='-') {
       // allow negative numbers as arguments.
       // ie., don't count them as switches
-      return (!isdigit(pParam[1]));
+      return( !pParam[1].isNumber() );
    }
    else {
       return false;
@@ -251,7 +251,7 @@ bool CCmdLine::IsSwitch( const char* pParam ) {
 
 
 /*------------------------------------------------------
-   bool CCmdLine::HasSwitch(const char *pSwitch)
+   bool CCmdLine::HasSwitch(const QString& pSwitch)
 
    was the switch found on the command line ?
 
@@ -262,7 +262,7 @@ bool CCmdLine::IsSwitch( const char* pParam ) {
    cmdLine.HasSwitch("-a")       true
    cmdLine.HasSwitch("-z")       false
 ------------------------------------------------------*/
-bool CCmdLine::HasSwitch( const char* pSwitch ) {
+bool CCmdLine::HasSwitch( const QString& pSwitch ) {
 	_CCmdLine::Iterator theIterator;
 	theIterator = find(pSwitch);
 	return (theIterator!=end());
@@ -270,7 +270,7 @@ bool CCmdLine::HasSwitch( const char* pSwitch ) {
 
 
 /*------------------------------------------------------
-   QString CCmdLine::GetSafeArgument(const char *pSwitch, int iIdx, const char *pDefault)
+   QString CCmdLine::GetSafeArgument(const QString& pSwitch, int iIdx, const QString& pDefault)
 
    fetch an argument associated with a switch . if the parameter at
    index iIdx is not found, this will return the default that you
@@ -287,10 +287,10 @@ bool CCmdLine::HasSwitch( const char* pSwitch ) {
    cmdLine.GetSafeArgument("-b", 0, "zz")    p4
    cmdLine.GetSafeArgument("-b", 1, "zz")    zz
 ------------------------------------------------------*/
-QString CCmdLine::GetSafeArgument( const char* pSwitch, int iIdx, const char* pDefault ) {
+QString CCmdLine::GetSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) {
    QString sRet;
    
-   if (pDefault!=NULL)
+   if (!pDefault.isEmpty())
       sRet = pDefault;
 
   if( HasSwitch( pSwitch ) ) {
@@ -306,7 +306,7 @@ QString CCmdLine::GetSafeArgument( const char* pSwitch, int iIdx, const char* pD
 
 
 /*------------------------------------------------------
-   QString CCmdLine::GetArgument(const char *pSwitch, int iIdx)
+   QString CCmdLine::GetArgument(const QString& pSwitch, int iIdx)
 
    fetch a argument associated with a switch. throws an exception 
    of (int)0, if the parameter at index iIdx is not found.
@@ -320,7 +320,7 @@ QString CCmdLine::GetSafeArgument( const char* pSwitch, int iIdx, const char* pD
    cmdLine.GetArgument("-a", 0)     p1
    cmdLine.GetArgument("-b", 1)     throws (int)0, returns an empty string
 ------------------------------------------------------*/
-QString CCmdLine::GetArgument( const char* pSwitch, int iIdx ) {
+QString CCmdLine::GetArgument( const QString& pSwitch, int iIdx ) {
    if (HasSwitch(pSwitch)) {
 	   CCmdLine::Iterator theIterator;
 
@@ -339,13 +339,13 @@ QString CCmdLine::GetArgument( const char* pSwitch, int iIdx ) {
 
 
 /*------------------------------------------------------
-   int CCmdLine::GetArgumentCount(const char *pSwitch)
+   int CCmdLine::GetArgumentCount(const QString& pSwitch)
 
    returns the number of arguments found for a given switch.
 
    returns -1 if the switch was not found
 ------------------------------------------------------*/
-int CCmdLine::GetArgumentCount( const char* pSwitch ) {
+int CCmdLine::GetArgumentCount( const QString& pSwitch ) {
    int iArgumentCount = -1;
 
    if (HasSwitch(pSwitch)) {
@@ -361,7 +361,7 @@ int CCmdLine::GetArgumentCount( const char* pSwitch ) {
 }
 
 
-QStringList CCmdLine::arguments( const char* pSwitch ) {
+QStringList CCmdLine::arguments(  const QString& pSwitch ) {
   QStringList list;
   int i;
 

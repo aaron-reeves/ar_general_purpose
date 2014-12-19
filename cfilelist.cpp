@@ -165,6 +165,10 @@ CFileList::CFileList( QString path, QString filter, bool recurse ) {
 
 
 CFileList::CFileList( bool createDirList ) {
+  if( createDirList ) {
+    // Do nothing.  This is essentially a dummy parameter for now.
+    // This block just avoids a compiler warning.
+  }
 	_dirList = NULL;
 	_fileList = NULL;
 }

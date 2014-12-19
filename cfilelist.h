@@ -192,7 +192,7 @@ class CFileList : public QList<CPathString*> {
 
     private:
 
-				CFileList( bool createDirList );
+        CFileList( bool createDirList );
 
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
