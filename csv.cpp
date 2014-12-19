@@ -24,18 +24,20 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
 
   temp = string.trimmed();
 
+  //qDebug() << "String size:" << temp.size();
+
   for (int i = 0; i < temp.size(); i++) {
     QChar current = temp.at(i);
 
     // Normal state
     if (state == Normal) {
-      // comma encountered
+      // Delimiter encountered
       if (current == delimiter ) {
         // add line
         line.append(value.trimmed());
         value.clear();
       }
-      // One quote mark encountered.  Ignore commas until the matching quote mark is encountered.
+      // One quote mark encountered.  Ignore delimiters until the matching quote mark is encountered.
       else if (current == '"') {
         state = Quote;
       }
@@ -47,8 +49,11 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
     // Quote
     else if (state == Quote) {
       // double quote
-      if (current == '"') {
-        int index = (i+1 < temp.size()) ? i+1 : temp.size();
+      if( current == '"' ) {
+        // If at the end of the line
+        /* && ( i < temp.size() - 1 )  ) {*/
+
+        int index = (i+1 < temp.size() - 1) ? i+1 : temp.size() - 1;
         QChar next = temp.at(index);
         if (next == '"') {
           value += '"';
@@ -163,7 +168,7 @@ QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' 
   foreach (QString value, line) {
     value.replace( "\"", "\"\"" );
 
-    if( value.contains( QRegExp( "|\"\r\n") ) || value.contains( delimiter ) ) {
+    if( value.contains( QRegExp( "\"\r\n") ) || value.contains( delimiter ) || value.contains( QRegExp( "\\s+" ) ) ) {
       output << ("\"" + value + "\"");
     } else {
       output << value;
@@ -279,13 +284,13 @@ void qCSV::debug() {
   qDebug() << "numFieldNames:" << this->fieldNames().count();
   qDebug() << "numRows:" << this->rowCount();
 
-  qDebug() << this->fieldNames().join( ',' ).prepend( "  " );
+  qDebug() << this->fieldNames().join( _delimiter ).prepend( "  " );
 
   if( qCSV_ReadLineByLine == _readMode )
     qDebug() << "(There is nothing to display)";
   else {
     for( int i = 0; i < _data.count(); ++i ) {
-      qDebug() << _data.at(i).join( ',' ).prepend( "  " );
+      qDebug() << _data.at(i).join( _delimiter ).prepend( "  " );
     }
   }
 }
@@ -543,22 +548,34 @@ int qCSV::moveNext(){
     tmp = _srcFile.readLine();
     tmp = tmp.trimmed();
 
+    //qDebug() << tmp;
+
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
 
     _currentLine.append( tmp );
 
+    //qDebug() << _currentLine;
+
     nQuotes = nQuotes + tmp.count( '\"' );
+
+    //qDebug() << nQuotes;
+
   } while( 0 != nQuotes%2 );
+
 
   if ( !_currentLine.isEmpty() ){
     _currentLineNumber++;
 
-    if ( _stringsContainDelimiters )
-      fieldList = CSV::parseLine( _currentLine );
-    else
-      fieldList = _currentLine.split( ',' );
+    //qDebug() << _currentLine;
+    //qDebug() << "Check 0" << _stringsContainDelimiters << _delimiter;
 
+    if ( _stringsContainDelimiters )
+      fieldList = CSV::parseLine( _currentLine, _delimiter );
+    else
+      fieldList = _currentLine.split( _delimiter );
+
+    //qDebug() << "Check 1";
 
     for ( int i = 0; i < fieldList.size(); i++ ){
       index++;
@@ -586,6 +603,8 @@ int qCSV::moveNext(){
         _fieldData.insert( i, tempString );
     }
 
+    //qDebug() << "Check 2";
+
     if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
       _columnCount = index;
       _fieldData.clear();
@@ -597,6 +616,8 @@ int qCSV::moveNext(){
         _data.append( _fieldData );
       }
     }
+
+    //qDebug() << "Check 3";
 
     /*  Save this, below, for a switch to check field list lengths later on....some csv formats,
         such as those created by Microsoft products, unfortunately, make the strings 
