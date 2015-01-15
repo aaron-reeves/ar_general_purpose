@@ -53,6 +53,11 @@ QString CPathString::shortFileName( void ) {
 }
 
 
+QString CPathString::fileType( void ) {
+  return this->mid( this->lastIndexOf( '.' ) + 1 );
+}
+
+
 QString CPathString::pathTrimmed( const int nPathsToTrim ) {
   QString result;
 
