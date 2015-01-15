@@ -18,6 +18,50 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qdebug.h>
 
 
+QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
+  bool ok;
+  QString res;
+
+  str.toDouble( &ok );
+  if( !ok )
+    str.toInt( &ok );
+
+  if( !ok ) {
+    res = str;
+    res.replace( quoteMark, QString( "%1%1" ).arg( quoteMark ) );
+    res = QString( "%1%2%1" ).arg( quoteMark ).arg( str );
+  }
+  else
+    res = str;
+
+  return res;
+}
+
+
+QString camelCase( const QString& str ) {
+  QString tmp = str;
+  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+
+  QStringList list = tmp.simplified().split( ' ' );
+  for( int i = 0; i < list.count(); ++i )
+    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1);
+
+  return list.join( "" );
+}
+
+
+QString postgresCase( const QString& str ) {
+  QString tmp = str;
+  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+
+  QStringList list = tmp.simplified().split( ' ' );
+  for( int i = 0; i < list.count(); ++i )
+    list[i] = list.at(i).toLower();
+
+  return list.join( "_" );
+}
+
+
 QString toTitleCase( QString str ){
   QStringList list = str.simplified().split( ' ' );
   for( int i = 0; i < list.count(); ++i )
@@ -322,9 +366,9 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
 }
 
 
-bool isComment( QString s ) {
+bool isComment( const QString st ) {
   bool result;
-  s = s.trimmed();
+  QString s = st.trimmed();
 
   if(
     ( '%' == s.at(0) )
