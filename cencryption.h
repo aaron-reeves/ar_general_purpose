@@ -17,7 +17,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CEncryption {
   public:
-    static QString rc4Encrypt( QString input, QString pwd );
+    static QByteArray rc4Encrypt( QString input, QString pwd );
     static QString hexEncode( QString str );
     static QString hexDecode( QString str );
 
