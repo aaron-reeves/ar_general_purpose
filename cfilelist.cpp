@@ -180,8 +180,14 @@ CFileList::CFileList( bool createDirList ) {
 
 
 CFileList::~CFileList( void ) {
-	if( NULL != _dirList ) delete _dirList;
-	if( NULL != _fileList ) delete _fileList;
+  if( NULL != _dirList ) {
+    _dirList->clear( true );
+    delete _dirList;
+  }
+  if( NULL != _fileList ) {
+    _fileList->clear( true );
+    delete _fileList;
+  }
 }
 
 
@@ -286,6 +292,18 @@ QStringList CFileList::qStringList( void ) {
     sl.append( *strp );
   }
   return sl;
+}
+
+
+void CFileList::clear( bool deleteElements ) {
+  int i;
+  CPathString* ps;
+  for( i = 0; i < this->count(); ++i ) {
+    ps = this->at(i);
+    if( deleteElements )
+      delete ps;
+    this->removeAt(i);
+  }
 }
 
 

@@ -199,6 +199,11 @@ class CFileList : public QList<CPathString*> {
 
         void insert( const QString& file ) { insert( CPathString( file ) ); }
 
+        /**
+         Clears the list, and optionally deletes all pointers to list elements.
+         */
+        void clear( bool deleteElements );
+
     private:
 
         CFileList( bool createDirList );
