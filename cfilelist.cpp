@@ -43,7 +43,7 @@ QString CPathString::shortFileName( void ) {
   xs = 0;
   xstr1 = "";
 
-  while( xstr1 !="/" && xstr !="\\" && xs != this->length() + 1 ) {
+  while( (xstr1 != "/") && (xstr1 != "\\") && (xs != this->length() + 1) ) {
 		++xs;
 		xstr = this->right( xs );
 		xstr1 = xstr.left(1);
