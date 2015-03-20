@@ -22,6 +22,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 extern QTextStream cout; //(stdout, QIODevice::WriteOnly);
 extern QTextStream cin;
 
+void setStdinEcho(bool enable = true);
+
 void cerr( const QString& msg, const bool silent );
 void cerr( const char* msg, const bool silent );
 
