@@ -60,6 +60,13 @@ class CPathString: public QString {
         */
         QString shortFileName( void );
 
+        /**
+        Returns just the file name component of a path without a file type.  For example, if the path string is
+        '/home/foo/bar.txt', shortNameNoType returns 'bar'.
+
+        @return QString containing the file name. without the extension/type.
+        */
+        QString shortNameNoType( void );
 
         /**
         Returns just the file name extension of a path.  For example, if the path string is
