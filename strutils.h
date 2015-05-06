@@ -33,7 +33,7 @@ QString removeDelimiters( const QString& val, QChar delim );
 QString boolToStr( bool val ); // returns "-1" or "0"
 QString boolToText( bool val ); // returns "true" or "false"
 QString boolToYesNo( bool val ); // returns "Yes" or "No"
-bool strToBool( QString val );
+bool strToBool( QString val, bool* ok = NULL );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
@@ -54,6 +54,12 @@ bool isComment( const QString st );
  */
 bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
 bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
+
+
+// Replaces single quotes " with double quotes "" and wraps s in double quotes.
+QString csvQuote( QString s );
+
+bool isHexDigit( const QChar& c );
 
 #ifdef WINDOWS_OR_WHATEVER_IT_IS
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc);

@@ -94,7 +94,7 @@ QString boolToYesNo( bool val ) {
 }
 
 
-bool strToBool( QString val ) {
+bool strToBool( QString val, bool* ok /* = NULL */ ) {
   val = val.trimmed().toLower();
 
   if(
@@ -105,6 +105,8 @@ bool strToBool( QString val ) {
     || "1" == val
     || "-1" == val
   ) {
+    if( NULL != ok )
+      *ok = true;
     return true;
   } else if (
     "n" == val
@@ -113,10 +115,13 @@ bool strToBool( QString val ) {
     || "false" == val
     || "0" == val
   ) {
+    if( NULL != ok )
+      *ok = true;
     return false;
   }
   else {
-    qDebug() << "Bad value in strToBool:" << val;
+    if( NULL != ok )
+      *ok = false;
     return false;
   }
 }
@@ -559,6 +564,26 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 
   return success;
 }
+
+
+QString csvQuote( QString s ) {
+  if(  s.contains( '"' ) )
+    s.replace( '"', "\"\"" );
+
+  s = QString( "\"%1\"" ).arg( s );
+  return s;
+}
+
+
+bool isHexDigit( const QChar& c ) {
+  if( !c.isDigit() )
+    return false;
+  else {
+    ushort s = c.toUpper().unicode();
+    return ( (65 <= s) && (70 >= s) ); // 'A' and 'F'
+  }
+}
+
 
 
 #ifdef WINDOWS_OR_WHATEVER_IT_IS
