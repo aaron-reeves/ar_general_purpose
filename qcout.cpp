@@ -13,7 +13,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "qcout.h"
 
-#ifdef win32
+#if defined(_WIN32) || defined(WIN32)
   #include <windows.h>
 #else
   #include <termios.h>
@@ -25,7 +25,7 @@ QTextStream cin( stdin,  QIODevice::ReadOnly );
 
 // From http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin
 void setStdinEcho(bool enable /* = true */){
-  #ifdef win32
+  #if defined(_WIN32) || defined(WIN32)
       HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
       DWORD mode;
       GetConsoleMode(hStdin, &mode);
