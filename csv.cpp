@@ -587,8 +587,8 @@ int qCSV::moveNext(){
       }
 
       if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
-        _fieldNames.append( tempString );
-        _fieldsLookup.insert( tempString, i );
+        _fieldNames.append( tempString.toLower() );
+        _fieldsLookup.insert( tempString.toLower(), i );
       }
       else if ( _containsFieldList && _concatenateDanglingEnds ){
         if ( i < _columnCount )
