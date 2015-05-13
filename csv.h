@@ -36,7 +36,8 @@ class qCSV {
       const bool containsFieldList,
       const QChar& stringToken = '\0',
       const bool stringsContainCommas = true,
-      const int readMode = qCSV::qCSV_ReadLineByLine
+      const int readMode = qCSV::qCSV_ReadLineByLine,
+      const bool checkForComment = false
     );
     ~qCSV();
 
@@ -96,6 +97,7 @@ class qCSV {
     QFile     _srcFile;
     QString   _currentLine;
     int       _currentLineNumber;
+    bool      _firstDataRowEncountered;
     int       _error;
     QString   _errorMsg;
     QChar     _stringToken;
@@ -106,6 +108,7 @@ class qCSV {
     bool      _concatenateDanglingEnds;
     QString   _eolDelimiter;
     QChar     _delimiter;
+    bool      _checkForComment;
 
     int _readMode;
 
@@ -124,6 +127,8 @@ class qCSV {
 
     void clearError();
     QStringList writeLine( const QStringList& line );
+
+    bool isCommentLine( const QString& line );
 };
 
 #endif // CSV_H

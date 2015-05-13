@@ -51,15 +51,18 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
       // double quote
       if( current == '"' ) {
         // If at the end of the line
-        /* && ( i < temp.size() - 1 )  ) {*/
-
-        int index = (i+1 < temp.size() - 1) ? i+1 : temp.size() - 1;
-        QChar next = temp.at(index);
-        if (next == '"') {
-          value += '"';
-          i++;
-        } else {
+        if( i == temp.size() - 1 ) {
           state = Normal;
+        }
+        else {
+          int index = i+1; // (i+1 < temp.size() - 1) ? i+1 : temp.size() - 1;
+          QChar next = temp.at(index);
+          if (next == '"') {
+            value += '"';
+            i++;
+          } else {
+            state = Normal;
+          }
         }
       }
       // other
@@ -210,13 +213,15 @@ qCSV::qCSV (
   const bool containsFieldList,
   const QChar& stringToken /* = '\0' */,
   const bool stringsContainDelimiters /* = true */,
-  const int readMode /* = qCsv::ReadLineByLine */
+  const int readMode /* = qCsv::ReadLineByLine */,
+  const bool checkForComment /* = false */
 ) {
   initialize();
 
   _srcFilename = filename;
   _stringToken = stringToken;
   _containsFieldList = containsFieldList;
+  _checkForComment = checkForComment;
 
   if ( stringToken != '\0' )
     _usesStringToken = true;
@@ -254,6 +259,8 @@ void qCSV::initialize() {
   _readMode = qCSV_ReadLineByLine;
   _eolDelimiter = " ";
   _delimiter = ',';
+  _firstDataRowEncountered = false;
+  _checkForComment = false;
 }
 
 
@@ -543,29 +550,27 @@ int qCSV::moveNext(){
   _currentLine.clear();
   nQuotes = 0;
 
-  // The do loop handles situations where end-of-line characters are encountered inside quote marks.
+  // The do loop handles situations where end-of-line
+  // characters are encountered inside quote marks.
   do {
     tmp = _srcFile.readLine();
     tmp = tmp.trimmed();
-
-    //qDebug() << tmp;
-
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
 
     _currentLine.append( tmp );
-
-    //qDebug() << _currentLine;
-
     nQuotes = nQuotes + tmp.count( '\"' );
-
-    //qDebug() << nQuotes;
-
   } while( 0 != nQuotes%2 );
 
 
-  if ( !_currentLine.isEmpty() ){
+  if( !_currentLine.isEmpty() ) {
     _currentLineNumber++;
+
+    // This next statement handles the situation where the file
+    // begins with a header (indicated by lines that start with #).
+    // These lines should simply be skipped.
+    if( _checkForComment && isCommentLine( _currentLine ) )
+      return moveNext();
 
     //qDebug() << _currentLine;
     //qDebug() << "Check 0" << _stringsContainDelimiters << _delimiter;
@@ -574,8 +579,6 @@ int qCSV::moveNext(){
       fieldList = CSV::parseLine( _currentLine, _delimiter );
     else
       fieldList = _currentLine.split( _delimiter );
-
-    //qDebug() << "Check 1";
 
     for ( int i = 0; i < fieldList.size(); i++ ){
       index++;
@@ -586,7 +589,7 @@ int qCSV::moveNext(){
         tempString = tempString.replace( _stringToken, "" );
       }
 
-      if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
+      if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
         _fieldNames.append( tempString.toLower() );
         _fieldsLookup.insert( tempString.toLower(), i );
       }
@@ -603,11 +606,10 @@ int qCSV::moveNext(){
         _fieldData.insert( i, tempString );
     }
 
-    //qDebug() << "Check 2";
-
-    if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
+    if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
       _columnCount = index;
       _fieldData.clear();
+      _firstDataRowEncountered = true;
       index = ret_val = moveNext();
     }
     else {
@@ -617,13 +619,13 @@ int qCSV::moveNext(){
       }
     }
 
-    //qDebug() << "Check 3";
-
     /*  Save this, below, for a switch to check field list lengths later on....some csv formats,
         such as those created by Microsoft products, unfortunately, make the strings 
         too short if the last few fields are empty...i.e. they don't save empty strings, or empty 
         comma separated strings, (such as ",,,,") if they are at the end of a line, and have
         no data somewhere after them...bad news, if you want to verify fields....
+
+        (AR: Not sure about the above: it no longer seems to be the case.)
      */
 
     /*
@@ -684,4 +686,9 @@ void qCSV::clearError(){
   _errorMsg = "";
 }
 
+
+bool qCSV::isCommentLine( const QString& line ) {
+  bool result = ( '#' == line.at(0) );
+  return result;
+}
 
