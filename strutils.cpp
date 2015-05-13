@@ -576,11 +576,13 @@ QString csvQuote( QString s ) {
 
 
 bool isHexDigit( const QChar& c ) {
-  if( !c.isDigit() )
-    return false;
+  bool result;
+  if( c.isDigit() )
+    return true;
   else {
     ushort s = c.toUpper().unicode();
-    return ( (65 <= s) && (70 >= s) ); // 'A' and 'F'
+    result = ( (65 <= s) && (70 >= s) ); // 'A' and 'F'
+    return result;
   }
 }
 
