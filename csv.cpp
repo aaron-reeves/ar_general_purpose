@@ -203,7 +203,7 @@ bool CSV::write(const QList<QStringList> data, const QString &filename,  const Q
 }
 
 
-qCSV::qCSV() {
+qCSV::qCSV() : QObject() {
   initialize();
 }
 
@@ -215,7 +215,7 @@ qCSV::qCSV (
   const bool stringsContainDelimiters /* = true */,
   const int readMode /* = qCsv::ReadLineByLine */,
   const bool checkForComment /* = false */
-) {
+) : QObject() {
   initialize();
 
   _srcFilename = filename;
@@ -664,6 +664,8 @@ int qCSV::moveNext(){
       _errorMsg = "Can not read next line.  Last line number was: " + QString::number ( _currentLineNumber ) + ".  Are we at the end of the file?";
     }
   }
+
+  emit nBytesRead( _currentLine.toUtf8().size() );
 
   return ret_val;
 }

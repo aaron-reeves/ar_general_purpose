@@ -12,12 +12,7 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #ifndef CSV_H
 #define CSV_H
 
-#include <QFile>
-#include <QMap>
-#include <QString>
-#include <QStringList>
-#include <QVariant>
-#include <QVariantList>
+#include <QtCore>
 
 namespace CSV {
   QStringList parseLine( const QString& string, const QChar delimiter = ',' );
@@ -28,7 +23,9 @@ namespace CSV {
 }
 
 
-class qCSV {
+class qCSV : public QObject {
+  Q_OBJECT
+
   public:
     qCSV();
     qCSV(
@@ -39,7 +36,7 @@ class qCSV {
       const int readMode = qCSV::qCSV_ReadLineByLine,
       const bool checkForComment = false
     );
-    ~qCSV();
+    virtual ~qCSV();
 
     void debug();
 
@@ -88,7 +85,10 @@ class qCSV {
       qCSV_ERROR_INDEX_OUT_OF_RANGE,
       qCSV_ERROR_BAD_READ,
       qCSV_ERROR_INVALID_FIELD_COUNT
-    };
+    };    
+
+  signals:
+    void nBytesRead( const int val );
 
   protected:
     void initialize();
