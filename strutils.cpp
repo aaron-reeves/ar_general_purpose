@@ -587,8 +587,13 @@ bool isHexDigit( const QChar& c ) {
 }
 
 
+bool isEmailAddress( const QString& str ) {
+  QRegExp re( "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$" );
+  return re.exactMatch( str );
+}
 
-#ifdef WINDOWS_OR_WHATEVER_IT_IS
+
+#if defined(_WIN32) || defined(WIN32)
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp
 

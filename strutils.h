@@ -61,7 +61,10 @@ QString csvQuote( QString s );
 
 bool isHexDigit( const QChar& c );
 
-#ifdef WINDOWS_OR_WHATEVER_IT_IS
+bool isEmailAddress( const QString& str );
+
+#if defined(_WIN32) || defined(WIN32)
+#include <tchar.h>
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc);
 void ConvertCToT(TCHAR* pszDest, const char* pszSrc);
 #endif
