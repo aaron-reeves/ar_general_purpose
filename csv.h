@@ -56,6 +56,7 @@ class qCSV : public QObject {
     QStringList fieldNames(){return _fieldNames; }
     int rowCount();
     bool writeFile( const QString &filename, const QString &codec = "" );
+    int nCommentRows(){ return _nCommentRows; }
 
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
@@ -109,6 +110,7 @@ class qCSV : public QObject {
     QString   _eolDelimiter;
     QChar     _delimiter;
     bool      _checkForComment;
+    int       _nCommentRows;
 
     int _readMode;
 

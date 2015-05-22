@@ -261,6 +261,7 @@ void qCSV::initialize() {
   _delimiter = ',';
   _firstDataRowEncountered = false;
   _checkForComment = false;
+  _nCommentRows = 0;
 }
 
 
@@ -569,8 +570,10 @@ int qCSV::moveNext(){
     // This next statement handles the situation where the file
     // begins with a header (indicated by lines that start with #).
     // These lines should simply be skipped.
-    if( _checkForComment && isCommentLine( _currentLine ) )
+    if( _checkForComment && isCommentLine( _currentLine ) ) {
+      ++_nCommentRows;
       return moveNext();
+    }
 
     //qDebug() << _currentLine;
     //qDebug() << "Check 0" << _stringsContainDelimiters << _delimiter;
