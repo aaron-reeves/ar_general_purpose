@@ -21,8 +21,17 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CAppLog;
 
-extern CAppLog* log;
+extern CAppLog* appLog;
 
+enum LogLevel {
+  LoggingPending,
+  LoggingNone,
+  LoggingTypical,
+  LoggingVerbose
+};
+
+void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
+void logVerbose( const QString& msg );
 
 class CLogMessage {
   public:
@@ -36,12 +45,6 @@ typedef QList<CLogMessage*> TLogMessageList;
 
 class CAppLog {
   public:
-    enum LogLevel {
-      LoggingPending,
-      LoggingNone,
-      LoggingTypical,
-      LoggingVerbose
-    };
     
     // Creates a log that won't actually record anything.
     CAppLog( void );
@@ -51,12 +54,17 @@ class CAppLog {
     
     CAppLog( const QString& fileName, const int logLevel );
     
+    void openLog( const QString& fileName, const int logLevel ); 
+    
     virtual ~CAppLog( void );
     
     void setLogLevel( const int logLevel );
+    void setFileName( const QString& fileName ); 
+    void setUseSterr( const bool& val ) { _debugging = val; }
     
-    void typical( const QString& message );
-    void verbose( const QString& message );  
+    void logMessage( const QString& message, const int logLevel ); 
+    void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
+    void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
   protected:
     bool openLog( void );
