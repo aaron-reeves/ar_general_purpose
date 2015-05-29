@@ -38,55 +38,39 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 
 
 CAppLog::CAppLog( void ) {
-  _logOpen = false;
-  _logFileName = ""; 
-  
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
- 
-  _logLineCount = 0;
-
-  _debugging = false;
-  
-  setLogLevel( LoggingPending );   
+  initialize();
 }
 
 
 CAppLog::CAppLog( const QString& fileName ) {
-  _logOpen = false;
-  
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
- 
-  _logLineCount = 0;
-    
-  _debugging = false;
+  initialize();
   
   setFileName( fileName );
-  setLogLevel( LoggingPending );  
-}
-
-
-void CAppLog::setFileName( const QString& fileName ) {
-  _logFileName = fileName; 
 }
 
 
 CAppLog::CAppLog( const QString& fileName, const int logLevel ) {
+  initialize();
+
+  setFileName( fileName );
+  setLogLevel( logLevel );  
+}
+
+
+void CAppLog::initialize() {
   _logOpen = false;
-  
+  _logFileName = "";
+
   _logFile = NULL;
   _logTextStream = NULL;
   _pending = NULL;
- 
+
   _logLineCount = 0;
-      
+
   _debugging = false;
-  
-  setFileName( fileName );
-  setLogLevel( logLevel );  
+  _autoTruncate = false;
+
+  setLogLevel( LoggingPending );
 }
 
 
@@ -156,7 +140,8 @@ void CAppLog::setLogLevel( const int logLevel ) {
 bool CAppLog::openLog( void ) {
     _logFile = new QFile( _logFileName );
   
-    truncateLogFile();
+    if( _autoTruncate )
+      truncateLogFile();
   
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
@@ -249,7 +234,7 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
     *_logTextStream << endl << dt << ": " << message << flush;
     ++_logLineCount;
-    if( 10000 < _logLineCount ) {
+    if( _autoTruncate && (10000 < _logLineCount) ) {
       truncateLogFile();
     } 
   }
@@ -266,7 +251,7 @@ void CAppLog::processPendingMessages( void ) {
         if( msg->_level >= _logLevel ) {
           *_logTextStream << endl << msg->_msg << flush;
           ++_logLineCount;
-          if( 10000 < _logLineCount ) {
+          if( _autoTruncate && (10000 < _logLineCount) ) {
             truncateLogFile();
           }  
         }  

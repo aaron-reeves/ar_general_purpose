@@ -59,14 +59,17 @@ class CAppLog {
     virtual ~CAppLog( void );
     
     void setLogLevel( const int logLevel );
-    void setFileName( const QString& fileName ); 
-    void setUseSterr( const bool& val ) { _debugging = val; }
+    void setFileName( const QString& fileName ) { _logFileName = fileName; }
+    void setUseStderr( const bool& val ) { _debugging = val; }
+    void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     
     void logMessage( const QString& message, const int logLevel ); 
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
   protected:
+    void initialize();
+
     bool openLog( void );
     void closeLog( void ); 
     void truncateLogFile( void );
@@ -80,7 +83,8 @@ class CAppLog {
     int _logLineCount;
     QString _logFileName; 
     TLogMessageList* _pending;
-    bool _debugging;   
+    bool _debugging;
+    bool _autoTruncate;
 };
 
 
