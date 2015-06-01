@@ -593,6 +593,37 @@ bool isEmailAddress( const QString& str ) {
 }
 
 
+QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt ) {
+  QDate result = QDate(); // An invalid date, unless a better one can be assigned.
+
+  dateStr = dateStr.trimmed();
+
+  // "yyyy-MM-dd"
+  QRegExp basic( "^[0-9]{4}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}$" );
+
+  // "dd/MM/yyyy"
+  QRegExp uk( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+
+  // "MM/dd/yyyy"
+  QRegExp us( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+
+  QChar separator;
+  if( dateStr.contains( '-') )
+    separator = '-';
+  else
+    separator = '/';
+
+  if( basic.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
+  else if( uk.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) )
+    result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
+  else if( us.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
+    result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+
+  return result;
+}
+
+
 #if defined(_WIN32) || defined(WIN32)
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp

@@ -63,6 +63,15 @@ bool isHexDigit( const QChar& c );
 
 bool isEmailAddress( const QString& str );
 
+namespace ARDateFormat {
+  enum DateFormat {
+    US,
+    UK
+  };
+}
+
+QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt );
+
 #if defined(_WIN32) || defined(WIN32)
 #include <tchar.h>
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc);
