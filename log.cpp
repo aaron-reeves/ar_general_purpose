@@ -42,18 +42,10 @@ CAppLog::CAppLog( void ) {
 }
 
 
-CAppLog::CAppLog( const QString& fileName ) {
-  initialize();
-  
-  setFileName( fileName );
-}
-
-
-CAppLog::CAppLog( const QString& fileName, const int logLevel ) {
+CAppLog::CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
   initialize();
 
-  setFileName( fileName );
-  setLogLevel( logLevel );  
+  openLog( fileName, logLevel, freq );
 }
 
 
@@ -70,6 +62,8 @@ void CAppLog::initialize() {
   _debugging = false;
   _autoTruncate = false;
 
+  _freq = OneFile;
+
   setLogLevel( LoggingPending );
 }
 
@@ -84,11 +78,31 @@ CAppLog::~CAppLog( void ) {
   }  
 }
 
-void CAppLog::openLog( const QString& fileName, const int logLevel ) {
+
+void CAppLog::openLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+  setFileFrequency( freq );
   setFileName( fileName );
   setLogLevel( logLevel );
 }
 
+
+void CAppLog::setFileName( const QString& fileName ) {
+  QString fn;
+
+  switch ( _freq ) {
+    case OneFile:
+      fn = fileName;
+      break;
+    case DailyFiles:
+      fn = QString( "%1-%2" ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fileName );
+      break;
+    default:
+      fn = fileName;
+      break;
+  }
+
+  _logFileName = fn;
+}
 
 void CAppLog::setLogLevel( const int logLevel ) {
   _logLevel = logLevel;
