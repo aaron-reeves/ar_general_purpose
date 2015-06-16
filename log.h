@@ -55,15 +55,15 @@ class CAppLog {
     CAppLog( void );
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq = OneFile );
+    CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
-    void openLog( const QString& fileName, const int logLevel, const FileFrequency freq = OneFile );
+    void openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
     virtual ~CAppLog( void );
     
     void setLogLevel( const int logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
-    void setFileName( const QString& fileName );
+    void setFileName( QString fileName );
     void setUseStderr( const bool& val ) { _debugging = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     
