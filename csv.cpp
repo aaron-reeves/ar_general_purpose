@@ -509,7 +509,7 @@ bool qCSV::open(){
   }
   else{
     _srcFile.setFileName ( _srcFilename );
-    if ( ! ( ret_val = _srcFile.open ( QIODevice::ReadOnly ) ) ){
+    if ( ! ( ret_val = _srcFile.open( QIODevice::ReadOnly | QIODevice::Text ) ) ){
       _error = qCSV_ERROR_OPEN;
       _errorMsg = "Can not open the source file";
     }
