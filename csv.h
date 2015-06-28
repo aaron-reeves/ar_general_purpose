@@ -1,12 +1,12 @@
 /*
 csv.h/cpp
-----------
+---------
 Begin: 2014/04/11
 Author (modified version): Aaron Reeves <aaron.reeves@naadsm.org>
-------------------------------------------------------------------------
+------------------------------------------------------------------
 
 Original code (name space CSV) by Naohiro Hasegawa, https://github.com/hnaohiro/qt-csv/blob/master/csv.h
-Original code (class qCSV) believed to be by Shaun Case, Animal Population Health Institute, Colorado State University.
+Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Colorado State University.
 */
 
 #ifndef CSV_H
@@ -27,6 +27,23 @@ class qCSV : public QObject {
   Q_OBJECT
 
   public:
+    enum ReadModes {
+      qCSV_ReadLineByLine,
+      qCSV_ReadEntireFile
+    };
+
+    enum CSVErrorMessages{
+      qCSV_ERROR_NONE,
+      qCSV_ERROR_OPEN,
+      qCSV_ERROR_CLOSE,
+      qCSV_ERROR_LINE_EMPTY,
+      qCSV_ERROR_NO_FIELDLIST,
+      qCSV_ERROR_INVALID_FIELD_NAME,
+      qCSV_ERROR_INDEX_OUT_OF_RANGE,
+      qCSV_ERROR_BAD_READ,
+      qCSV_ERROR_INVALID_FIELD_COUNT
+    };
+
     qCSV();
     qCSV(
       const QString& filename,
@@ -70,23 +87,6 @@ class qCSV : public QObject {
     void setConcatenateDanglingEnds( bool set_val ){ _concatenateDanglingEnds = set_val; }
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     void setDelimiter( const QChar val ) { _delimiter = val; }
-
-    enum ReadModes {
-      qCSV_ReadLineByLine,
-      qCSV_ReadEntireFile
-    };
-
-    enum CSVErrorMessages{
-      qCSV_ERROR_NONE,
-      qCSV_ERROR_OPEN,
-      qCSV_ERROR_CLOSE,
-      qCSV_ERROR_LINE_EMPTY,
-      qCSV_ERROR_NO_FIELDLIST,
-      qCSV_ERROR_INVALID_FIELD_NAME,
-      qCSV_ERROR_INDEX_OUT_OF_RANGE,
-      qCSV_ERROR_BAD_READ,
-      qCSV_ERROR_INVALID_FIELD_COUNT
-    };    
 
   signals:
     void nBytesRead( const int val );
