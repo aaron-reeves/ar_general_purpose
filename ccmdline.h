@@ -122,59 +122,41 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <qstring.h>
 #include <qstringlist.h>
-#include <qmap.h>
-
-
-// handy little container for our argument vector
-struct CCmdParam {
-  QStringList m_strings;
-};
-
-
-// this class is actually a map of strings to vectors
-typedef QMap<QString, CCmdParam> _CCmdLine;
+#include <qhash.h>
 
 
 // the command line parser class
-class CCmdLine : public _CCmdLine {
+class CCmdLine {
   public:
     CCmdLine( int argc, char** argv, bool clearArgs = true );
     CCmdLine( const QString& fileName ); 
   
     /* Parses the command line into switches and arguments. Returns number of switches found. */
-    int SplitLine( int argc, char** argv, bool clearArgs = true );
-    int splitLine( int argc, char** argv, bool clearArgs = true ) { return SplitLine( argc, argv, clearArgs ); }
+    int splitLine( int argc, char** argv, bool clearArgs = true );
     
-    int SplitString( QString str );
-    int splitString( QString str ) { return SplitString( str ); }
+    int splitString( QString str );
     
-    int SplitFile( const QString& fileName );
-    int splitFile( const QString& fileName ) { return SplitFile( fileName ); }
+    int splitFile( const QString& fileName );
     
-    int ProcessList( QStringList list );
-    int processList( QStringList list ) { return ProcessList( list ); }
+    int processList( QStringList list );
     
     /* How many switches are there? */
-    int GetSwitchCount() { return count(); }
-    int getSwitchCount() { return count(); }
-    bool HasSwitches() { return 0 < count(); }
-    bool hasSwitches() { return HasSwitches(); }
+    int switchCount() { return _hash.count(); }
+    bool hasSwitches() { return 0 < _hash.count(); }
 
     /* Was the switch found on the command line? */
-    bool HasSwitch( const QString& pSwitch );
-    bool hasSwitch( const QString& pSwitch ){ return HasSwitch( pSwitch ); }
+    bool hasSwitch( const QString& pSwitch );
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
-    QString GetSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault);
-    QString getSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault) { return GetSafeArgument( pSwitch, iIdx, pDefault ); }
+    QString safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault);
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
-    QString GetArgument( const QString& pSwitch, int iIdx);
-    QString getArgument( const QString& pSwitch, int iIdx) { return GetArgument( pSwitch, iIdx ); }
+    QString argument( const QString& pSwitch, int iIdx);
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
-    int GetArgumentCount(const QString& pSwitch );
-    int getArgumentCount(const QString& pSwitch ) { return GetArgumentCount( pSwitch ); }
+    int argumentCount(const QString& pSwitch );
+
+    bool pair( const QString& str1, const QString& str2 );
 
     /* Returns true if any of the following switches is present: -h, --help, -? */
     bool hasHelp();
@@ -193,15 +175,18 @@ class CCmdLine : public _CCmdLine {
     /* 
     Useful inherited functions:
     ---------------------------
-    // Returns the number of switches.  From QMap.
+    // Returns the number of switches.  From QHash.
     int count( void );
     
-    // Clears all items.  From QMap.
+    // Clears all items.  From QHash.
     void clear( void );
     */
   protected:
+    QHash<QString, QStringList> _hash;
+
     /* Test a parameter to see if it's a switch (form "-x"). */
-    bool IsSwitch(const QString& pParam);
+    bool isSwitch( const QString& pParam );
+
 
     QString _originalString;
 };

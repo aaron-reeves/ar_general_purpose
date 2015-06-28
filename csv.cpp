@@ -139,7 +139,8 @@ QList<QStringList> parse(const QString &string, const QChar delimiter /* = ',' *
 QString initString(const QString &string){
   QString result = string;
   result.replace("\r\n", "\n");
-  if (result.at(result.size()-1) != '\n') {
+
+  if( !result.isEmpty() && ( result.at(result.size()-1) != '\n' ) ) {
     result += '\n';
   }
   return result;
@@ -147,7 +148,7 @@ QString initString(const QString &string){
 
 
 QList<QStringList> CSV::parseFromString(const QString &string , const QChar delimiter /* = ',' */){
-  return parse(initString(string), delimiter );
+  return parse( initString(string), delimiter );
 }
 
 
