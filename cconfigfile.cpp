@@ -5,22 +5,22 @@ QString ReturnCode::resultString( const int& returnCode ) {
   QString result;
   switch( returnCode ) {
     case ReturnCode::Success: result = "Success"; break;
-    case ReturnCode::SuccessWithBadRows: result = "SuccessWithBadRows"; break;
-    case ReturnCode::BadArguments: result = "BadArguments"; break;
-    case ReturnCode::UnrecognizedFunction: result = "UnrecognizedFunction"; break;
-    case ReturnCode::MissingConfigFile: result = "MissingConfigFile"; break;
-    case ReturnCode::CannotOpenConfigFile: result = "CannotOpenConfigFile"; break;
-    case ReturnCode::BadConfiguration: result = "BadConfiguration"; break;
-    case ReturnCode::BadFunctionConfiguration: result = "BadFunctionConfiguration"; break;
-    case ReturnCode::BadDatabaseConfiguration: result = "BadDatabaseConfiguration"; break;
-    case ReturnCode::BadDatabaseSchema: result = "BadDatabaseSchema"; break;
-    case ReturnCode::MissingInstructions: result = "MissingInstructions"; break;
-    case ReturnCode::EmptyInputFile: result = "EmptyInputFile"; break;
-    case ReturnCode::CannotOpenInputFile: result = "CannotOpenInputFile"; break;
-    case ReturnCode::QueryDidNotExecute: result = "QueryDidNotExecute"; break;
-    case ReturnCode::CannotOpenOutputFile: result = "CannotOpenOutputFile"; break;
-    case ReturnCode::BadFileFormat: result = "BadFileFormat"; break;
-    case ReturnCode::BadDataField: result = "BadDataField"; break;
+    case ReturnCode::SuccessWithBadRows: result = "Success with bad rows"; break;
+    case ReturnCode::BadArguments: result = "Bad arguments"; break;
+    case ReturnCode::UnrecognizedFunction: result = "Unrecognized function"; break;
+    case ReturnCode::MissingConfigFile: result = "Missing config file"; break;
+    case ReturnCode::CannotOpenConfigFile: result = "Cannot open config file"; break;
+    case ReturnCode::BadConfiguration: result = "Bad configuration"; break;
+    case ReturnCode::BadFunctionConfiguration: result = "Bad function configuration"; break;
+    case ReturnCode::BadDatabaseConfiguration: result = "Bad database configuration"; break;
+    case ReturnCode::BadDatabaseSchema: result = "Bad database schema"; break;
+    case ReturnCode::MissingInstructions: result = "Missing instructions"; break;
+    case ReturnCode::EmptyInputFile: result = "Empty input file"; break;
+    case ReturnCode::CannotOpenInputFile: result = "Cannot open input file"; break;
+    case ReturnCode::QueryDidNotExecute: result = "Query did not execute"; break;
+    case ReturnCode::CannotOpenOutputFile: result = "Cannot open output file"; break;
+    case ReturnCode::BadFileFormat: result = "Bad file format"; break;
+    case ReturnCode::BadDataField: result = "Bad data field"; break;
 
     default: result = "Undefined error.";
   }
@@ -42,12 +42,10 @@ CConfigFile::CConfigFile( const QString& configFileName ) {
 
 
 CConfigFile::~CConfigFile() {
-  qDebug() << "BEGIN CConfigFile::~CConfigFile()";
   foreach( const QString& key, _blocks->keys() )
     delete _blocks->take( key );
 
   delete _blocks;
-  qDebug() << "Done.";
 }
 
 
@@ -103,7 +101,7 @@ void CConfigFile::debug() {
     qDebug() << endl;
   }
 
-  qDebug() << "Configuration return code:" << ReturnCode::resultString( this->_returnValue );
+  qDebug() << "Configuration return code:" << this->_returnValue << ReturnCode::resultString( this->_returnValue );
 }
 
 
