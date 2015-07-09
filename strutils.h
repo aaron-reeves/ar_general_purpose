@@ -27,8 +27,8 @@ QString findAndRemove( QString str3, QString str1 );
 QString findAndReplace( QString str3, QString str2, QString str1 );
 
 QString removeLineBreaks( QString str1 );
-
 QString removeDelimiters( const QString& val, QChar delim );
+QString removeWhiteSpace( QString str1 );
 
 QString boolToStr( bool val ); // returns "-1" or "0"
 QString boolToText( bool val ); // returns "true" or "false"
@@ -70,7 +70,7 @@ namespace ARDateFormat {
   };
 }
 
-QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt );
+QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, const int defaultCentury = 2000 );
 
 #if defined(_WIN32) || defined(WIN32)
 #include <tchar.h>

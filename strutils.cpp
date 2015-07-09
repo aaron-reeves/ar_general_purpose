@@ -230,6 +230,14 @@ QString removeDelimiters( const QString& val, QChar delim ) {
 }
 
 
+QString removeWhiteSpace( QString str1 ) {
+  str1 = str1.trimmed().simplified();
+  str1.replace( QRegExp( "\\s" ), "" );
+
+  return str1;
+}
+
+
 // Remove any line breaks in the provided string, and replace them with spaces.
 QString removeLineBreaks( QString str1 ) {
   str1.replace( "\r\n", " " );
@@ -593,10 +601,10 @@ bool isEmailAddress( const QString& str ) {
 }
 
 
-QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt ) {
+QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, const int defaultCentury /* = 2000 */ ) {
   QDate result = QDate(); // An invalid date, unless a better one can be assigned.
 
-  dateStr = dateStr.trimmed();
+  dateStr = dateStr.trimmed().toLower();
 
   // "yyyy-MM-dd"
   QRegExp basic( "^[0-9]{4}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}$" );
@@ -606,6 +614,18 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt )
 
   // "MM/dd/yyyy"
   QRegExp us( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+
+  // 01-Jan-15
+  QRegExp abbrevMonth1( "^[0-3]{1}[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{2}$" );
+
+  // 01-Jan-2015
+  QRegExp abbrevMonth2( "^[0-3]{1}[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
+
+  // 1-Jan-15
+  QRegExp abbrevMonth3( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{2}$" );
+
+  // 1-Jan-2015
+  QRegExp abbrevMonth4( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
 
   QChar separator;
   if( dateStr.contains( '-') )
@@ -619,6 +639,18 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt )
     result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
   else if( us.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
     result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+  else if( abbrevMonth1.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth2.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+  else if( abbrevMonth3.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth4.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
 
   return result;
 }
