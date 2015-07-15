@@ -610,10 +610,10 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
   QRegExp basic( "^[0-9]{4}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}$" );
 
   // "dd/MM/yyyy"
-  QRegExp uk( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+  QRegExp ukDate( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}$" );
 
   // "MM/dd/yyyy"
-  QRegExp us( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+  QRegExp usDate( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}$" );
 
   // 01-Jan-15
   QRegExp abbrevMonth1( "^[0-3]{1}[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{2}$" );
@@ -627,6 +627,12 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
   // 1-Jan-2015
   QRegExp abbrevMonth4( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
 
+  // "dd/MM/yyyy 00:00"
+  QRegExp ukDateTime( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}:[0-9]{2}$" );
+
+  // "MM/dd/yyyy"
+  QRegExp usDateTime( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}:[0-9]{2}$" );
+
   QChar separator;
   if( dateStr.contains( '-') )
     separator = '-';
@@ -635,10 +641,12 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
 
   if( basic.exactMatch( dateStr ) )
     result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
-  else if( uk.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) )
+
+  else if( ukDate.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) )
     result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
-  else if( us.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
+  else if( usDate.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
     result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+
   else if( abbrevMonth1.exactMatch( dateStr ) ) {
     result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
     result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
@@ -651,6 +659,16 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
   }
   else if( abbrevMonth4.exactMatch( dateStr ) )
     result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+
+
+  else if( ukDateTime.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
+    QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
+    result = dt.date();
+  }
+  else if( usDateTime.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
+    QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
+    result = dt.date();
+  }
 
   return result;
 }
