@@ -86,7 +86,7 @@ void CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency
   setFileName( fileName );
   setLogLevel( logLevel );
 
-  qDebug() << "Log" << _logFileName << "will open.";
+  //qDebug() << "Log" << _logFileName << "will open.";
 }
 
 
