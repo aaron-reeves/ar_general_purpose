@@ -627,11 +627,11 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
   // 1-Jan-2015
   QRegExp abbrevMonth4( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
 
-  // "dd/MM/yyyy 00:00"
-  QRegExp ukDateTime( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}:[0-9]{2}$" );
+  // "dd/MM/yyyy 00:00:00" (seconds optional)
+  QRegExp ukDateTime( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}(:[0-9]{2}){1,2}$" );
 
-  // "MM/dd/yyyy"
-  QRegExp usDateTime( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}:[0-9]{2}$" );
+  // "MM/dd/yyyy 00:00:00" (seconds optional)
+  QRegExp usDateTime( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}(:[0-9]{2}){1,2}$" );
 
   QChar separator;
   if( dateStr.contains( '-') )
@@ -663,10 +663,14 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
 
   else if( ukDateTime.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
+    if( !dt.isValid() )
+      dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm:ss" ).arg( separator ) );
     result = dt.date();
   }
   else if( usDateTime.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
+    if( !dt.isValid() )
+      dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm:ss" ).arg( separator ) );
     result = dt.date();
   }
 
