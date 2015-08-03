@@ -42,12 +42,17 @@ bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* 
   if( NULL != returnTypeInfo )
     *returnTypeInfo = fileTypeInfo;
 
-  // Another possibility: "ASCII C program text, with CRLF line terminators"
-
   if( magicOK ) {
     if( NULL != error )
       *error = false;
-    result = fileTypeInfo.startsWith( "ASCII text" );
+
+    result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
+
+    //    result = (
+    //      fileTypeInfo.startsWith( "ASCII text" )
+    //      | fileTypeInfo.startsWith( "ASCII English text" )
+    //      | fileTypeInfo.startsWith( "ASCII C program text" )
+    //    );
   }
   else {
     if( NULL != error )
