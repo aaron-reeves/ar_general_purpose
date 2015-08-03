@@ -6,7 +6,7 @@
 #include <qdebug.h>
 #include <qfile.h>
 
-bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */ ) {
+bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile;
@@ -38,6 +38,11 @@ bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */ ) {
   QString fileTypeInfo;
   QString errMsg;
   bool magicOK = magicProcess( magic, fileName, fileTypeInfo, errMsg );
+
+  if( NULL != returnTypeInfo )
+    *returnTypeInfo = fileTypeInfo;
+
+  // Another possibility: "ASCII C program text, with CRLF line terminators"
 
   if( magicOK ) {
     if( NULL != error )

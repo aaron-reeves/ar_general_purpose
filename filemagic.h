@@ -11,7 +11,7 @@
  * High-level, user-friendly functions
  * -----------------------------------
  */
-bool magicIsAsciiTextFile( QString fileName, bool* error = NULL );
+bool magicIsAsciiTextFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL );
 
 
 /*
