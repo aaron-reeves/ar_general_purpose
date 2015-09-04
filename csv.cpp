@@ -335,6 +335,8 @@ QString qCSV::field( int index ){
 
 
 QString qCSV::field( QString fName ){
+  fName = fName.toLower();
+
   QStringList dataList;
   QString ret_val = "";
   clearError();
