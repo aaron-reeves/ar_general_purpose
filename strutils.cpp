@@ -159,6 +159,27 @@ QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* =
   return str;
 }
 
+
+QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
+  int i;
+  int origStrLen;
+
+  if( toPad.length() > places )
+    qDebug() << toPad << places << toPad.length() << (places - toPad.length());
+
+  Q_ASSERT( toPad.length() <= places );
+
+  origStrLen = toPad.length();
+
+  if( origStrLen < places ) {
+    for( i = 0; i < places - origStrLen; ++i )
+      toPad.append( padChar );
+  }
+
+  return toPad;
+}
+
+
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
 QString findAndRemove( QString str3, QString str1 ) {
