@@ -14,6 +14,8 @@ bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* 
     magicFile = "C:/libs/C_libs/bin/magic";
   else if( QFile::exists(  QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
     magicFile = QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
+  else if( QFile::exists( "/etc/magic" )
+    magicFile = "/etc/magic";
   else {
     if( NULL != error )
       *error = true;
