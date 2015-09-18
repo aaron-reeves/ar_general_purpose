@@ -305,6 +305,35 @@ void qCSV::debug() {
 }
 
 
+void qCSV::setField( const int index, const QString& val ) {
+  QStringList dataList;
+  clearError();
+
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
+
+  if( 0 < dataList.size() ) {
+    if ( index < dataList.size() ) {
+      if( qCSV_ReadLineByLine == _readMode )
+        _fieldData[index] = val;
+      else
+        _data[_currentLineNumber][index] = val;
+    }
+    else {
+      _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+      _errorMsg = "For File Linenumber: " + QString::number ( _currentLineNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
+    }
+  }
+  else{
+    _error = qCSV_ERROR_LINE_EMPTY;
+    _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+  }
+}
+
+
+
 // Accessors
 QString qCSV::field( int index ){
   QStringList dataList;
@@ -333,6 +362,39 @@ QString qCSV::field( int index ){
   return ret_val;
 }
 
+
+void qCSV::setField( QString fName, const QString& val ) {
+  fName = fName.toLower();
+  QStringList dataList;
+  clearError();
+
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
+
+  if ( _containsFieldList ){
+    if ( dataList.size() > 0 ){
+      if ( _fieldsLookup.contains( fName ) ){
+        int index = _fieldsLookup.value( fName );
+
+        setField( index, val );
+      }
+      else{
+        _error = qCSV_ERROR_INVALID_FIELD_NAME;
+        _errorMsg = "Invalid Field Name: " + fName;
+      }
+    }
+    else{
+      _error = qCSV_ERROR_LINE_EMPTY;
+      _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+    }
+  }
+  else {
+    _error = qCSV_ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
+  }
+}
 
 QString qCSV::field( QString fName ){
   fName = fName.toLower();

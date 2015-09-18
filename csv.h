@@ -75,6 +75,9 @@ class qCSV : public QObject {
     bool writeFile( const QString &filename, const QString &codec = "" );
     int nCommentRows(){ return _nCommentRows; }
 
+    void setField( const int index, const QString& val );
+    void setField( QString fName, const QString& val );
+
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
     void setFilename ( QString filename );
