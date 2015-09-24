@@ -86,7 +86,7 @@ QDir CPathString::dir() const {
 }
 
 QString CPathString::directory() const {
-  return dir().absolutePath();
+  return dir().absolutePath().append( "/" );
 }
 
 
