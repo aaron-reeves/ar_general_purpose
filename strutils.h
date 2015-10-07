@@ -30,10 +30,11 @@ QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
 QString removeWhiteSpace( QString str1 );
 
-QString boolToStr( bool val ); // returns "-1" or "0"
-QString boolToText( bool val ); // returns "true" or "false"
-QString boolToYesNo( bool val ); // returns "Yes" or "No"
+QString boolToStr( const bool val ); // returns "-1" or "0"
+QString boolToText( const bool val ); // returns "true" or "false"
+QString boolToYesNo( const bool val ); // returns "Yes" or "No"
 bool strToBool( QString val, bool* ok = NULL );
+QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", "true", or "false"
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );

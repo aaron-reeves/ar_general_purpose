@@ -71,14 +71,15 @@ QString toTitleCase( QString str ){
 }
 
 
-QString boolToStr( bool val ) {
+QString boolToStr( const bool val ) {
   if( val )
     return "-1";
   else
     return "0";
 }
 
-QString boolToText( bool val ) {
+
+QString boolToText( const bool val ) {
   if( val )
     return "true";
   else
@@ -86,7 +87,17 @@ QString boolToText( bool val ) {
 }
 
 
-QString boolToYesNo( bool val ) {
+QString variantBoolToText( const QVariant& val ) {
+  if( val.type() != QVariant::Bool )
+    return "invalid";
+  else if( val.isNull() )
+    return "null";
+  else
+    return boolToText( val.toBool() );
+}
+
+
+QString boolToYesNo( const bool val ) {
   if( val )
     return "Yes";
   else
