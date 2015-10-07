@@ -6,7 +6,7 @@
 /*
  * Exit codes returned by the application.  Use --help for definitions.
  */
-class ReturnCode {
+class ConfigReturnCode {
   public:
     enum returnCodes {
       Success,
@@ -48,7 +48,7 @@ class CConfigFile {
     virtual void debug();
 
     int result() { return _returnValue; }
-    QString resultString() { return ReturnCode::resultString( _returnValue ); }
+    QString resultString() { return ConfigReturnCode::resultString( _returnValue ); }
 
     QString errorMessage() { return _errorMessage; }
 

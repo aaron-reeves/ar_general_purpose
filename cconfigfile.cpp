@@ -1,26 +1,26 @@
 #include "cconfigfile.h"
 
 
-QString ReturnCode::resultString( const int& returnCode ) {
+QString ConfigReturnCode::resultString( const int& returnCode ) {
   QString result;
   switch( returnCode ) {
-    case ReturnCode::Success: result = "Success"; break;
-    case ReturnCode::SuccessWithBadRows: result = "Success with bad rows"; break;
-    case ReturnCode::BadArguments: result = "Bad arguments"; break;
-    case ReturnCode::UnrecognizedFunction: result = "Unrecognized function"; break;
-    case ReturnCode::MissingConfigFile: result = "Missing config file"; break;
-    case ReturnCode::CannotOpenConfigFile: result = "Cannot open config file"; break;
-    case ReturnCode::BadConfiguration: result = "Bad configuration"; break;
-    case ReturnCode::BadFunctionConfiguration: result = "Bad function configuration"; break;
-    case ReturnCode::BadDatabaseConfiguration: result = "Bad database configuration"; break;
-    case ReturnCode::BadDatabaseSchema: result = "Bad database schema"; break;
-    case ReturnCode::MissingInstructions: result = "Missing instructions"; break;
-    case ReturnCode::EmptyInputFile: result = "Empty input file"; break;
-    case ReturnCode::CannotOpenInputFile: result = "Cannot open input file"; break;
-    case ReturnCode::QueryDidNotExecute: result = "Query did not execute"; break;
-    case ReturnCode::CannotOpenOutputFile: result = "Cannot open output file"; break;
-    case ReturnCode::BadFileFormat: result = "Bad file format"; break;
-    case ReturnCode::BadDataField: result = "Bad data field"; break;
+    case ConfigReturnCode::Success: result = "Success"; break;
+    case ConfigReturnCode::SuccessWithBadRows: result = "Success with bad rows"; break;
+    case ConfigReturnCode::BadArguments: result = "Bad arguments"; break;
+    case ConfigReturnCode::UnrecognizedFunction: result = "Unrecognized function"; break;
+    case ConfigReturnCode::MissingConfigFile: result = "Missing config file"; break;
+    case ConfigReturnCode::CannotOpenConfigFile: result = "Cannot open config file"; break;
+    case ConfigReturnCode::BadConfiguration: result = "Bad configuration"; break;
+    case ConfigReturnCode::BadFunctionConfiguration: result = "Bad function configuration"; break;
+    case ConfigReturnCode::BadDatabaseConfiguration: result = "Bad database configuration"; break;
+    case ConfigReturnCode::BadDatabaseSchema: result = "Bad database schema"; break;
+    case ConfigReturnCode::MissingInstructions: result = "Missing instructions"; break;
+    case ConfigReturnCode::EmptyInputFile: result = "Empty input file"; break;
+    case ConfigReturnCode::CannotOpenInputFile: result = "Cannot open input file"; break;
+    case ConfigReturnCode::QueryDidNotExecute: result = "Query did not execute"; break;
+    case ConfigReturnCode::CannotOpenOutputFile: result = "Cannot open output file"; break;
+    case ConfigReturnCode::BadFileFormat: result = "Bad file format"; break;
+    case ConfigReturnCode::BadDataField: result = "Bad data field"; break;
 
     default: result = "Undefined error.";
   }
@@ -30,7 +30,7 @@ QString ReturnCode::resultString( const int& returnCode ) {
 
 CConfigFile::CConfigFile( QStringList* args ) {
   if( 1 != args->count() )
-    _returnValue = ReturnCode::BadArguments;
+    _returnValue = ConfigReturnCode::BadArguments;
   else
     buildBasic( args->at(0) );
 }
@@ -55,16 +55,16 @@ void CConfigFile::buildBasic( const QString& fn ) {
   _blocks = new QHash< QString, QHash<QString, QString>* >();
 
   // Until shown otherwise...
-  _returnValue = ReturnCode::Success;
+  _returnValue = ConfigReturnCode::Success;
   _errorMessage = "";
 
   // Attempt to parse the file.
   file = new QFile( fn );
 
   if( !file->exists() )
-    _returnValue =  ReturnCode::MissingConfigFile;
+    _returnValue =  ConfigReturnCode::MissingConfigFile;
   else if (!file->open( QIODevice::ReadOnly | QIODevice::Text))
-    _returnValue = ReturnCode::CannotOpenConfigFile;
+    _returnValue = ConfigReturnCode::CannotOpenConfigFile;
   else
     _returnValue = processFile( file );
 
@@ -101,12 +101,12 @@ void CConfigFile::debug() {
     qDebug() << endl;
   }
 
-  qDebug() << "Configuration return code:" << this->_returnValue << ReturnCode::resultString( this->_returnValue );
+  qDebug() << "Configuration return code:" << this->_returnValue << ConfigReturnCode::resultString( this->_returnValue );
 }
 
 
 int CConfigFile::fillBlock( QHash<QString, QString>* block, QStringList strList ) {
-  int result = ReturnCode::Success; // until shown otherwise
+  int result = ConfigReturnCode::Success; // until shown otherwise
 
   QStringList lineParts;
   QString key, val;
@@ -116,13 +116,13 @@ int CConfigFile::fillBlock( QHash<QString, QString>* block, QStringList strList 
     lineParts = strList.at(i).split( "<-" );
 
     if( 2 != lineParts.count() )
-      result = ReturnCode::BadDatabaseConfiguration;
+      result = ConfigReturnCode::BadDatabaseConfiguration;
     else {
       key = lineParts.at(0).trimmed().toLower();
       val = lineParts.at(1).trimmed();
 
      if( block->contains( key ) )
-       result = ReturnCode::BadDatabaseConfiguration;
+       result = ConfigReturnCode::BadDatabaseConfiguration;
      else
       block->insert( key, val );
     }
@@ -138,7 +138,7 @@ int CConfigFile::processFile( QFile* file ) {
   // Once a block has been assembled, send it to the appropriate object
   // to be constructed.
 
-  int result = ReturnCode::Success; // until shown otherwise
+  int result = ConfigReturnCode::Success; // until shown otherwise
 
   QString line = "";
   QStringList block;
@@ -160,7 +160,7 @@ int CConfigFile::processFile( QFile* file ) {
         else {
           result = processBlock( block );
 
-          if( ReturnCode::Success == result ) {
+          if( ConfigReturnCode::Success == result ) {
             block.clear();
             block.append( line );
           }
@@ -176,7 +176,7 @@ int CConfigFile::processFile( QFile* file ) {
   }
 
   // Process the last block
-  if( ReturnCode::Success == result )
+  if( ConfigReturnCode::Success == result )
     result = processBlock( block );
 
   return result;
@@ -184,7 +184,7 @@ int CConfigFile::processFile( QFile* file ) {
 
 
 int CConfigFile::processBlock( QStringList strList ) {
-  int result = ReturnCode::Success; // until shown otherwise
+  int result = ConfigReturnCode::Success; // until shown otherwise
 
   QString line0 = strList.takeFirst().toLower();
 
