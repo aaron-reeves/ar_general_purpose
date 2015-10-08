@@ -21,8 +21,17 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CAppLog;
 
-extern CAppLog* log;
+extern CAppLog* appLog;
 
+enum LogLevel {
+  LoggingPending,
+  LoggingNone,
+  LoggingTypical,
+  LoggingVerbose
+};
+
+void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
+void logVerbose( const QString& msg );
 
 class CLogMessage {
   public:
@@ -36,29 +45,35 @@ typedef QList<CLogMessage*> TLogMessageList;
 
 class CAppLog {
   public:
-    enum LogLevel {
-      LoggingPending,
-      LoggingNone,
-      LoggingTypical,
-      LoggingVerbose
-    };
     
+    enum FileFrequency {
+      OneFile,
+      DailyFiles
+    };
+
     // Creates a log that won't actually record anything.
     CAppLog( void );
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName );
+    CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
-    CAppLog( const QString& fileName, const int logLevel );
+    void openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
     virtual ~CAppLog( void );
     
     void setLogLevel( const int logLevel );
+    void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
+    void setFileName( QString fileName );
+    void setUseStderr( const bool& val ) { _debugging = val; }
+    void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     
-    void typical( const QString& message );
-    void verbose( const QString& message );  
+    void logMessage( const QString& message, const int logLevel ); 
+    void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
+    void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
   protected:
+    void initialize();
+
     bool openLog( void );
     void closeLog( void ); 
     void truncateLogFile( void );
@@ -72,7 +87,9 @@ class CAppLog {
     int _logLineCount;
     QString _logFileName; 
     TLogMessageList* _pending;
-    bool _debugging;   
+    bool _debugging;
+    bool _autoTruncate;
+    FileFrequency _freq;
 };
 
 

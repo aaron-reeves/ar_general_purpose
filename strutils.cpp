@@ -18,6 +18,50 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qdebug.h>
 
 
+QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
+  bool ok;
+  QString res;
+
+  str.toDouble( &ok );
+  if( !ok )
+    str.toInt( &ok );
+
+  if( !ok ) {
+    res = str;
+    res.replace( quoteMark, QString( "%1%1" ).arg( quoteMark ) );
+    res = QString( "%1%2%1" ).arg( quoteMark ).arg( str );
+  }
+  else
+    res = str;
+
+  return res;
+}
+
+
+QString camelCase( const QString& str ) {
+  QString tmp = str;
+  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+
+  QStringList list = tmp.simplified().split( ' ' );
+  for( int i = 0; i < list.count(); ++i )
+    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1);
+
+  return list.join( "" );
+}
+
+
+QString postgresCase( const QString& str ) {
+  QString tmp = str;
+  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+
+  QStringList list = tmp.simplified().split( ' ' );
+  for( int i = 0; i < list.count(); ++i )
+    list[i] = list.at(i).toLower();
+
+  return list.join( "_" );
+}
+
+
 QString toTitleCase( QString str ){
   QStringList list = str.simplified().split( ' ' );
   for( int i = 0; i < list.count(); ++i )
@@ -27,14 +71,15 @@ QString toTitleCase( QString str ){
 }
 
 
-QString boolToStr( bool val ) {
+QString boolToStr( const bool val ) {
   if( val )
     return "-1";
   else
     return "0";
 }
 
-QString boolToText( bool val ) {
+
+QString boolToText( const bool val ) {
   if( val )
     return "true";
   else
@@ -42,7 +87,17 @@ QString boolToText( bool val ) {
 }
 
 
-QString boolToYesNo( bool val ) {
+QString variantBoolToText( const QVariant& val ) {
+  if( val.type() != QVariant::Bool )
+    return "invalid";
+  else if( val.isNull() )
+    return "null";
+  else
+    return boolToText( val.toBool() );
+}
+
+
+QString boolToYesNo( const bool val ) {
   if( val )
     return "Yes";
   else
@@ -50,7 +105,7 @@ QString boolToYesNo( bool val ) {
 }
 
 
-bool strToBool( QString val ) {
+bool strToBool( QString val, bool* ok /* = NULL */ ) {
   val = val.trimmed().toLower();
 
   if(
@@ -61,6 +116,8 @@ bool strToBool( QString val ) {
     || "1" == val
     || "-1" == val
   ) {
+    if( NULL != ok )
+      *ok = true;
     return true;
   } else if (
     "n" == val
@@ -69,10 +126,13 @@ bool strToBool( QString val ) {
     || "false" == val
     || "0" == val
   ) {
+    if( NULL != ok )
+      *ok = true;
     return false;
   }
   else {
-    qDebug() << "Bad value in strToBool:" << val;
+    if( NULL != ok )
+      *ok = false;
     return false;
   }
 }
@@ -109,6 +169,27 @@ QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* =
 
   return str;
 }
+
+
+QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
+  int i;
+  int origStrLen;
+
+  if( toPad.length() > places )
+    qDebug() << toPad << places << toPad.length() << (places - toPad.length());
+
+  Q_ASSERT( toPad.length() <= places );
+
+  origStrLen = toPad.length();
+
+  if( origStrLen < places ) {
+    for( i = 0; i < places - origStrLen; ++i )
+      toPad.append( padChar );
+  }
+
+  return toPad;
+}
+
 
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
@@ -171,13 +252,21 @@ QString findAndReplace( QString str3, QString str2, QString str1 ) {
 QString removeDelimiters( const QString& val, QChar delim ) {
   QString result = val.trimmed();
 
-  if( delim == val.right(1) )
+  if( val.endsWith( delim ) )
     result = val.left( val.length() - 1 );
 
-  if( delim == val.left(1) )
+  if( val.startsWith( delim ) )
     result = result.right(result.length() - 1 );
 
   return result;
+}
+
+
+QString removeWhiteSpace( QString str1 ) {
+  str1 = str1.trimmed().simplified();
+  str1.replace( QRegExp( "\\s" ), "" );
+
+  return str1;
 }
 
 
@@ -322,9 +411,9 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
 }
 
 
-bool isComment( QString s ) {
+bool isComment( const QString st ) {
   bool result;
-  s = s.trimmed();
+  QString s = st.trimmed();
 
   if(
     ( '%' == s.at(0) )
@@ -517,7 +606,111 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 }
 
 
-#ifdef WINDOWS_OR_WHATEVER_IT_IS
+QString csvQuote( QString s ) {
+  if(  s.contains( '"' ) )
+    s.replace( '"', "\"\"" );
+
+  s = QString( "\"%1\"" ).arg( s );
+  return s;
+}
+
+
+bool isHexDigit( const QChar& c ) {
+  bool result;
+  if( c.isDigit() )
+    return true;
+  else {
+    ushort s = c.toUpper().unicode();
+    result = ( (65 <= s) && (70 >= s) ); // 'A' and 'F'
+    return result;
+  }
+}
+
+
+bool isEmailAddress( const QString& str ) {
+  QRegExp re( "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$" );
+  return re.exactMatch( str );
+}
+
+
+QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, const int defaultCentury /* = 2000 */ ) {
+  QDate result = QDate(); // An invalid date, unless a better one can be assigned.
+
+  dateStr = dateStr.trimmed().toLower();
+
+  // "yyyy-MM-dd"
+  QRegExp basic( "^[0-9]{4}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}$" );
+
+  // "dd/MM/yyyy"
+  QRegExp ukDate( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+
+  // "MM/dd/yyyy"
+  QRegExp usDate( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}$" );
+
+  // 01-Jan-15
+  QRegExp abbrevMonth1( "^[0-3]{1}[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{2}$" );
+
+  // 01-Jan-2015
+  QRegExp abbrevMonth2( "^[0-3]{1}[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
+
+  // 1-Jan-15
+  QRegExp abbrevMonth3( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{2}$" );
+
+  // 1-Jan-2015
+  QRegExp abbrevMonth4( "^[1-3]?[0-9]{1}[-/]{1}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-/][0-9]{4}$" );
+
+  // "dd/MM/yyyy 00:00:00" (seconds optional)
+  QRegExp ukDateTime( "^[0-3]?[0-9]{1}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}(:[0-9]{2}){1,2}$" );
+
+  // "MM/dd/yyyy 00:00:00" (seconds optional)
+  QRegExp usDateTime( "^[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}[-/]{1}[0-9]{4}[\\s]+[0-9]{2}(:[0-9]{2}){1,2}$" );
+
+  QChar separator;
+  if( dateStr.contains( '-') )
+    separator = '-';
+  else
+    separator = '/';
+
+  if( basic.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
+
+  else if( ukDate.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) )
+    result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
+  else if( usDate.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
+    result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+
+  else if( abbrevMonth1.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth2.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+  else if( abbrevMonth3.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth4.exactMatch( dateStr ) )
+    result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+
+
+  else if( ukDateTime.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
+    QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
+    if( !dt.isValid() )
+      dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm:ss" ).arg( separator ) );
+    result = dt.date();
+  }
+  else if( usDateTime.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
+    QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
+    if( !dt.isValid() )
+      dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm:ss" ).arg( separator ) );
+    result = dt.date();
+  }
+
+  return result;
+}
+
+
+#if defined(_WIN32) || defined(WIN32)
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp
 

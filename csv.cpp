@@ -51,15 +51,18 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
       // double quote
       if( current == '"' ) {
         // If at the end of the line
-        /* && ( i < temp.size() - 1 )  ) {*/
-
-        int index = (i+1 < temp.size() - 1) ? i+1 : temp.size() - 1;
-        QChar next = temp.at(index);
-        if (next == '"') {
-          value += '"';
-          i++;
-        } else {
+        if( i == temp.size() - 1 ) {
           state = Normal;
+        }
+        else {
+          int index = i+1; // (i+1 < temp.size() - 1) ? i+1 : temp.size() - 1;
+          QChar next = temp.at(index);
+          if (next == '"') {
+            value += '"';
+            i++;
+          } else {
+            state = Normal;
+          }
         }
       }
       // other
@@ -136,7 +139,8 @@ QList<QStringList> parse(const QString &string, const QChar delimiter /* = ',' *
 QString initString(const QString &string){
   QString result = string;
   result.replace("\r\n", "\n");
-  if (result.at(result.size()-1) != '\n') {
+
+  if( !result.isEmpty() && ( result.at(result.size()-1) != '\n' ) ) {
     result += '\n';
   }
   return result;
@@ -144,7 +148,7 @@ QString initString(const QString &string){
 
 
 QList<QStringList> CSV::parseFromString(const QString &string , const QChar delimiter /* = ',' */){
-  return parse(initString(string), delimiter );
+  return parse( initString(string), delimiter );
 }
 
 
@@ -200,7 +204,7 @@ bool CSV::write(const QList<QStringList> data, const QString &filename,  const Q
 }
 
 
-qCSV::qCSV() {
+qCSV::qCSV() : QObject() {
   initialize();
 }
 
@@ -210,13 +214,15 @@ qCSV::qCSV (
   const bool containsFieldList,
   const QChar& stringToken /* = '\0' */,
   const bool stringsContainDelimiters /* = true */,
-  const int readMode /* = qCsv::ReadLineByLine */
-) {
+  const int readMode /* = qCsv::ReadLineByLine */,
+  const bool checkForComment /* = false */
+) : QObject() {
   initialize();
 
   _srcFilename = filename;
   _stringToken = stringToken;
   _containsFieldList = containsFieldList;
+  _checkForComment = checkForComment;
 
   if ( stringToken != '\0' )
     _usesStringToken = true;
@@ -254,6 +260,9 @@ void qCSV::initialize() {
   _readMode = qCSV_ReadLineByLine;
   _eolDelimiter = " ";
   _delimiter = ',';
+  _firstDataRowEncountered = false;
+  _checkForComment = false;
+  _nCommentRows = 0;
 }
 
 
@@ -296,6 +305,35 @@ void qCSV::debug() {
 }
 
 
+void qCSV::setField( const int index, const QString& val ) {
+  QStringList dataList;
+  clearError();
+
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
+
+  if( 0 < dataList.size() ) {
+    if ( index < dataList.size() ) {
+      if( qCSV_ReadLineByLine == _readMode )
+        _fieldData[index] = val;
+      else
+        _data[_currentLineNumber][index] = val;
+    }
+    else {
+      _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+      _errorMsg = "For File Linenumber: " + QString::number ( _currentLineNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
+    }
+  }
+  else{
+    _error = qCSV_ERROR_LINE_EMPTY;
+    _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+  }
+}
+
+
+
 // Accessors
 QString qCSV::field( int index ){
   QStringList dataList;
@@ -325,7 +363,42 @@ QString qCSV::field( int index ){
 }
 
 
+void qCSV::setField( QString fName, const QString& val ) {
+  fName = fName.toLower();
+  QStringList dataList;
+  clearError();
+
+  if( qCSV_ReadLineByLine == _readMode )
+    dataList = _fieldData;
+  else
+    dataList = _data.at( _currentLineNumber );
+
+  if ( _containsFieldList ){
+    if ( dataList.size() > 0 ){
+      if ( _fieldsLookup.contains( fName ) ){
+        int index = _fieldsLookup.value( fName );
+
+        setField( index, val );
+      }
+      else{
+        _error = qCSV_ERROR_INVALID_FIELD_NAME;
+        _errorMsg = "Invalid Field Name: " + fName;
+      }
+    }
+    else{
+      _error = qCSV_ERROR_LINE_EMPTY;
+      _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+    }
+  }
+  else {
+    _error = qCSV_ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
+  }
+}
+
 QString qCSV::field( QString fName ){
+  fName = fName.toLower();
+
   QStringList dataList;
   QString ret_val = "";
   clearError();
@@ -501,7 +574,7 @@ bool qCSV::open(){
   }
   else{
     _srcFile.setFileName ( _srcFilename );
-    if ( ! ( ret_val = _srcFile.open ( QIODevice::ReadOnly ) ) ){
+    if ( ! ( ret_val = _srcFile.open( QIODevice::ReadOnly | QIODevice::Text ) ) ){
       _error = qCSV_ERROR_OPEN;
       _errorMsg = "Can not open the source file";
     }
@@ -543,29 +616,29 @@ int qCSV::moveNext(){
   _currentLine.clear();
   nQuotes = 0;
 
-  // The do loop handles situations where end-of-line characters are encountered inside quote marks.
+  // The do loop handles situations where end-of-line
+  // characters are encountered inside quote marks.
   do {
     tmp = _srcFile.readLine();
     tmp = tmp.trimmed();
-
-    //qDebug() << tmp;
-
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
 
     _currentLine.append( tmp );
-
-    //qDebug() << _currentLine;
-
     nQuotes = nQuotes + tmp.count( '\"' );
-
-    //qDebug() << nQuotes;
-
   } while( 0 != nQuotes%2 );
 
 
-  if ( !_currentLine.isEmpty() ){
+  if( !_currentLine.isEmpty() ) {
     _currentLineNumber++;
+
+    // This next statement handles the situation where the file
+    // begins with a header (indicated by lines that start with #).
+    // These lines should simply be skipped.
+    if( _checkForComment && isCommentLine( _currentLine ) ) {
+      ++_nCommentRows;
+      return moveNext();
+    }
 
     //qDebug() << _currentLine;
     //qDebug() << "Check 0" << _stringsContainDelimiters << _delimiter;
@@ -574,8 +647,6 @@ int qCSV::moveNext(){
       fieldList = CSV::parseLine( _currentLine, _delimiter );
     else
       fieldList = _currentLine.split( _delimiter );
-
-    //qDebug() << "Check 1";
 
     for ( int i = 0; i < fieldList.size(); i++ ){
       index++;
@@ -586,9 +657,9 @@ int qCSV::moveNext(){
         tempString = tempString.replace( _stringToken, "" );
       }
 
-      if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
-        _fieldNames.append( tempString );
-        _fieldsLookup.insert( tempString, i );
+      if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
+        _fieldNames.append( tempString.toLower() );
+        _fieldsLookup.insert( tempString.toLower(), i );
       }
       else if ( _containsFieldList && _concatenateDanglingEnds ){
         if ( i < _columnCount )
@@ -603,11 +674,10 @@ int qCSV::moveNext(){
         _fieldData.insert( i, tempString );
     }
 
-    //qDebug() << "Check 2";
-
-    if ( _containsFieldList && ( _currentLineNumber == 1 ) ){
+    if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
       _columnCount = index;
       _fieldData.clear();
+      _firstDataRowEncountered = true;
       index = ret_val = moveNext();
     }
     else {
@@ -617,13 +687,13 @@ int qCSV::moveNext(){
       }
     }
 
-    //qDebug() << "Check 3";
-
     /*  Save this, below, for a switch to check field list lengths later on....some csv formats,
         such as those created by Microsoft products, unfortunately, make the strings 
         too short if the last few fields are empty...i.e. they don't save empty strings, or empty 
         comma separated strings, (such as ",,,,") if they are at the end of a line, and have
         no data somewhere after them...bad news, if you want to verify fields....
+
+        (AR: Not sure about the above: it no longer seems to be the case.)
      */
 
     /*
@@ -663,6 +733,8 @@ int qCSV::moveNext(){
     }
   }
 
+  emit nBytesRead( _currentLine.toUtf8().size() );
+
   return ret_val;
 }
 
@@ -684,4 +756,9 @@ void qCSV::clearError(){
   _errorMsg = "";
 }
 
+
+bool qCSV::isCommentLine( const QString& line ) {
+  bool result = ( '#' == line.at(0) );
+  return result;
+}
 

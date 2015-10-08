@@ -15,8 +15,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstring.h>
 #include <QDebug>
 
-QString CEncryption::rc4Encrypt( QString input, QString pwd ) {
-  QString temp = "";
+QByteArray CEncryption::rc4Encrypt( QString input, QString pwd ) {
+  QByteArray temp;
   int i;
   int j = 0;
   ushort t;

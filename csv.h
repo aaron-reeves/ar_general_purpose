@@ -1,23 +1,18 @@
 /*
 csv.h/cpp
-----------
+---------
 Begin: 2014/04/11
 Author (modified version): Aaron Reeves <aaron.reeves@naadsm.org>
-------------------------------------------------------------------------
+------------------------------------------------------------------
 
 Original code (name space CSV) by Naohiro Hasegawa, https://github.com/hnaohiro/qt-csv/blob/master/csv.h
-Original code (class qCSV) believed to be by Shaun Case, Animal Population Health Institute, Colorado State University.
+Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Colorado State University.
 */
 
 #ifndef CSV_H
 #define CSV_H
 
-#include <QFile>
-#include <QMap>
-#include <QString>
-#include <QStringList>
-#include <QVariant>
-#include <QVariantList>
+#include <QtCore>
 
 namespace CSV {
   QStringList parseLine( const QString& string, const QChar delimiter = ',' );
@@ -28,17 +23,37 @@ namespace CSV {
 }
 
 
-class qCSV {
+class qCSV : public QObject {
+  Q_OBJECT
+
   public:
+    enum ReadModes {
+      qCSV_ReadLineByLine,
+      qCSV_ReadEntireFile
+    };
+
+    enum CSVErrorMessages{
+      qCSV_ERROR_NONE,
+      qCSV_ERROR_OPEN,
+      qCSV_ERROR_CLOSE,
+      qCSV_ERROR_LINE_EMPTY,
+      qCSV_ERROR_NO_FIELDLIST,
+      qCSV_ERROR_INVALID_FIELD_NAME,
+      qCSV_ERROR_INDEX_OUT_OF_RANGE,
+      qCSV_ERROR_BAD_READ,
+      qCSV_ERROR_INVALID_FIELD_COUNT
+    };
+
     qCSV();
     qCSV(
       const QString& filename,
       const bool containsFieldList,
       const QChar& stringToken = '\0',
       const bool stringsContainCommas = true,
-      const int readMode = qCSV::qCSV_ReadLineByLine
+      const int readMode = qCSV::qCSV_ReadLineByLine,
+      const bool checkForComment = false
     );
-    ~qCSV();
+    virtual ~qCSV();
 
     void debug();
 
@@ -58,6 +73,10 @@ class qCSV {
     QStringList fieldNames(){return _fieldNames; }
     int rowCount();
     bool writeFile( const QString &filename, const QString &codec = "" );
+    int nCommentRows(){ return _nCommentRows; }
+
+    void setField( const int index, const QString& val );
+    void setField( QString fName, const QString& val );
 
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
@@ -72,22 +91,8 @@ class qCSV {
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     void setDelimiter( const QChar val ) { _delimiter = val; }
 
-    enum ReadModes {
-      qCSV_ReadLineByLine,
-      qCSV_ReadEntireFile
-    };
-
-    enum CSVErrorMessages{
-      qCSV_ERROR_NONE,
-      qCSV_ERROR_OPEN,
-      qCSV_ERROR_CLOSE,
-      qCSV_ERROR_LINE_EMPTY,
-      qCSV_ERROR_NO_FIELDLIST,
-      qCSV_ERROR_INVALID_FIELD_NAME,
-      qCSV_ERROR_INDEX_OUT_OF_RANGE,
-      qCSV_ERROR_BAD_READ,
-      qCSV_ERROR_INVALID_FIELD_COUNT
-    };
+  signals:
+    void nBytesRead( const int val );
 
   protected:
     void initialize();
@@ -96,6 +101,7 @@ class qCSV {
     QFile     _srcFile;
     QString   _currentLine;
     int       _currentLineNumber;
+    bool      _firstDataRowEncountered;
     int       _error;
     QString   _errorMsg;
     QChar     _stringToken;
@@ -106,6 +112,8 @@ class qCSV {
     bool      _concatenateDanglingEnds;
     QString   _eolDelimiter;
     QChar     _delimiter;
+    bool      _checkForComment;
+    int       _nCommentRows;
 
     int _readMode;
 
@@ -124,6 +132,8 @@ class qCSV {
 
     void clearError();
     QStringList writeLine( const QStringList& line );
+
+    bool isCommentLine( const QString& line );
 };
 
 #endif // CSV_H

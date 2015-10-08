@@ -275,7 +275,7 @@ void CFormString::urlEncode( bool encodeSpaces ) {
     }
   }
 
-  if( !encodeSpaces ) {
+  if( encodeSpaces ) {
     temp.swapChar( ' ', '+' ); 
   }
 

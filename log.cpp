@@ -13,14 +13,25 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "log.h"
 
-#include <qdatetime.h>
-#include <qfile.h>
-#include <qstring.h>
-#include <qtextstream.h>
-#include <qstringlist.h>
-#include <qdebug.h>
+#include <QDateTime>
+#include <QFile>
+#include <QString>
+#include <QTextStream>
+#include <QStringList>
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 
-CAppLog* log;
+CAppLog* appLog = NULL;
+
+void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  if( NULL != appLog )
+    appLog->logMessage( msg, logLevel );
+}
+
+void logVerbose( const QString& msg ) {
+  logMsg( msg, LoggingVerbose );
+}
 
 CLogMessage::CLogMessage( const int level, const QString& msg ) {
   _level = level;
@@ -29,62 +40,33 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 
 
 CAppLog::CAppLog( void ) {
-  _logOpen = false;
-  _logFileName = ""; 
-  
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
- 
-  _logLineCount = 0;
-  
-  #ifdef LOG_NO_DEBUG_OUTPUT
-    _debugging = false;
-  #else
-    _debugging = true;
-  #endif
-  
-  setLogLevel( LoggingNone );   
+  initialize();
 }
 
 
-CAppLog::CAppLog( const QString& fileName ) {
-  _logOpen = false;
-  _logFileName = fileName; 
-  
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
- 
-  _logLineCount = 0;
-    
-  #ifdef LOG_NO_DEBUG_OUTPUT
-    _debugging = false;
-  #else
-    _debugging = true;
-  #endif
-  
-  setLogLevel( LoggingPending );  
+CAppLog::CAppLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+  initialize();
+
+  openLog( fileName, logLevel, freq );
 }
 
 
-CAppLog::CAppLog( const QString& fileName, const int logLevel ) {
+void CAppLog::initialize() {
   _logOpen = false;
-  _logFileName = fileName; 
-  
+  _logFileName = "";
+
   _logFile = NULL;
   _logTextStream = NULL;
   _pending = NULL;
- 
+
   _logLineCount = 0;
-      
-  #ifdef LOG_NO_DEBUG_OUTPUT
-    _debugging = false;
-  #else
-    _debugging = true;
-  #endif
-  
-  setLogLevel( logLevel );  
+
+  _debugging = false;
+  _autoTruncate = false;
+
+  _freq = OneFile;
+
+  setLogLevel( LoggingPending );
 }
 
 
@@ -98,6 +80,32 @@ CAppLog::~CAppLog( void ) {
   }  
 }
 
+
+void CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+  setFileFrequency( freq );
+  setFileName( fileName );
+  setLogLevel( logLevel );
+
+  //qDebug() << "Log" << _logFileName << "will open.";
+}
+
+
+void CAppLog::setFileName( QString fileName ) {
+  QFileInfo fi( fileName );
+
+  switch ( _freq ) {
+    case DailyFiles:
+      fileName = QString( "%1/%2-%3" ).arg( fi.absoluteDir().absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      break;
+
+    // For now, fall through for all other options.
+    case OneFile:
+    default:
+      break;
+  }
+
+  _logFileName = fileName;
+}
 
 void CAppLog::setLogLevel( const int logLevel ) {
   _logLevel = logLevel;
@@ -138,7 +146,8 @@ void CAppLog::setLogLevel( const int logLevel ) {
         processPendingMessages();  
       }
       else {
-        qDebug() << "Log file is not open!";  
+        // FIXME: For the moment, fail silently.
+        //qDebug() << "Log file is not open!";  
       }
     }
   }  
@@ -146,27 +155,24 @@ void CAppLog::setLogLevel( const int logLevel ) {
 
 
 bool CAppLog::openLog( void ) {
-  #ifndef NO_LOGGING
     _logFile = new QFile( _logFileName );
   
-    truncateLogFile();
+    if( _autoTruncate )
+      truncateLogFile();
   
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      *_logTextStream << "\r\n" << flush;
-      qDebug() << "Log file is open.";
+      *_logTextStream << endl << flush;
+      //qDebug() << "Log file is open.";
       return true;
     }
     else {
-      qDebug() << "Log file did not open!";
+      //qDebug() << "Log file did not open!";
       delete _logFile;
       _logFile = NULL;
       _logTextStream = NULL;
       return false;
     }
-  #else
-    return false;
-  #endif
 }
 
 
@@ -211,7 +217,7 @@ void CAppLog::truncateLogFile( void ) {
   }
 
   if( truncNeeded ) {
-    QString dt = QDateTime::currentDateTime().toString();
+    QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
   
     // Write a new log...
     if( _logFile->open( QIODevice::WriteOnly ) ) {
@@ -230,46 +236,24 @@ void CAppLog::truncateLogFile( void ) {
 }
 
 
-void CAppLog::typical( const QString& message ) {
+void CAppLog::logMessage( const QString& message, const int logLevel ) {
   CLogMessage* msg;
-  QString dt = QDateTime::currentDateTime().toString();
+  QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
 
   if( _debugging ) {
     qDebug() << "          (app)" << message;    
   }
   
   if( LoggingPending == _logLevel ) {
-    msg = new CLogMessage( LoggingTypical, QString( "%1: %2" ).arg( dt ).arg( message ) );
+    msg = new CLogMessage( logLevel, QString( "%1: %2" ).arg( dt ).arg( message ) );
     _pending->append( msg );    
   }
-  else if( _logOpen && ( LoggingTypical <= _logLevel ) ) {
-    *_logTextStream << "\r\n" << dt << ": " << message << flush;
+  else if( _logOpen && ( logLevel <= _logLevel ) ) {
+    *_logTextStream << endl << dt << ": " << message << flush;
     ++_logLineCount;
-    if( 10000 < _logLineCount ) {
+    if( _autoTruncate && (10000 < _logLineCount) ) {
       truncateLogFile();
     } 
-  }
-}
-
-
-void CAppLog::verbose( const QString& message ) {
-  CLogMessage* msg;
-  QString dt = QDateTime::currentDateTime().toString();
-
-  if( _debugging ) {
-    qDebug() << message;    
-  }
-  
-  if( LoggingPending == _logLevel ) {
-    msg = new CLogMessage( LoggingVerbose, QString( "%1: %2" ).arg( dt ).arg( message ) );
-    _pending->append( msg );    
-  }
-  else if( _logOpen && ( LoggingVerbose <= _logLevel ) ) {
-    *_logTextStream << "\r\n" << dt << ": " << message << flush; 
-    ++_logLineCount;
-    if( 10000 < _logLineCount ) {
-      truncateLogFile();
-    }    
   }
 }
 
@@ -282,9 +266,9 @@ void CAppLog::processPendingMessages( void ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
         if( msg->_level >= _logLevel ) {
-          *_logTextStream << "\r\n" << msg->_msg << flush;
+          *_logTextStream << endl << msg->_msg << flush;
           ++_logLineCount;
-          if( 10000 < _logLineCount ) {
+          if( _autoTruncate && (10000 < _logLineCount) ) {
             truncateLogFile();
           }  
         }  

@@ -56,19 +56,19 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/strutils.h>
 
 
-CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs ) : _CCmdLine() {
+CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs ) {
   _originalString = "";
-  SplitLine( argc, argv, clearArgs );
+  splitLine( argc, argv, clearArgs );
 }
 
     
-CCmdLine::CCmdLine( const QString& fileName ) : _CCmdLine() {
+CCmdLine::CCmdLine( const QString& fileName ) {
   _originalString = "";
-  SplitFile( fileName );  
+  splitFile( fileName );
 }
 
 
-int CCmdLine::ProcessList( QStringList list ) {
+int CCmdLine::processList( QStringList list ) {
   int i;
   char** argv;
   char* arg;
@@ -86,11 +86,11 @@ int CCmdLine::ProcessList( QStringList list ) {
   }
   
   // Parse it
-  return SplitLine( list.count(), argv, false );  
+  return splitLine( list.count(), argv, false );
 }
 
 
-int CCmdLine::SplitString( QString str ) {
+int CCmdLine::splitString( QString str ) {
   QStringList list, list2;
   QString s;
   int i;
@@ -111,7 +111,7 @@ int CCmdLine::SplitString( QString str ) {
 
 
 
-int CCmdLine::SplitFile( const QString& fileName ) {
+int CCmdLine::splitFile( const QString& fileName ) {
   QStringList list;
   QString s;
   
@@ -142,13 +142,13 @@ int CCmdLine::SplitFile( const QString& fileName ) {
 
   returns number of switches found
 ------------------------------------------------------*/
-int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
+int CCmdLine::splitLine( int argc, char** argv, bool clearArgs ) {
 	QString arg;
   QString curParam; // current argv[x]
 	int i;
 
    if( clearArgs ) {
-    clear();
+    _hash.clear();
     _originalString = "";
   }
 
@@ -167,7 +167,7 @@ int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
   // skip the exe name (start with i = 1)
   for (i = 1; i < argc; i++) {
      // if it's a switch, start a new CCmdLine
-     if (IsSwitch(argv[i])) {
+     if (isSwitch(argv[i])) {
         curParam = argv[i];
 
          // Clear args between switches to prevent problems
@@ -175,7 +175,7 @@ int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
 
         // look at next input string to see if it's a switch or an argument
         if (i + 1 < argc) {
-           if (!IsSwitch(argv[i + 1])) {
+           if (!isSwitch(argv[i + 1])) {
               // it's an argument, not a switch
               arg = argv[i + 1];
 
@@ -188,34 +188,24 @@ int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
         }
 
         // add it
-        CCmdParam cmd;
+        QStringList cmd;
 
         // only add non-empty args
         if (arg != "") {
-           cmd.m_strings.append(arg);
+           cmd.append(arg);
         }
 
         // add the CCmdParam to 'this'
-        this->insert(curParam, cmd);
+        _hash.insert(curParam, cmd);
      }
      else {
-        // it's not a new switch, so it must be more stuff for the last switch
-
-        // ...let's add it
-       _CCmdLine::Iterator theIterator;
-
-        // get an iterator for the current param
-        theIterator = this->find(curParam);
-       if (theIterator!=end()) {
-           (*theIterator).m_strings.append(argv[i]);
-        }
-        else {
-           // ??
-        }
+        // it's not a new switch, so it must be more stuff for the last switch.
+        // ...let's add it.
+        _hash[ curParam ].append( argv[i] );
      }
   }
 
-  return count();
+  return _hash.count();
 }
 
 
@@ -227,7 +217,7 @@ int CCmdLine::SplitLine( int argc, char** argv, bool clearArgs ) {
    where 'x' is one or more characters.
    the first character of a switch must be non-numeric!
 ------------------------------------------------------*/
-bool CCmdLine::IsSwitch( const QString& pParam ) {
+bool CCmdLine::isSwitch( const QString& pParam ) {
    if (pParam.isEmpty())
       return false;
 
@@ -262,10 +252,8 @@ bool CCmdLine::IsSwitch( const QString& pParam ) {
    cmdLine.HasSwitch("-a")       true
    cmdLine.HasSwitch("-z")       false
 ------------------------------------------------------*/
-bool CCmdLine::HasSwitch( const QString& pSwitch ) {
-	_CCmdLine::Iterator theIterator;
-	theIterator = find(pSwitch);
-	return (theIterator!=end());
+bool CCmdLine::hasSwitch( const QString& pSwitch ) {
+  return _hash.contains( pSwitch );
 }
 
 
@@ -287,15 +275,15 @@ bool CCmdLine::HasSwitch( const QString& pSwitch ) {
    cmdLine.GetSafeArgument("-b", 0, "zz")    p4
    cmdLine.GetSafeArgument("-b", 1, "zz")    zz
 ------------------------------------------------------*/
-QString CCmdLine::GetSafeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) {
+QString CCmdLine::safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) {
    QString sRet;
    
    if (!pDefault.isEmpty())
       sRet = pDefault;
 
-  if( HasSwitch( pSwitch ) ) {
+  if( hasSwitch( pSwitch ) ) {
      try {
-        sRet = GetArgument(pSwitch, iIdx);
+        sRet = argument(pSwitch, iIdx);
      }
      catch (...) {
      }
@@ -320,17 +308,9 @@ QString CCmdLine::GetSafeArgument( const QString& pSwitch, int iIdx, const QStri
    cmdLine.GetArgument("-a", 0)     p1
    cmdLine.GetArgument("-b", 1)     throws (int)0, returns an empty string
 ------------------------------------------------------*/
-QString CCmdLine::GetArgument( const QString& pSwitch, int iIdx ) {
-   if (HasSwitch(pSwitch)) {
-	   CCmdLine::Iterator theIterator;
-
-      theIterator = find(pSwitch);
-	   if (theIterator!=end()) {
-         if ((*theIterator).m_strings.count() > iIdx) {
-					return (*theIterator).m_strings[iIdx];
-         }
-      }
-   }
+QString CCmdLine::argument( const QString& pSwitch, int iIdx ) {
+  if( this->hasSwitch( pSwitch ) && ( iIdx < this->argumentCount( pSwitch ) ) )
+    return _hash.value( pSwitch ).at( iIdx );
 
    throw (int)0;
 
@@ -345,31 +325,19 @@ QString CCmdLine::GetArgument( const QString& pSwitch, int iIdx ) {
 
    returns -1 if the switch was not found
 ------------------------------------------------------*/
-int CCmdLine::GetArgumentCount( const QString& pSwitch ) {
-   int iArgumentCount = -1;
-
-   if (HasSwitch(pSwitch)) {
-	   CCmdLine::Iterator theIterator;
-
-      theIterator = find(pSwitch);
-	   if (theIterator!=end()) {
-         iArgumentCount = (*theIterator).m_strings.count();
-      }
-   }
-
-   return iArgumentCount;
+int CCmdLine::argumentCount( const QString& pSwitch ) {
+  if( hasSwitch( pSwitch ) )
+    return _hash.value( pSwitch ).count();
+  else
+    return -1;
 }
 
 
 QStringList CCmdLine::arguments(  const QString& pSwitch ) {
   QStringList list;
-  int i;
 
-  if( this->hasSwitch( pSwitch ) ) {
-    for( i = 0; i < this->getArgumentCount( pSwitch ); ++i ) {
-      list.append( this->getArgument( pSwitch, i ) );
-    }
-  }
+  if( this->hasSwitch( pSwitch ) )
+    list = _hash.value( pSwitch );
 
   return list;
 }
@@ -399,10 +367,25 @@ QString CCmdLine::asString(){
 
 
 void CCmdLine::debug( void ) {
-  CCmdLine::Iterator i; 
-  
-  for (i = this->begin(); i != this->end(); ++i) {
-    cout << "Key " << i.key() << " values " << i.value().m_strings.join( ", " ) << endl;
+  QHashIterator<QString, QStringList> it( _hash );
+
+  while( it.hasNext() ) {
+    it.next();
+    qDebug() << "Key " << it.key() << " values " << it.value().join( ", " );
+  }
+}
+
+
+bool CCmdLine::pair( const QString& str1, const QString& str2 ) {
+  if( this->hasSwitch( str1 ) && this->hasSwitch( str2 ) )
+    return false;
+  else {
+    if( this->hasSwitch( str1 ) )
+      _hash.insert( str2, _hash.value( str1 ) );
+    else if( this->hasSwitch( str2 ) )
+      _hash.insert( str1, _hash.value( str2 ) );
+
+    return true;
   }
 }
 
