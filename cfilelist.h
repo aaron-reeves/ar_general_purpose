@@ -12,6 +12,5 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 // This class is obsolete.  Switch to CFileList2
 
-#endif //CFILELIST_H_DEFINED
 
 
