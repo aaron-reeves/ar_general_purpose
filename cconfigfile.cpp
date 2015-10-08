@@ -105,6 +105,20 @@ void CConfigFile::debug() {
 }
 
 
+void CConfigFile::writeToStream( QTextStream* stream ) {
+  if( !_blocks->isEmpty() && ( NULL != stream ) ) {
+    foreach( const QString& blockKey, _blocks->keys() ) {
+      *stream << "[" << blockKey << "]" << endl;
+
+      foreach( const QString& key, _blocks->value( blockKey )->keys() )
+        *stream << "  " << key << " <- " << _blocks->value( blockKey )->value( key ) << endl;
+    }
+
+    *stream << endl;
+  }
+}
+
+
 int CConfigFile::fillBlock( QHash<QString, QString>* block, QStringList strList ) {
   int result = ConfigReturnCode::Success; // until shown otherwise
 

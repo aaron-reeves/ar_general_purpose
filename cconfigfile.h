@@ -47,6 +47,8 @@ class CConfigFile {
 
     virtual void debug();
 
+    virtual void writeToStream( QTextStream* stream );
+
     int result() { return _returnValue; }
     QString resultString() { return ConfigReturnCode::resultString( _returnValue ); }
 
