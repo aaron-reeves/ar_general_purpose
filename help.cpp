@@ -114,7 +114,7 @@ void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
     if( 0 == list[i].part1().length() )
       cout << prettyPrint( list[i].part2() );
     else {
-      lines = prettyPrintedList( list[i].part2(), 50, true, true, nPadding );
+      lines = prettyPrintedList( list[i].part2(), 50, false, true, nPadding );
       if( list[i].part1().length() > maxPart1Len ) {
         cout << list[i].part1() << endl;
         for( j = 0; j < lines.count(); ++j ) {

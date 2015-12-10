@@ -13,12 +13,14 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "log.h"
 
-#include <qdatetime.h>
-#include <qfile.h>
-#include <qstring.h>
-#include <qtextstream.h>
-#include <qstringlist.h>
-#include <qdebug.h>
+#include <QDateTime>
+#include <QFile>
+#include <QString>
+#include <QTextStream>
+#include <QStringList>
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 
 CAppLog* appLog = NULL;
 
@@ -42,18 +44,10 @@ CAppLog::CAppLog( void ) {
 }
 
 
-CAppLog::CAppLog( const QString& fileName ) {
-  initialize();
-  
-  setFileName( fileName );
-}
-
-
-CAppLog::CAppLog( const QString& fileName, const int logLevel ) {
+CAppLog::CAppLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
   initialize();
 
-  setFileName( fileName );
-  setLogLevel( logLevel );  
+  openLog( fileName, logLevel, freq );
 }
 
 
@@ -70,6 +64,8 @@ void CAppLog::initialize() {
   _debugging = false;
   _autoTruncate = false;
 
+  _freq = OneFile;
+
   setLogLevel( LoggingPending );
 }
 
@@ -84,11 +80,32 @@ CAppLog::~CAppLog( void ) {
   }  
 }
 
-void CAppLog::openLog( const QString& fileName, const int logLevel ) {
+
+void CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+  setFileFrequency( freq );
   setFileName( fileName );
   setLogLevel( logLevel );
+
+  //qDebug() << "Log" << _logFileName << "will open.";
 }
 
+
+void CAppLog::setFileName( QString fileName ) {
+  QFileInfo fi( fileName );
+
+  switch ( _freq ) {
+    case DailyFiles:
+      fileName = QString( "%1/%2-%3" ).arg( fi.absoluteDir().absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      break;
+
+    // For now, fall through for all other options.
+    case OneFile:
+    default:
+      break;
+  }
+
+  _logFileName = fileName;
+}
 
 void CAppLog::setLogLevel( const int logLevel ) {
   _logLevel = logLevel;

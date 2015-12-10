@@ -46,20 +46,24 @@ typedef QList<CLogMessage*> TLogMessageList;
 class CAppLog {
   public:
     
+    enum FileFrequency {
+      OneFile,
+      DailyFiles
+    };
+
     // Creates a log that won't actually record anything.
     CAppLog( void );
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName );
+    CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
-    CAppLog( const QString& fileName, const int logLevel );
-    
-    void openLog( const QString& fileName, const int logLevel ); 
+    void openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
     virtual ~CAppLog( void );
     
     void setLogLevel( const int logLevel );
-    void setFileName( const QString& fileName ) { _logFileName = fileName; }
+    void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
+    void setFileName( QString fileName );
     void setUseStderr( const bool& val ) { _debugging = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     
@@ -85,6 +89,7 @@ class CAppLog {
     TLogMessageList* _pending;
     bool _debugging;
     bool _autoTruncate;
+    FileFrequency _freq;
 };
 
 
