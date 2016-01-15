@@ -252,17 +252,10 @@ QString findAndReplace( QString str3, QString str2, QString str1 ) {
 QString removeDelimiters( const QString& val, QChar delim ) {
   QString result = val.trimmed();
 
-<<<<<<< HEAD
-  if( delim == val.right(1).data()[0] )
-    result = val.left( val.length() - 1 );
-
-  if( delim == val.left(1).data()[0] )
-=======
   if( val.endsWith( delim ) )
     result = val.left( val.length() - 1 );
 
   if( val.startsWith( delim ) )
->>>>>>> 4629de23609efe99e6294041615e2e134bfcebd6
     result = result.right(result.length() - 1 );
 
   return result;
