@@ -270,6 +270,13 @@ QString removeWhiteSpace( QString str1 ) {
 }
 
 
+QString trimPunct( QString str ) {
+  str = str.trimmed();
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), "" );
+  return str;
+}
+
+
 // Remove any line breaks in the provided string, and replace them with spaces.
 QString removeLineBreaks( QString str1 ) {
   str1.replace( "\r\n", " " );
