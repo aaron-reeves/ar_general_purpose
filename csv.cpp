@@ -100,7 +100,7 @@ QList<QStringList> parse(const QString &string, const QChar delimiter /* = ',' *
       // comma
       else if (current == delimiter) {
         // add line
-        line.append(value);
+        line.append(value.trimmed());
         value.clear();
       }
       // double quote
