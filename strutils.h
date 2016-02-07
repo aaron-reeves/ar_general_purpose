@@ -29,6 +29,7 @@ QString findAndReplace( QString str3, QString str2, QString str1 );
 QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
 QString removeWhiteSpace( QString str1 );
+QString trimPunct( QString str );
 
 QString boolToStr( const bool val ); // returns "-1" or "0"
 QString boolToText( const bool val ); // returns "true" or "false"
