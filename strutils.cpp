@@ -270,6 +270,13 @@ QString removeWhiteSpace( QString str1 ) {
 }
 
 
+QString trimPunct( QString str ) {
+  str = str.trimmed();
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), "" );
+  return str;
+}
+
+
 // Remove any line breaks in the provided string, and replace them with spaces.
 QString removeLineBreaks( QString str1 ) {
   str1.replace( "\r\n", " " );
@@ -671,38 +678,83 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
   else
     separator = '/';
 
-  if( basic.exactMatch( dateStr ) )
+  if( basic.exactMatch( dateStr ) ) {
     result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
+  }
 
-  else if( ukDate.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) )
+  else if( ukDate.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
     result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
-  else if( usDate.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) )
+
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "d%1M%1yyyy" ).arg( separator ) );
+    }
+  }
+  else if( usDate.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
     result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "M%1d%1yyyy" ).arg( separator ) );
+    }
+  }
 
   else if( abbrevMonth1.exactMatch( dateStr ) ) {
     result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
-    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
-  }
-  else if( abbrevMonth2.exactMatch( dateStr ) )
-    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
-  else if( abbrevMonth3.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
-    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
-  }
-  else if( abbrevMonth4.exactMatch( dateStr ) )
-    result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
 
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+    }
+
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth2.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+    }
+  }
+  else if( abbrevMonth3.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
+
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+    }
+
+    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+  }
+  else if( abbrevMonth4.exactMatch( dateStr ) ) {
+    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+
+    if( !result.isValid() ) {
+      result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+    }
+  }
 
   else if( ukDateTime.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
-    if( !dt.isValid() )
+    if( !dt.isValid() ) {
+      dt = QDateTime::fromString( dateStr, QString( "d%1M%1yyyy hh:mm" ).arg( separator ) );
+    }
+    if( !dt.isValid() ) {
       dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm:ss" ).arg( separator ) );
+    }
+    if( !dt.isValid() ) {
+      dt = QDateTime::fromString( dateStr, QString( "d%1M%1yyyy hh:mm:ss" ).arg( separator ) );
+    }
     result = dt.date();
   }
+
   else if( usDateTime.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
-    if( !dt.isValid() )
+    if( !dt.isValid() ) {
+      dt = QDateTime::fromString( dateStr, QString( "M%1d%1yyyy hh:mm" ).arg( separator ) );
+    }
+    if( !dt.isValid() ) {
       dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm:ss" ).arg( separator ) );
+    }
+    if( !dt.isValid() ) {
+      dt = QDateTime::fromString( dateStr, QString( "M%1d%1yyyy hh:mm:ss" ).arg( separator ) );
+    }
     result = dt.date();
   }
 

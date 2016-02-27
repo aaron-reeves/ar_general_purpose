@@ -14,6 +14,7 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
 
 #include <QtCore>
 
+<<<<<<< HEAD
 /*-------------------
 // General usage:
 
@@ -23,6 +24,32 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
    // Do stuff
  }
 -------------------*/
+=======
+/*
+ * Basic use:
+ * ==========
+ *  qCSV csv(
+ *    csvFileName,               // const QString& filename,
+ *    true,                      // const bool containsFieldList,
+ *    '\0',                      //const QChar& stringToken = '\0',
+ *    true,                      //const bool stringsContainCommas = true,
+ *    qCSV::qCSV_ReadLineByLine, // const int readMode = qCSV::qCSV_ReadLineByLine,
+ *    false                      // const bool checkForComment = false
+ *  );
+ *
+ *  if( !csv.open() ) {
+ *    error();
+ *    return false;
+ *  }
+ *
+ *  while( -1 != csv.moveNext() )
+ *    doStuff();
+ *
+ *  csv.close();
+ *
+ *  return true;
+*/
+>>>>>>> c0f57eaafa81438832f5bb5c703322266fc9cb6e
 
 namespace CSV {
   QStringList parseLine( const QString& string, const QChar delimiter = ',' );
