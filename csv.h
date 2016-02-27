@@ -14,6 +14,16 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
 
 #include <QtCore>
 
+/*-------------------
+// General usage:
+
+ qCSV csv = new qCSV( ... );
+ csv->open();
+ while( -1 != csv->moveNext() ) {
+   // Do stuff
+ }
+-------------------*/
+
 namespace CSV {
   QStringList parseLine( const QString& string, const QChar delimiter = ',' );
   QList<QStringList> parseFromString(const QString &string, const QChar delimiter = ',' );
