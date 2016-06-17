@@ -22,6 +22,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QDir>
 #include <QFileInfo>
 
+#include <ar_general_purpose/qcout.h>
+
 CAppLog* appLog = NULL;
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
@@ -29,9 +31,11 @@ void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ 
     appLog->logMessage( msg, logLevel );
 }
 
+
 void logVerbose( const QString& msg ) {
   logMsg( msg, LoggingVerbose );
 }
+
 
 CLogMessage::CLogMessage( const int level, const QString& msg ) {
   _level = level;
@@ -65,6 +69,8 @@ void CAppLog::initialize() {
   _autoTruncate = false;
 
   _freq = OneFile;
+
+  _consoleEcho = false;
 
   setLogLevel( LoggingPending );
 }
@@ -162,7 +168,7 @@ bool CAppLog::openLog( void ) {
   
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      *_logTextStream << endl << flush;
+      *_logTextStream << ::endl << ::flush;
       //qDebug() << "Log file is open.";
       return true;
     }
@@ -223,10 +229,10 @@ void CAppLog::truncateLogFile( void ) {
     if( _logFile->open( QIODevice::WriteOnly ) ) {
       QTextStream t( _logFile );
   
-      t << dt << ": LOG FILE TRUNCATED" << "\r\n" << "\r\n" << flush;
+      t << dt << ": LOG FILE TRUNCATED" << "\r\n" << "\r\n" << ::flush;
   
       for( i = 0; i < list.count(); ++i ) {
-        t << list.at( i ) << "\r\n" << flush;
+        t << list.at( i ) << "\r\n" << ::flush;
       }
       _logFile->close();
     }
@@ -249,12 +255,46 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
     _pending->append( msg );    
   }
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
-    *_logTextStream << endl << dt << ": " << message << flush;
+    *_logTextStream << ::endl << dt << ": " << message << ::flush;
     ++_logLineCount;
     if( _autoTruncate && (10000 < _logLineCount) ) {
       truncateLogFile();
     } 
   }
+}
+
+
+CAppLog& CAppLog::operator<<( const QString& message ) {
+  this->logMessage( message.trimmed(), LoggingTypical );
+  if( _consoleEcho ) {
+    cout << message << ::flush;
+  }
+
+  return *this;
+}
+
+
+CAppLog& CAppLog::operator<<( const char* message ) {
+  this->logMessage( QString( "%1" ).arg( message ), LoggingTypical );
+  if( _consoleEcho ) {
+    cout << message << ::flush;
+  }
+
+  return *this;
+}
+
+
+CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
+  if( _consoleEcho ) {
+    if( f == ::endl ) {
+      cout << ::endl;
+    }
+    else if( f == ::flush ) {
+      cout << ::flush;
+    }
+  }
+
+  return *this;
 }
 
 
@@ -266,7 +306,7 @@ void CAppLog::processPendingMessages( void ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
         if( msg->_level >= _logLevel ) {
-          *_logTextStream << endl << msg->_msg << flush;
+          *_logTextStream << ::endl << msg->_msg << ::flush;
           ++_logLineCount;
           if( _autoTruncate && (10000 < _logLineCount) ) {
             truncateLogFile();

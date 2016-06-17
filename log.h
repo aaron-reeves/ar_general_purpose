@@ -30,8 +30,10 @@ enum LogLevel {
   LoggingVerbose
 };
 
+
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logVerbose( const QString& msg );
+
 
 class CLogMessage {
   public:
@@ -66,11 +68,16 @@ class CAppLog {
     void setFileName( QString fileName );
     void setUseStderr( const bool& val ) { _debugging = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
+    void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
     
     void logMessage( const QString& message, const int logLevel ); 
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
+    CAppLog& operator<<( const QString& message );
+    CAppLog& operator<<( const char* message );
+    CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
+
   protected:
     void initialize();
 
@@ -90,7 +97,7 @@ class CAppLog {
     bool _debugging;
     bool _autoTruncate;
     FileFrequency _freq;
+    bool _consoleEcho;
 };
-
 
 #endif // LOG_H
