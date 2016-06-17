@@ -85,8 +85,12 @@ class qCSV : public QObject {
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
     int currentLineNumber(){ return _currentLineNumber; }
-    QString field( int index );
+
+    QString field( const int index );
     QString field( QString fName );
+    QString field( const int index, const int rowNumber );
+    QString field( QString fName, const int rowNumber );
+
     QString fieldName( int index );
     QVariantList fields( QString fName );
     QVariantList fields( int index );
@@ -102,12 +106,20 @@ class qCSV : public QObject {
 
     void setField( const int index, const QString& val );
     void setField( QString fName, const QString& val );
+    void setField( const int index, const int rowNumber, const QString& val );
+    void setField( QString fName, const int rowNumber, const QString& val );
+
+    // These functions currently work only for read mode qCSV_ReadEntireFile.
+    void appendField( const QString& fieldName );
+    void removeField( const QString& fieldName );
+    void removeField( const int fieldNumber );
 
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
     void setFilename ( QString filename );
     bool open();
     bool close();
+    void toFront();
     int moveNext();
     void setStringToken ( QChar token );
     void setColumnCount( int set_val ){ _columnCount = set_val;}
@@ -121,6 +133,7 @@ class qCSV : public QObject {
 
   protected:
     void initialize();
+    int readNext();
 
     QString   _srcFilename;
     QFile     _srcFile;

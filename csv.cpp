@@ -237,7 +237,7 @@ qCSV::qCSV (
     int fieldsRead = 0;
     while( -1 != fieldsRead ) {
       //qDebug() << fieldsRead;
-      fieldsRead = moveNext();
+      fieldsRead = readNext();
     }
 
     this->close();
@@ -335,7 +335,7 @@ void qCSV::setField( const int index, const QString& val ) {
 
 
 // Accessors
-QString qCSV::field( int index ){
+QString qCSV::field( const int index ){
   QStringList dataList;
   QString ret_val = "";
   clearError();
@@ -434,6 +434,52 @@ QString qCSV::field( QString fName ){
 }
 
 
+void qCSV::setField( const int index, const int rowNumber, const QString& val ) {
+  if( rowNumber > (_data.count() - 1) ) {
+    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+  }
+  else {
+    _currentLineNumber = rowNumber;
+    setField( index, val );
+  }
+}
+
+void qCSV::setField( QString fName, const int rowNumber, const QString& val ) {
+  if( rowNumber > (_data.count() - 1) ) {
+    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+  }
+  else {
+    _currentLineNumber = rowNumber;
+    setField( fName, val );
+  }
+}
+
+QString qCSV::field( const int index, const int rowNumber ) {
+  if( rowNumber > (_data.count() - 1) ) {
+    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+    return QString();
+  }
+  else {
+    _currentLineNumber = rowNumber;
+    return field( index );
+  }
+}
+
+QString qCSV::field( QString fName, const int rowNumber ) {
+  if( rowNumber > (_data.count() - 1) ) {
+    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+    return QString();
+  }
+  else {
+    _currentLineNumber = rowNumber;
+    return field( fName );
+  }
+}
+
 QVariantList qCSV::fields( QString fName ) {
   QVariantList result;
   clearError();
@@ -479,6 +525,53 @@ QString qCSV::fieldName( int index ){
   }
 
   return ret_val;
+}
+
+
+void qCSV::appendField( const QString& fieldName ) {
+  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
+  // Think about how it might work for qCSV_ReadLineByLine.
+  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+
+  _fieldNames.append( fieldName.trimmed().toLower() );
+  _fieldsLookup.insert( fieldName.trimmed().toLower(), _fieldNames.count() - 1 );
+
+  for( int i = 0; i < _data.count(); ++i ) {
+    _data[i].append( "" );
+  }
+
+}
+
+
+void qCSV::removeField( const QString& fieldName ) {
+  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
+  // Think about how it might work for qCSV_ReadLineByLine.
+  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+
+  if( _fieldsLookup.contains( fieldName ) )
+    removeField( _fieldsLookup.value( fieldName ) );
+  else {
+    _error = qCSV_ERROR_INVALID_FIELD_NAME;
+    _errorMsg = "Invalid Field Name: " + fieldName;
+  }
+}
+
+
+void qCSV::removeField( const int fieldNumber ) {
+  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
+  // Think about how it might work for qCSV_ReadLineByLine.
+  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+
+  _fieldNames.removeAt( fieldNumber );
+
+  QList<QString> keys = _fieldsLookup.keys( fieldNumber );
+  for( int i = 0; i < keys.count(); ++i ) {
+    _fieldsLookup.remove( keys.at(i) );
+  }
+
+  for( int i = 0; i < _data.count(); ++i ) {
+    _data[i].removeAt( fieldNumber );
+  }
 }
 
 
@@ -600,9 +693,32 @@ bool qCSV::close(){
 }
 
 
+void qCSV::toFront() {
+  _currentLineNumber = -1;
+}
+
+
+//  Returns the number of fields in the row, or -1 at the end of the file.
+int qCSV::moveNext(){
+  if( qCSV_ReadLineByLine == _readMode ) {
+    return readNext();
+  }
+  else {
+    ++_currentLineNumber;
+
+    if( _currentLineNumber < _data.count() ) {
+      return _data.at( _currentLineNumber ).count();
+    }
+    else {
+      return -1;
+    }
+  }
+}
+
+
 //  Also acts as movefirst...cause a read of a line of data from the csv file.
 //  Returns the number of fields read, or -1 at the end of the file.
-int qCSV::moveNext(){
+int qCSV::readNext() {
   int ret_val = -1;
   int index = 0;
   QStringList fieldList;
@@ -637,7 +753,7 @@ int qCSV::moveNext(){
     // These lines should simply be skipped.
     if( _checkForComment && isCommentLine( _currentLine ) ) {
       ++_nCommentRows;
-      return moveNext();
+      return readNext();
     }
 
     //qDebug() << _currentLine;
@@ -678,7 +794,7 @@ int qCSV::moveNext(){
       _columnCount = index;
       _fieldData.clear();
       _firstDataRowEncountered = true;
-      index = ret_val = moveNext();
+      index = ret_val = readNext();
     }
     else {
       ret_val = index;
