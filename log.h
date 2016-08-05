@@ -66,7 +66,7 @@ class CAppLog {
     void setLogLevel( const int logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
     void setFileName( QString fileName );
-    void setUseStderr( const bool& val ) { _debugging = val; }
+    void setUseStderr( const bool& val ) { _useStderr = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
     
@@ -94,7 +94,7 @@ class CAppLog {
     int _logLineCount;
     QString _logFileName; 
     TLogMessageList* _pending;
-    bool _debugging;
+    bool _useStderr;
     bool _autoTruncate;
     FileFrequency _freq;
     bool _consoleEcho;
