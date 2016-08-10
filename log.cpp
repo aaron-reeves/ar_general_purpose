@@ -65,7 +65,7 @@ void CAppLog::initialize() {
 
   _logLineCount = 0;
 
-  _debugging = false;
+  _useStderr = false;
   _autoTruncate = false;
 
   _freq = OneFile;
@@ -246,7 +246,7 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
 
-  if( _debugging ) {
+  if( _useStderr ) {
     qDebug() << "          (app)" << message;    
   }
   

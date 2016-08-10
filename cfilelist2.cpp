@@ -223,14 +223,7 @@ void CFileList::getFileNames( const QString& dirName, QString filter, const bool
   CPathString listItem;
 
   if( filter.startsWith( "*." ) )
-    filter = filter.right( filter.length() - 2 );
-
-  if( filter.startsWith( '.' ) )
     filter = filter.right( filter.length() - 1 );
-
-  filter.replace( ".", "[.]" );
-
-  QRegExp extensionRE( filter.toLower() );
 
 	QDir dir( dirName );
 	dir.setFilter( QDir::Files | QDir::Dirs | QDir::Hidden );
@@ -254,8 +247,8 @@ void CFileList::getFileNames( const QString& dirName, QString filter, const bool
           getFileNames( finfo.filePath(), filter, recurse );
 			}
 			else {
-        str = finfo.completeSuffix().toLower();
-        if( extensionRE.exactMatch( str ) ) {
+        str = finfo.filePath().toLower();
+        if( str.endsWith( filter ) ) {
           listItem = CPathString( finfo.filePath() );
           if( NULL != _fileList )
             _fileList->append( listItem );
