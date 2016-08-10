@@ -31,8 +31,9 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
  *    return false;
  *  }
  *
- *  while( -1 != csv.moveNext() )
+ *  while( -1 != csv.moveNext() ) {
  *    doStuff();
+ *  }
  *
  *  csv.close();
  *

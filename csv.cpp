@@ -737,6 +737,7 @@ int qCSV::readNext() {
   do {
     tmp = _srcFile.readLine();
     tmp = tmp.trimmed();
+
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
 
