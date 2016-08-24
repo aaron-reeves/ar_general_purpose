@@ -71,13 +71,26 @@ class qCSV : public QObject {
     };
 
     qCSV();
+
+    // This version is used to generate a CSV object from a file.
     qCSV(
       const QString& filename,
       const bool containsFieldList,
       const QChar& stringToken = '\0',
-      const bool stringsContainCommas = true,
+      const bool stringsContainDelimiters = true,
       const int readMode = qCSV::qCSV_ReadLineByLine,
       const bool checkForComment = false
+    );
+
+    // This version is used to generate a CSV object from a big, long string.
+    // FIXME/WARNING: This function doesn't yet support all of the same capabilities that
+    // reading a CSV from a file does.  It almost certainly needs work!
+    qCSV(
+      const int dummy,
+      QString text,
+      const bool containsFieldList,
+      const QChar& stringToken = '\0',
+      const bool stringsContainDelimiters = true
     );
     virtual ~qCSV();
 
