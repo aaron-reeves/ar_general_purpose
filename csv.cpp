@@ -246,6 +246,41 @@ qCSV::qCSV (
 }
 
 
+qCSV::qCSV(
+  const int dummy,
+  QString text,
+  const bool containsFieldList,
+  const QChar& stringToken /* = '\0' */,
+  const bool stringsContainDelimiters /* = true */
+): QObject() {
+  Q_UNUSED( dummy );
+
+  initialize();
+
+  _srcFilename = QString(); // There is no source file.
+  _stringToken = stringToken;
+  _containsFieldList = containsFieldList;
+  _checkForComment = false; // There is no allowance for comments here.
+
+  if ( stringToken != '\0' )
+    _usesStringToken = true;
+
+  _stringsContainDelimiters = stringsContainDelimiters;
+  _readMode = qCSV_ReadEntireFile;
+
+  QList<QStringList> items = CSV::parseFromString( text );
+
+  _fieldNames = items.at(0);
+  for( int i = 0; i < _fieldNames.count(); ++i ) {
+    _fieldsLookup.insert( _fieldNames.at(i).toLower(), i );
+  }
+
+  for( int i = 1; i < items.count(); ++i ) {
+    _data.append( items.at( i ) );
+  }
+}
+
+
 void qCSV::initialize() {
   _srcFilename = "";
   _currentLine = "";
@@ -737,6 +772,7 @@ int qCSV::readNext() {
   do {
     tmp = _srcFile.readLine();
     tmp = tmp.trimmed();
+
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
 
