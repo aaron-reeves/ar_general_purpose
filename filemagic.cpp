@@ -20,7 +20,7 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */ ) {
   else {
     if( NULL != error )
       *error = true;
-    return false;
+    return "";
   }
 
   // Set up magic
@@ -32,7 +32,7 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */ ) {
   if( NULL == magic ) {
     if( NULL != error )
       *error = true;
-    return false;
+    return "";
   }
 
   // Check the file type.
@@ -41,9 +41,6 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */ ) {
   QString fileTypeInfo;
   QString errMsg;
   bool magicOK = magicProcess( magic, fileName, fileTypeInfo, errMsg );
-
-  if( NULL != returnTypeInfo )
-    *returnTypeInfo = fileTypeInfo;
 
   if( magicOK ) {
     if( NULL != error )
