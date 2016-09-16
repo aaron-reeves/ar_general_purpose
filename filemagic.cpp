@@ -6,6 +6,63 @@
 #include <qdebug.h>
 #include <qfile.h>
 
+
+QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */ ) {
+  // Determine which magic file to use
+  //----------------------------------
+  QString magicFile;
+  if( QFile::exists( "C:/libs/C_libs/bin/magic" ) )
+    magicFile = "C:/libs/C_libs/bin/magic";
+  else if( QFile::exists(  QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
+    magicFile = QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
+  else if( QFile::exists( "/etc/magic" ) )
+    magicFile = "/etc/magic";
+  else {
+    if( NULL != error )
+      *error = true;
+    return false;
+  }
+
+  // Set up magic
+  //-------------
+  struct magic_set* magic = NULL;
+  int flags = 0;
+
+  magic = magicLoadMagic( magicFile, flags );
+  if( NULL == magic ) {
+    if( NULL != error )
+      *error = true;
+    return false;
+  }
+
+  // Check the file type.
+  //--------------------
+  QString result;
+  QString fileTypeInfo;
+  QString errMsg;
+  bool magicOK = magicProcess( magic, fileName, fileTypeInfo, errMsg );
+
+  if( NULL != returnTypeInfo )
+    *returnTypeInfo = fileTypeInfo;
+
+  if( magicOK ) {
+    if( NULL != error )
+      *error = false;
+
+    result = fileTypeInfo;
+  }
+  else {
+    if( NULL != error )
+      *error = true;
+    result = "";
+  }
+
+  magicCloseMagic( magic );
+
+  return result;
+}
+
+
 bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
