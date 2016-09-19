@@ -117,6 +117,7 @@ class qCSV : public QObject {
     int rowCount();
     bool writeFile( const QString &filename, const QString &codec = "" );
     int nCommentRows(){ return _nCommentRows; }
+    QString sourceFileName() { return _srcFilename; }
 
     void setField( const int index, const QString& val );
     void setField( QString fName, const QString& val );
