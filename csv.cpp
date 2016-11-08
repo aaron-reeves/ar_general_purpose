@@ -419,9 +419,9 @@ void qCSV::setField( const int index, const QString& val ) {
   if( 0 < dataList->size() ) {
     if ( index < dataList->size() ) {
       if( qCSV_ReadLineByLine == _readMode )
-        _fieldData[index] = val;
+        _fieldData[index] = val.trimmed();
       else
-        _data[_currentLineNumber][index] = val;
+        _data[_currentLineNumber][index] = val.trimmed();
     }
     else {
       _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
@@ -449,7 +449,7 @@ QString qCSV::field( const int index ){
 
   if ( dataList->size() > 0 ){
     if ( dataList->size() > index ){
-      ret_val = dataList->at( index );
+      ret_val = dataList->at( index ).trimmed();
     }
     else{
       _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
@@ -732,7 +732,12 @@ bool qCSV::appendRow( const QStringList& values ) {
   if( qCSV_ReadLineByLine == _readMode )
     return false;
   else if( values.count() == _fieldNames.count() ) {
-    _data.append( values );
+    QStringList trimmedVals;
+    for( int i = 0; i < values.count(); ++i ) {
+      trimmedVals.append( values.at(i).trimmed() );
+    }
+
+    _data.append( trimmedVals );
     return true;
   }
   else {
