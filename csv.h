@@ -105,7 +105,7 @@ class qCSV {
 
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
-    int currentLineNumber(){ return _currentLineNumber; }
+    int currentLineNumber(){ if( -1 == _currentLineNumber ) return 0; else return _currentLineNumber; }
 
     QString field( const int index );
     QString field( QString fName );
