@@ -11,8 +11,8 @@
  * High-level, user-friendly functions
  * -----------------------------------
  */
-bool magicIsAsciiTextFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL );
-QString magicFileTypeInfo( QString fileName, bool* error = NULL );
+bool magicIsAsciiTextFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
+QString magicFileTypeInfo( QString fileName, bool* error = NULL, QString* errorMessage = NULL );
 
 
 /*
@@ -20,7 +20,7 @@ QString magicFileTypeInfo( QString fileName, bool* error = NULL );
  * -------------------------------------
  */
 struct magic_set;
-magic_set* magicLoadMagic( QString magicFile, int flags );
+magic_set* magicLoadMagic( QString magicFile, int flags, QString& errMsg );
 bool magicProcess( struct magic_set* ms, QString fileName, QString& fileTypeInfo, QString& errMsg );
 void magicCloseMagic( struct magic_set* ms );
 
