@@ -7,14 +7,15 @@
 #include <qfile.h>
 
 
-QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* errorMessage /* = NULL */ ) {
-  // Determine which magic file to use
-  //----------------------------------
+QString setMagicPath( bool* error, QString* errorMessage ) {
   QString magicFile;
+
   if( QFile::exists( "C:/libs/C_libs/bin/magic" ) )
     magicFile = "C:/libs/C_libs/bin/magic";
   else if( QFile::exists(  QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
     magicFile = QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
+  else if( QFile::exists( "/usr/share/file/magic" ) )
+    magicFile = "/usr/share/file/magic";
   else if( QFile::exists( "/etc/magic" ) )
     magicFile = "/etc/magic";
   else {
@@ -22,8 +23,19 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* 
       *error = true;
     if( NULL != errorMessage )
       *errorMessage = "Could not find magic file.";
+  }
 
-    return "";
+  return magicFile;
+}
+
+
+QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* errorMessage /* = NULL */ ) {
+  // Determine which magic file to use
+  //----------------------------------
+  QString magicFile = setMagicPath( error, errorMessage );
+
+  if( magicFile.isEmpty() ) {
+    return QString();
   }
 
   // Set up magic
@@ -72,19 +84,9 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* 
 bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
-  QString magicFile;
-  if( QFile::exists( "C:/libs/C_libs/bin/magic" ) )
-    magicFile = "C:/libs/C_libs/bin/magic";
-  else if( QFile::exists(  QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
-    magicFile = QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
-  else if( QFile::exists( "/etc/magic" ) )
-    magicFile = "/etc/magic";
-  else {
-    if( NULL != error )
-      *error = true;
-    if( NULL != errorMessage )
-      *errorMessage = "Could not find magic file.";
+  QString magicFile = setMagicPath( error, errorMessage );
 
+  if( magicFile.isEmpty() ) {
     return false;
   }
 
