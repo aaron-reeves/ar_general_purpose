@@ -248,7 +248,7 @@ void CFileList::getFileNames( const QString& dirName, QString filter, const bool
 			}
 			else {
         str = finfo.filePath().toLower();
-        if( str.endsWith( filter ) ) {
+        if( ( filter == ".*" ) || str.endsWith( filter ) ) {
           listItem = CPathString( finfo.filePath() );
           if( NULL != _fileList )
             _fileList->append( listItem );

@@ -31,9 +31,20 @@ void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ 
     appLog->logMessage( msg, logLevel );
 }
 
+void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
+  for( int i = 0; i < msgs.count(); ++i ) {
+    logMsg( msgs.at(i), logLevel );
+  }
+}
+
 
 void logVerbose( const QString& msg ) {
   logMsg( msg, LoggingVerbose );
+}
+
+
+void logBlank( const LogLevel logLevel /* = LoggingTypical */ ) {
+  logMsg( QString(), logLevel );
 }
 
 
@@ -245,17 +256,29 @@ void CAppLog::truncateLogFile( void ) {
 void CAppLog::logMessage( const QString& message, const int logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
+  QString str;
 
   if( _useStderr ) {
-    qDebug() << "          (app)" << message;    
+    qDebug() << "          (log)" << message;
   }
   
   if( LoggingPending == _logLevel ) {
-    msg = new CLogMessage( logLevel, QString( "%1: %2" ).arg( dt ).arg( message ) );
+    if( !message.isEmpty() ) {
+      str = QString( "%1: %2" ).arg( dt ).arg( message );
+    }
+    else {
+      str = "";
+    }
+
+    msg = new CLogMessage( logLevel, str );
     _pending->append( msg );    
   }
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
-    *_logTextStream << ::endl << dt << ": " << message << ::flush;
+    if( !message.isEmpty() )
+      *_logTextStream << ::endl << dt << ": " << message << ::flush;
+    else
+      *_logTextStream << ::endl << message << ::flush;
+
     ++_logLineCount;
     if( _autoTruncate && (10000 < _logLineCount) ) {
       truncateLogFile();

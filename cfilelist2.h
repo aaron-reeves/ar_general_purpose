@@ -216,9 +216,6 @@ class CFileList : public QList<CPathString> {
          */
         void clear();
 
-    private:
-        CFileList( bool createDirList );
-
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
         Parameters are identical to the constructor.  File names that match 'filter' are appended to the list.
@@ -229,6 +226,9 @@ class CFileList : public QList<CPathString> {
         @param recurse bool indicating whether to list directory contents recursively.
         */
         void getFileNames( const QString& path, QString filter, const bool recurse );
+
+    private:
+        CFileList( bool createDirList );
 
 				QString _startingDir;
         CFileList* _dirList;

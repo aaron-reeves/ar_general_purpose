@@ -31,8 +31,9 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
  *    return false;
  *  }
  *
- *  while( -1 != csv.moveNext() )
+ *  while( -1 != csv.moveNext() ) {
  *    doStuff();
+ *  }
  *
  *  csv.close();
  *
@@ -48,11 +49,11 @@ namespace CSV {
 }
 
 
-class qCSV : public QObject {
-  Q_OBJECT
 
+class qCSV {
   public:
     enum ReadModes {
+      qCSV_UnspecifiedMode,
       qCSV_ReadLineByLine,
       qCSV_ReadEntireFile
     };
@@ -70,21 +71,41 @@ class qCSV : public QObject {
     };
 
     qCSV();
+
+    // This version is used to generate a CSV object from a file.
     qCSV(
       const QString& filename,
       const bool containsFieldList,
       const QChar& stringToken = '\0',
-      const bool stringsContainCommas = true,
+      const bool stringsContainDelimiters = true,
       const int readMode = qCSV::qCSV_ReadLineByLine,
       const bool checkForComment = false
     );
+
+    // This version is used to generate a CSV object from a big, long string.
+    // FIXME/WARNING: This function doesn't yet support all of the same capabilities that
+    // reading a CSV from a file does.  It almost certainly needs work!
+    qCSV(
+      const int dummy,
+      QString text,
+      const bool containsFieldList,
+      const QChar& stringToken = '\0',
+      const bool stringsContainDelimiters = true
+    );
+
+    // Used for building a CSV data set from scratch.
+    qCSV( const QStringList& fieldNames );
+    qCSV( const QStringList& fieldNames, const QList<QStringList>& data );
+
+    qCSV( const qCSV& other );
+
     virtual ~qCSV();
 
-    void debug();
+    void debug( int nLines /* = 0 */ );
 
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
-    int currentLineNumber(){ return _currentLineNumber; }
+    int currentLineNumber(){ if( -1 == _currentLineNumber ) return 0; else return _currentLineNumber; }
 
     QString field( const int index );
     QString field( QString fName );
@@ -98,27 +119,39 @@ class qCSV : public QObject {
     QString errorMsg(){ return _errorMsg; }
     int columnCount(){ return _columnCount; }
     QStringList fieldData(){ return _fieldData; }
+
     int fieldCount(){ return _fieldNames.count(); }
-    QStringList fieldNames(){return _fieldNames; }
+    int fieldIndexOf( QString fieldName );
+    bool containsFieldName( QString fieldName );
+    QStringList fieldNames() {return _fieldNames; }
+
     int rowCount();
     bool writeFile( const QString &filename, const QString &codec = "" );
     int nCommentRows(){ return _nCommentRows; }
+    QString sourceFileName() { return _srcFilename; }
 
     void setField( const int index, const QString& val );
     void setField( QString fName, const QString& val );
     void setField( const int index, const int rowNumber, const QString& val );
     void setField( QString fName, const int rowNumber, const QString& val );
 
+    bool renameFields( const QStringList& newFieldNames );
+    bool renameField( QString oldName, QString newName );
+
     // These functions currently work only for read mode qCSV_ReadEntireFile.
-    void appendField( const QString& fieldName );
-    void removeField( const QString& fieldName );
-    void removeField( const int fieldNumber );
+    bool appendField( const QString& fieldName );
+    bool removeField( const QString& fieldName );
+    bool removeField( const int fieldNumber );
+    bool appendRow( const QStringList& values );
+    QStringList fieldValues( const int fieldNumber, const bool unique = false );
+    QStringList fieldValues( const QString& fieldName, const bool unique = false );
+    qCSV filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
 
     // Mutator Members
     void setContainsFieldList ( bool setVal ); //  if True line one of the file contains a list of field names
     void setFilename ( QString filename );
     bool open();
-    bool close();
+    void close();
     void toFront();
     int moveNext();
     void setStringToken ( QChar token );
@@ -128,15 +161,20 @@ class qCSV : public QObject {
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     void setDelimiter( const QChar val ) { _delimiter = val; }
 
-  signals:
-    void nBytesRead( const int val );
-
   protected:
     void initialize();
     int readNext();
 
+    bool reallyOpen( const bool force );
+
+    void clearError();
+    QStringList writeLine( const QStringList& line );
+
+    bool isCommentLine( const QString& line );
+
     QString   _srcFilename;
-    QFile     _srcFile;
+    QFile*    _srcFile;
+    bool      _isOpen;
     QString   _currentLine;
     int       _currentLineNumber;
     bool      _firstDataRowEncountered;
@@ -167,12 +205,50 @@ class qCSV : public QObject {
 
     // All rows of data, if an entire file has been read into memory.
     QList<QStringList> _data;
-
-    void clearError();
-    QStringList writeLine( const QStringList& line );
-
-    bool isCommentLine( const QString& line );
 };
+
+
+class QCsvObject : public QObject, qCSV {
+  Q_OBJECT
+
+  public:
+    QCsvObject();
+
+    // This version is used to generate a CSV object from a file.
+    QCsvObject(
+      const QString& filename,
+      const bool containsFieldList,
+      const QChar& stringToken = '\0',
+      const bool stringsContainDelimiters = true,
+      const int readMode = qCSV::qCSV_ReadLineByLine,
+      const bool checkForComment = false
+    );
+
+    // This version is used to generate a CSV object from a big, long string.
+    // FIXME/WARNING: This function doesn't yet support all of the same capabilities that
+    // reading a CSV from a file does.  It almost certainly needs work!
+    QCsvObject(
+      const int dummy,
+      QString text,
+      const bool containsFieldList,
+      const QChar& stringToken = '\0',
+      const bool stringsContainDelimiters = true
+    );
+
+    // Used for building a CSV data set from scratch.
+    QCsvObject( const QStringList& fieldNames );
+    QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data );
+
+    //qCSV( const qCSV& other );
+
+    virtual ~QCsvObject();
+
+    int readNext();
+
+  signals:
+    void nBytesRead( const int val );
+};
+
 
 #endif // CSV_H
 
