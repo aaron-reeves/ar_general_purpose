@@ -54,11 +54,15 @@ class CConfigFile {
 
     QString errorMessage() { return _errorMessage; }
 
+    QString fileName() { return _fileName; }
+
   protected:
     void buildBasic( const QString& fn );
     int processBlock( QStringList strList );
     int processFile( QFile* file );
     int fillBlock( QHash<QString, QString>* block, QStringList strList );
+
+    QString _fileName;
 
     QHash< QString, QHash<QString, QString>* >* _blocks;
 

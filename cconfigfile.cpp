@@ -29,6 +29,8 @@ QString ConfigReturnCode::resultString( const int& returnCode ) {
 }
 
 CConfigFile::CConfigFile( QStringList* args ) {
+  _fileName = "";
+
   if( 1 != args->count() )
     _returnValue = ConfigReturnCode::BadArguments;
   else
@@ -37,6 +39,8 @@ CConfigFile::CConfigFile( QStringList* args ) {
 
 
 CConfigFile::CConfigFile( const QString& configFileName ) {
+  _fileName = configFileName;
+
   buildBasic( configFileName );
 }
 
