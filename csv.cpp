@@ -1000,6 +1000,8 @@ int qCSV::moveNext(){
     ++_currentLineNumber;
 
     if( _currentLineNumber < _data.count() ) {
+      _fieldData.clear();
+      _fieldData = _data.at( _currentLineNumber );
       return _data.at( _currentLineNumber ).count();
     }
     else {
