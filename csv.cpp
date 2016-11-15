@@ -270,9 +270,12 @@ qCSV::qCSV(
 
   QList<QStringList> items = CSV::parseFromString( text );
 
-  _fieldNames = items.at(0);
-  for( int i = 0; i < _fieldNames.count(); ++i ) {
-    _fieldsLookup.insert( _fieldNames.at(i).toLower(), i );
+
+  QString str;
+  for( int i = 0; i < items.at(0).count(); ++i ) {
+    str = items.at(0).at(i).trimmed();
+    _fieldNames.append( str );
+    _fieldsLookup.insert( str.toLower(), i );
   }
 
   for( int i = 1; i < items.count(); ++i ) {
@@ -284,11 +287,13 @@ qCSV::qCSV( const QStringList& fieldNames ) {
   initialize();
   _readMode = qCSV_ReadEntireFile;
 
-  _fieldNames = fieldNames;
   _containsFieldList = true;
 
-  for( int i = 0; i < _fieldNames.count(); ++i ) {
-    _fieldsLookup.insert( _fieldNames.at(i).toLower(), i );
+  QString str;
+  for( int i = 0; i < fieldNames.count(); ++i ) {
+     str = fieldNames.at(i).trimmed();
+    _fieldNames.append( str );
+    _fieldsLookup.insert( str.toLower(), i );
   }
 }
 
@@ -297,11 +302,13 @@ qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
   initialize();
   _readMode = qCSV_ReadEntireFile;
 
-  _fieldNames = fieldNames;
   _containsFieldList = true;
 
-  for( int i = 0; i < _fieldNames.count(); ++i ) {
-    _fieldsLookup.insert( _fieldNames.at(i).toLower(), i );
+  QString str;
+  for( int i = 0; i < fieldNames.count(); ++i ) {
+     str = fieldNames.at(i).trimmed();
+    _fieldNames.append( str );
+    _fieldsLookup.insert( str.toLower(), i );
   }
 
   for( int i = 0; i < data.count(); ++i ) {
@@ -388,7 +395,7 @@ qCSV::~qCSV() {
 }
 
 
-void qCSV::debug() {
+void qCSV::debug( int nLines /* = 0 */ ) {
   qDebug() << "qCSV contents:";
 
   qDebug() << "numFields:" << this->fieldCount();
@@ -400,7 +407,10 @@ void qCSV::debug() {
   if( qCSV_ReadLineByLine == _readMode )
     qDebug() << "(There is nothing to display)";
   else {
-    for( int i = 0; i < _data.count(); ++i ) {
+    if( (1 > nLines) || ( _data.count() < nLines ) )
+      nLines = _data.count();
+
+    for( int i = 0; i < nLines; ++i ) {
       qDebug() << _data.at(i).join( _delimiter ).prepend( "  " );
     }
   }
@@ -583,6 +593,7 @@ QString qCSV::field( QString fName, const int rowNumber ) {
 }
 
 QVariantList qCSV::fields( QString fName ) {
+  fName = fName.toLower();
   QVariantList result;
   clearError();
 
@@ -634,24 +645,62 @@ bool qCSV::renameFields( const QStringList& newFieldNames ) {
   if( newFieldNames.count() != _fieldNames.count() )
     return false;
   else {
-    _fieldNames = newFieldNames;
-    return true;
+    bool result = true;
+    for( int i = 0; i < newFieldNames.count(); ++i ) {
+      result = result && renameField( _fieldNames.at(i), newFieldNames.at(i) );
+    }
+    return result;
   }
 }
 
 
-bool qCSV::renameField( const QString& oldName, QString newName ) {
-  newName = newName.trimmed().toLower();
+int qCSV::fieldIndexOf( QString fieldName ) {
+  fieldName = fieldName.trimmed();
+  int result = -1;
 
-  if( oldName == newName )
+  for( int i = 0; i < _fieldNames.count(); ++i ) {
+    if( 0 == fieldName.compare( _fieldNames.at(i), Qt::CaseInsensitive ) ) {
+      result = i;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool qCSV::containsFieldName( QString fieldName ) {
+  return _fieldsLookup.contains( fieldName.trimmed().toLower() );
+}
+
+
+bool qCSV::renameField( QString oldName, QString newName ) {
+  newName = newName.trimmed();
+  oldName = oldName.trimmed();
+
+  if( oldName.toLower() == newName.toLower() ) {
+    // This could be a change of case.  Go through the motions, just in case.
+    int idx = fieldIndexOf( oldName );
+
+    _fieldNames.replace( idx, newName );
+    int hashVal = _fieldsLookup.value( oldName.toLower() );
+    _fieldsLookup.remove( oldName.toLower() );
+    _fieldsLookup.insert( newName.toLower(), hashVal );
+
     return true;
-  else if( !_fieldNames.contains( oldName ) )
+  }
+  else if( !_fieldNames.contains( oldName, Qt::CaseInsensitive ) )
     return false;
-  else if( _fieldNames.contains( newName ) )
+  else if( _fieldNames.contains( newName, Qt::CaseInsensitive ) )
     return false;
   else {
-    int idx = _fieldNames.indexOf( oldName );
+    int idx = fieldIndexOf( oldName );
+
     _fieldNames.replace( idx, newName );
+    int hashVal = _fieldsLookup.value( oldName.toLower() );
+    _fieldsLookup.remove( oldName.toLower() );
+    _fieldsLookup.insert( newName.toLower(), hashVal );
+
     return true;
   }
 }
@@ -665,7 +714,7 @@ bool qCSV::appendField( const QString& fieldName ) {
   if( qCSV_ReadLineByLine == _readMode )
     return false;
   else {
-    _fieldNames.append( fieldName.trimmed().toLower() );
+    _fieldNames.append( fieldName.trimmed() );
     _fieldsLookup.insert( fieldName.trimmed().toLower(), _fieldNames.count() - 1 );
 
     for( int i = 0; i < _data.count(); ++i ) {
@@ -1019,7 +1068,7 @@ int qCSV::readNext() {
       }
 
       if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
-        _fieldNames.append( tempString.toLower() );
+        _fieldNames.append( tempString );
         _fieldsLookup.insert( tempString.toLower(), i );
       }
       else if ( _containsFieldList && _concatenateDanglingEnds ){

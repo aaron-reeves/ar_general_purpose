@@ -101,7 +101,7 @@ class qCSV {
 
     virtual ~qCSV();
 
-    void debug();
+    void debug( int nLines /* = 0 */ );
 
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
@@ -119,8 +119,12 @@ class qCSV {
     QString errorMsg(){ return _errorMsg; }
     int columnCount(){ return _columnCount; }
     QStringList fieldData(){ return _fieldData; }
+
     int fieldCount(){ return _fieldNames.count(); }
-    QStringList fieldNames(){return _fieldNames; }
+    int fieldIndexOf( QString fieldName );
+    bool containsFieldName( QString fieldName );
+    QStringList fieldNames() {return _fieldNames; }
+
     int rowCount();
     bool writeFile( const QString &filename, const QString &codec = "" );
     int nCommentRows(){ return _nCommentRows; }
@@ -132,7 +136,7 @@ class qCSV {
     void setField( QString fName, const int rowNumber, const QString& val );
 
     bool renameFields( const QStringList& newFieldNames );
-    bool renameField( const QString& oldName, QString newName );
+    bool renameField( QString oldName, QString newName );
 
     // These functions currently work only for read mode qCSV_ReadEntireFile.
     bool appendField( const QString& fieldName );
