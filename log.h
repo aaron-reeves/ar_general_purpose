@@ -32,6 +32,7 @@ enum LogLevel {
 
 
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
+void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
 void logVerbose( const QString& msg );
 void logBlank( const LogLevel logLevel = LoggingTypical );
 

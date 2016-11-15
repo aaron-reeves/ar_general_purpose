@@ -31,6 +31,12 @@ void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ 
     appLog->logMessage( msg, logLevel );
 }
 
+void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
+  for( int i = 0; i < msgs.count(); ++i ) {
+    logMsg( msgs.at(i), logLevel );
+  }
+}
+
 
 void logVerbose( const QString& msg ) {
   logMsg( msg, LoggingVerbose );
