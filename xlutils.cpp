@@ -17,11 +17,11 @@ Public License as published by the Free Software Foundation; either version 2 of
 QString _lastErrorMessage;
 bool _error;
 
-QString lastErrorMessage() {
+QString XLSX::lastErrorMessage() {
   return _lastErrorMessage;
 }
 
-bool error() {
+bool XLSX::error() {
   return _error;
 }
 
