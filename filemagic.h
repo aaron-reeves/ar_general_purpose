@@ -12,6 +12,7 @@
  * -----------------------------------
  */
 bool magicIsAsciiTextFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
+bool magicIsXlsxFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
 QString magicFileTypeInfo( QString fileName, bool* error = NULL, QString* errorMessage = NULL );
 
 

@@ -6,6 +6,8 @@
 #include <qdebug.h>
 #include <qfile.h>
 
+const int CHECKTEXT = 1;
+const int CHECKXLSX = 2;
 
 QString setMagicPath( bool* error, QString* errorMessage ) {
   QString magicFile;
@@ -81,7 +83,7 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* 
 }
 
 
-bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool _magicIsType( const int type, QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile = setMagicPath( error, errorMessage );
@@ -121,13 +123,27 @@ bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* 
     if( NULL != error )
       *error = false;
 
-    result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
+    switch( type ) {
+      case CHECKTEXT:
+          result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
+          //    result = (
+          //      fileTypeInfo.startsWith( "ASCII text" )
+          //      || fileTypeInfo.startsWith( "ASCII English text" )
+          //      || fileTypeInfo.startsWith( "ASCII C program text" )
+          //    );
+        break;
+      case CHECKXLSX:
+          result = (
+            ( fileTypeInfo.startsWith( "Zip archive data" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+            || ( 0 == fileTypeInfo.compare( "Microsoft Excel 2007+" ) )
+            || ( fileTypeInfo.contains( "Microsoft OOXML" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+          );
+        break;
+      default:
+          Q_ASSERT( false );
+        break;
+    }
 
-    //    result = (
-    //      fileTypeInfo.startsWith( "ASCII text" )
-    //      | fileTypeInfo.startsWith( "ASCII English text" )
-    //      | fileTypeInfo.startsWith( "ASCII C program text" )
-    //    );
   }
   else {
     if( NULL != error )
@@ -141,6 +157,16 @@ bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* 
   magicCloseMagic( magic );
 
   return result;
+}
+
+
+bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+  return _magicIsType( CHECKTEXT, fileName, error, returnTypeInfo, errorMessage );
+}
+
+
+bool magicIsXlsxFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+  return _magicIsType( CHECKXLSX, fileName, error, returnTypeInfo, errorMessage );
 }
 
 
