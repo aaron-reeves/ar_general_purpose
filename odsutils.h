@@ -16,6 +16,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <ods/odsCore>
 
+#include <ar_general_purpose/csv.h>
+
 namespace ODS {
   QString getCellValue( ods::Cell *cell );
   QString getCellValue( ods::Sheet *sheet, const int colIdx, const int rowIdx );
