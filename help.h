@@ -46,6 +46,16 @@ Public License as published by the Free Software Foundation; either version 2 of
  *   list.append( "  show tables:", "Displays a list of tables in the database, excluding Microsoft Access system tables." );
  *   list.append( "  describe <tablename>:", "Describes all tables, excluding system tables." );
  *
+ *   // Another new block, with a bulleted list (note the hyphens):
+ *   list.append( "", "Simpsons characters:" );
+ *   list.append( "  Adults:", "These are the grownups." );
+ *   list.append( "  ", "- Homer" );
+ *   list.append( "  ", "- Marge" );
+ *   list.append( "  Kids:", "These are the Kids." );
+ *   list.append( "  ", "- Bart" );
+ *   list.append( "  ", "- Lisa" );
+ *   list.append( "  ", "- Maggie" );
+ *
  *   // Display the message.
  *   printHelpList( list );
  * }
