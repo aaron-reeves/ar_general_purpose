@@ -78,6 +78,7 @@ class CAppLog {
     
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
+    CAppLog& operator<<( const int number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
 
   protected:
@@ -100,6 +101,7 @@ class CAppLog {
     bool _autoTruncate;
     FileFrequency _freq;
     bool _consoleEcho;
+    QString _msgInProgress;
 };
 
 #endif // LOG_H

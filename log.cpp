@@ -261,6 +261,10 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
   if( _useStderr ) {
     qDebug() << "          (log)" << message;
   }
+
+  if( _consoleEcho ) {
+    cout << message << endl << ::flush;
+  }
   
   if( LoggingPending == _logLevel ) {
     if( !message.isEmpty() ) {
@@ -288,33 +292,33 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
 
 
 CAppLog& CAppLog::operator<<( const QString& message ) {
-  this->logMessage( message.trimmed(), LoggingTypical );
-  if( _consoleEcho ) {
-    cout << message << ::flush;
-  }
+  _msgInProgress.append( message );
 
   return *this;
 }
 
 
 CAppLog& CAppLog::operator<<( const char* message ) {
-  this->logMessage( QString( "%1" ).arg( message ), LoggingTypical );
-  if( _consoleEcho ) {
-    cout << message << ::flush;
-  }
+  _msgInProgress.append( message );
+
+  return *this;
+}
+
+
+CAppLog& CAppLog::operator<<( const int number ) {
+  _msgInProgress.append( QString::number( number ) );
 
   return *this;
 }
 
 
 CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
-  if( _consoleEcho ) {
-    if( f == ::endl ) {
-      cout << ::endl;
-    }
-    else if( f == ::flush ) {
-      cout << ::flush;
-    }
+  if( (f == ::endl) || (f == ::flush) ) {
+    logMsg( _msgInProgress, LoggingTypical );
+    _msgInProgress.clear();
+  }
+  else {
+    // do nothing.
   }
 
   return *this;
