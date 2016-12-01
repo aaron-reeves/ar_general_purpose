@@ -441,7 +441,7 @@ bool isComment( const QString st ) {
 }
 
 
-bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts ) {
+bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts ) {
   QString newPart;
   int i;
   QRegExp re;
@@ -449,10 +449,12 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
   bool prevMatchFound;
   bool debug = false;
 
+  int counter = nTotalParts - patternsToMatch.count();
+
   re = patternsToMatch.takeAt(0);
 
   if( debug ) qDebug() << "fullLine (before processing):" << fullLine;
-  if( debug ) qDebug() << "Expression:" << re.pattern();
+  if( debug ) qDebug() << QString( "Expression %1:" ).arg( counter ) << re.pattern();
 
   // Start with the entire line, and eliminate characters one at a time until the pattern matches the new string.
   i = 0;
@@ -460,7 +462,7 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
   while( i <= fullLine.length() ) {
     newPart = fullLine.left( fullLine.length() - i );
 
-    if( debug ) qDebug() << "newPart (1):" << newPart;
+    //if( debug ) qDebug() << "newPart (1):" << newPart;
 
     if( re.exactMatch( newPart) ) {
       // We found a match.  Keep going until we run out of it.
@@ -477,7 +479,7 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
     ++i;
   }
 
-  if( debug ) qDebug() << "Initial match:" << newPart;
+  //if( debug ) qDebug() << "Initial match:" << newPart;
 
   // Now, read forward again one character at a time for as long as the pattern matches the new string.
   prevMatchFound = false;
@@ -485,7 +487,7 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
   while( i <= fullLine.length() ) {
     newPart = fullLine.left(i);
 
-    if( debug ) qDebug() << "newPart(2):" << newPart;
+    //if( debug ) qDebug() << "newPart(2):" << newPart;
 
     if( !re.exactMatch( newPart ) ) {
       if( prevMatchFound ) {
@@ -505,12 +507,12 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
 
   newPart = fullLine.left(i);
   if( re.exactMatch( newPart ) ) {
-    if( debug ) qDebug() << "MATCH FOUND:" << newPart;
+    if( debug ) qDebug() << "MATCH FOUND:" << newPart << endl;
 
     newList.append( newPart );
-    if( debug ) qDebug() << "Remaining line (before snip):" << fullLine.right( fullLine.length() - newPart.length() );
+    //if( debug ) qDebug() << "Remaining line (before snip):" << fullLine.right( fullLine.length() - newPart.length() );
 
-    if( debug ) qDebug() << fullLine.length() << newPart.length();
+    //if( debug ) qDebug() << fullLine.length() << newPart.length();
 
     fullLine = fullLine.right( fullLine.length() - newPart.length() );
 
@@ -519,10 +521,10 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
     //if( !fullLine.isEmpty() && !newPart.isEmpty() )
       fullLine = fullLine.right( fullLine.length() - 1 );
 
-    if( debug ) qDebug() << "Remaining line:" << fullLine;
+    //if( debug ) qDebug() << "Remaining line:" << fullLine;
 
     if( 0 < patternsToMatch.count() ) { // Is there more to do?
-      success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1 );
+      success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1, nTotalParts );
     }
     else {
       if( fullLine.isEmpty() )
@@ -547,7 +549,7 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
 }
 
 
-bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts ) {
+bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts ) {
   QString newPart;
   int i;
   QRegExp re;
@@ -588,7 +590,7 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
     fullLine = fullLine.right( fullLine.length() - newPart.length() - 1 );// The -1 eliminates what is now a leading comma.
 
     if( 0 < patternsToMatch.count() ) { // Is there more to do?
-      success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1 );
+      success = reprocessCsv_v1( fullLine, patternsToMatch, newList, nExpectedParts - 1, nTotalParts );
     }
     else {
       if( fullLine.isEmpty() )

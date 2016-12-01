@@ -55,8 +55,8 @@ bool isComment( const QString st );
  *
  * If a new list can be constructed that matches all of the regular expressions, then success is set to true.
  */
-bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
-bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
+bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts );
+bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts );
 
 
 // Replaces single quotes " with double quotes "" and wraps s in double quotes.
