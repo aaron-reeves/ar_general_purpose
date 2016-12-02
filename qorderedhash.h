@@ -15,27 +15,102 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
-template <typename Key, typename T>
+template <class Key, class T>
 class QOrderedHash {
   public:
-    QOrderedHash();
-    QOrderedHash( const QOrderedHash<Key, T>& other );
-    ~QOrderedHash();
+    QOrderedHash() {
+      // Nothing to do here.
+    }
+    QOrderedHash( const QOrderedHash<Key, T>& other ) {
+      this->_hash = other._hash;
+      this->_values = other._values;
+      this->_keys = other._keys;
+    }
 
-    const T at( int i ) const;
-    void clear();
-    bool containsKey( const Key& key ) const;
-    bool containsValue( const T& value ) const;
-    int count() const;
-    int countByKey( const Key& key ) const;
-    int countByValue( const T& value ) const;
-    void insert( const Key& key, const T& value );
-    bool isEmpty() const;
-    QList<Key> keys() const;
-    int removeKey( const Key& key );
-    int removeAllValues( const T& value );
-    const T value( const Key& key ) const;
-    QList<T> values() const;
+    ~QOrderedHash() {
+      // Nothing to do here.
+    }
+
+    const T at( int i ) const { return _hash.value( _keys.at(i) ); }
+    void clear() { _keys.clear(); _values.clear(); _hash.clear(); }
+    bool containsKey( const Key& key ) const { return _hash.contains( key ); }
+    bool containsValue( const T& value ) const { return _values.contains( value ); }
+    int count() const { return _hash.count(); }
+    int countByKey( const Key& key ) const { return _hash.count( key ); }
+    int countByValue( const T& value ) const { return _values.count( value ); }
+    bool isEmpty() const { return _hash.isEmpty(); }
+    QList<Key> keys() const { return _keys; }
+    const T value( const Key& key ) const { return _hash.value( key ); }
+    QList<T>values() const { return _values; }
+
+    void insert( const Key& key, const T& value ) {
+      int idx = _keys.indexOf( key );
+      if( -1 != idx ) {
+        _keys.removeAt( idx );
+        _values.removeAt( idx );
+      }
+
+      _hash.insert( key, value );
+      _keys.append( key );
+      _values.append( value );
+    }
+
+    int removeKey( const Key& key ) {
+      int idx = _keys.indexOf( key );
+      if( -1 != idx ) {
+        _keys.removeAt( idx );
+        _values.removeAt( idx );
+      }
+
+      return _hash.remove( key );
+    }
+
+    int removeAllValues( const T& value ) {
+      int result = 0;
+      int idx = _values.indexOf( value );
+      while( -1 != idx ) {
+        Key key = _keys.at( idx );
+        _keys.removeAt( idx );
+        _values.removeAt( idx );
+        _hash.remove( key );
+
+        idx = _values.indexOf( value );
+
+        ++result;
+      }
+
+      return result;
+    }
+
+    T takeFirst() {
+      Q_ASSERT( !this->isEmpty() );
+
+      QString key = _keys.first();
+      _keys.removeFirst();
+      _values.removeFirst();
+
+      return _hash.take( key );
+    }
+
+    T takeLast() {
+      Q_ASSERT( !this->isEmpty() );
+
+      QString key = _keys.last();
+      _keys.removeLast();
+      _values.removeLast();
+
+      return _hash.take( key );
+    }
+
+    T takeAt( const int i ) {
+      Q_ASSERT( !this->isEmpty() );
+
+      QString key = _keys.at(i);
+      _keys.removeAt(i);
+      _values.removeAt(i);
+
+      return _hash.take( key );
+    }
 
   protected:
     QList<Key> _keys;
@@ -43,12 +118,12 @@ class QOrderedHash {
     QHash<Key, T> _hash;
 };
 
-template <typename Key, typename T>
-class QOrderedHashIterator {
-  public:
-    QOrderedHashIterator();
+//template <class Key, class T>
+//class QOrderedHashIterator {
+//  public:
+//    QOrderedHashIterator();
 
-};
+//};
 
 void testQOrderedHash();
 
