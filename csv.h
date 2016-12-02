@@ -135,6 +135,8 @@ class qCSV {
     void setField( const int index, const int rowNumber, const QString& val );
     void setField( QString fName, const int rowNumber, const QString& val );
 
+    void setLinesToSkip( const int val ) { _linesToSkip = val; }
+
     bool renameFields( const QStringList& newFieldNames );
     bool renameField( QString oldName, QString newName );
 
@@ -156,10 +158,11 @@ class qCSV {
     int moveNext();
     void setStringToken ( QChar token );
     void setColumnCount( int set_val ){ _columnCount = set_val;}
-    void setStringsContainCommas( bool set_val ){ _stringsContainDelimiters = set_val;}
+    void setStringsContainDelimiters( bool set_val ){ _stringsContainDelimiters = set_val;}
     void setConcatenateDanglingEnds( bool set_val ){ _concatenateDanglingEnds = set_val; }
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     void setDelimiter( const QChar val ) { _delimiter = val; }
+    void setReadMode( const ReadModes val ) { _readMode = val; }
 
   protected:
     void initialize();
@@ -190,6 +193,9 @@ class qCSV {
     QChar     _delimiter;
     bool      _checkForComment;
     int       _nCommentRows;
+
+    int       _linesToSkip;
+    int       _linesSkipped;
 
     int _readMode;
 
