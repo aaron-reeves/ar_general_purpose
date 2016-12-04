@@ -54,6 +54,7 @@ class CConfigBlock : public QMap<QString, QString> {
     bool _removed;
 };
 
+typedef QMapIterator<QString, QString> CConfigBlockIterator;
 
 class CConfigFile {
   public:
