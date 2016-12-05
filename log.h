@@ -21,7 +21,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CAppLog;
 
-extern CAppLog* appLog;
+extern CAppLog appLog;
 
 enum LogLevel {
   LoggingPending,

@@ -24,11 +24,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <ar_general_purpose/qcout.h>
 
-CAppLog* appLog = NULL;
+CAppLog appLog;
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
-  if( NULL != appLog )
-    appLog->logMessage( msg, logLevel );
+  appLog.logMessage( msg, logLevel );
 }
 
 void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
