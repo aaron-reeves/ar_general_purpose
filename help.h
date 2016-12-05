@@ -67,8 +67,8 @@ class CHelpItem {
     CHelpItem( QString part1, QString part2 );
     CHelpItem( const char* part1, const char* part2 );
 
-    QString part1() { return _part1; }
-    QString part2() { return _part2; }
+    QString part1() const { return _part1; }
+    QString part2() const { return _part2; }
 
   protected:
     QString _part1;
@@ -82,6 +82,7 @@ class CHelpItemList : public QList<CHelpItem> {
     void append( const char* part1, const char* part2 );
     void append( const QString& part1, const QString& part2 );
     void append( const CHelpItemList& otherList );
+    void append();
 };
 
 void printHelpList( CHelpItemList list, const int extraPadding = 0 );
