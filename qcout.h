@@ -20,11 +20,12 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtCore/QString>
 
 extern QTextStream cout; //(stdout, QIODevice::WriteOnly);
+extern QTextStream cerr; //(stderr, QIODevice::WriteOnly);
 extern QTextStream cin;
 
 void setStdinEcho(bool enable = true);
 
-void cerr( const QString& msg, const bool silent );
-void cerr( const char* msg, const bool silent );
+void consoleErr( const QString& msg, const bool silent );
+void consoleErr( const char* msg, const bool silent );
 
 #endif // _QCOUT_H_

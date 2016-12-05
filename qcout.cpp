@@ -21,6 +21,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #endif
 
 QTextStream cout( stdout, QIODevice::WriteOnly );
+QTextStream cerr( stderr, QIODevice::WriteOnly );
 QTextStream cin( stdin,  QIODevice::ReadOnly );
 
 // From http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin
@@ -50,13 +51,13 @@ void setStdinEcho(bool enable /* = true */){
 }
 
 
-void cerr( const QString& msg, const bool silent ) {
+void consoleErr( const QString& msg, const bool silent ) {
   if( !silent )
     cout << msg << endl << flush;
 }
 
 
-void cerr( const char* msg, const bool silent ) {
+void consoleErr( const char* msg, const bool silent ) {
   if( !silent )
     cout << msg << endl << flush;
 }
