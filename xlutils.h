@@ -21,33 +21,9 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 namespace XLSX {
   QStringList readRow( QXlsx::Document* xlsx, const int rowIdx, const bool makeLower = false );
-  qCSV xlsxToCsv( const QString& filename, const int nCommentRows = 0, const QString& sheetname = "" );
   QString lastErrorMessage();
   bool error();
 }
-
-
-/* SAMPLE CODE
-   ===========
-  // For Excel file parsing
-  //-----------------------
-  int main() {
-    //QString filename = "C:/Users/areeves/Documents/ResearchProjects/sphn/sampleDataFiles/Salmonella/labdata/salmonella results - 20072016.XLSX";
-
-    qCSV csv = XLSX::xlsxToCsv( filename );
-
-    csv.debug();
-
-  //  QStringList sampleIDs = csv.fieldValues( "sampnum", true );
-
-  //  for( int i = 0; i < sampleIDs.count(); ++i ) {
-  //    qCSV filtered = csv.filter( "sampnum", sampleIDs.at( i ) );
-  //    qDebug() << filtered.rowCount();
-  //  }
-
-    return 0;
-  }
-*/
 
 #endif
 
