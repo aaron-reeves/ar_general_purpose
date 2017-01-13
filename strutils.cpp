@@ -62,12 +62,29 @@ QString postgresCase( const QString& str ) {
 }
 
 
-QString toTitleCase( QString str ){
-  QStringList list = str.simplified().split( ' ' );
-  for( int i = 0; i < list.count(); ++i )
-    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1).toLower();
+QString titleCase( QString str ){
+  str = str.simplified().trimmed();
+  QString result;
+  QChar c;
 
-  return list.join( " " );
+  for( int i = 0; i < str.count(); ++i ) {
+    c = str.at(i);
+
+    if( 0 == i )
+      result.append( c.toUpper() );
+    else if( str.at(i-1).isLetter() )
+      result.append( c.toLower() );
+    else
+      result.append( c );
+  }
+
+  return result;
+
+//  QStringList list = str.simplified().split( ' ' );
+//  for( int i = 0; i < list.count(); ++i )
+//    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1).toLower();
+
+//  return list.join( " " );
 }
 
 

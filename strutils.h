@@ -22,6 +22,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
 QString camelCase( const QString& str );
 QString postgresCase( const QString& str );
+QString titleCase( QString str );
 
 QString findAndRemove( QString str3, QString str1 );
 QString findAndReplace( QString str3, QString str2, QString str1 );
@@ -40,8 +41,6 @@ QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
-
-QString toTitleCase( QString str );
 
 QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
 QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
