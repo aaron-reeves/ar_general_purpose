@@ -67,7 +67,8 @@ class qCSV {
       qCSV_ERROR_INVALID_FIELD_NAME,
       qCSV_ERROR_INDEX_OUT_OF_RANGE,
       qCSV_ERROR_BAD_READ,
-      qCSV_ERROR_INVALID_FIELD_COUNT
+      qCSV_ERROR_INVALID_FIELD_COUNT,
+      qCSV_ERROR_OTHER
     };
 
     qCSV();
@@ -174,6 +175,8 @@ class qCSV {
     QStringList writeLine( const QStringList& line );
 
     bool isCommentLine( const QString& line );
+
+    void setFieldNames( const QStringList& fieldNames );
 
     QString   _srcFilename;
     QFile*    _srcFile;

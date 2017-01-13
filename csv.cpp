@@ -285,21 +285,21 @@ qCSV::qCSV(
 
 qCSV::qCSV( const QStringList& fieldNames ) {
   initialize();
-  _readMode = qCSV_ReadEntireFile;
-
-  _containsFieldList = true;
-
-  QString str;
-  for( int i = 0; i < fieldNames.count(); ++i ) {
-     str = fieldNames.at(i).trimmed();
-    _fieldNames.append( str );
-    _fieldsLookup.insert( str.toLower(), i );
-  }
+  setFieldNames( fieldNames );
 }
 
 
 qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
   initialize();
+  setFieldNames( fieldNames );
+
+  for( int i = 0; i < data.count(); ++i ) {
+    appendRow( data.at(i) );
+  }
+}
+
+
+void qCSV::setFieldNames( const QStringList& fieldNames ) {
   _readMode = qCSV_ReadEntireFile;
 
   _containsFieldList = true;
@@ -309,10 +309,6 @@ qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
      str = fieldNames.at(i).trimmed();
     _fieldNames.append( str );
     _fieldsLookup.insert( str.toLower(), i );
-  }
-
-  for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
   }
 }
 
