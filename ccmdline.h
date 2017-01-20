@@ -72,14 +72,14 @@ Public License as published by the Free Software Foundation; either version 2 of
       CCmdLine cmdLine;
 
       // parse argc,argv
-      if (cmdLine.SplitLine(argc, argv) < 1) {
+      if (cmdLine.splitLine(argc, argv) < 1) {
          // no switches were given on the command line, abort
          ASSERT(0);
          exit(-1);
       }
 
       // test for the 'help' case
-      if (cmdLine.HasSwitch("-h")) {
+      if (cmdLine.hasSwitch("-h")) {
          show_help();
          exit(0);
       }
@@ -88,9 +88,9 @@ Public License as published by the Free Software Foundation; either version 2 of
       QString p1_1, p1_2, p2_1;
       try {
          // if any of these fail, we'll end up in the catch() block
-         p1_1 = cmdLine.GetArgument("-p1", 0);
-         p1_2 = cmdLine.GetArgument("-p1", 1);
-         p2_1 = cmdLine.GetArgument("-p2", 0);
+         p1_1 = cmdLine.getArgument("-p1", 0);
+         p1_2 = cmdLine.getArgument("-p1", 1);
+         p2_1 = cmdLine.getArgument("-p2", 0);
 
       }
       catch (...) {
@@ -102,11 +102,11 @@ Public License as published by the Free Software Foundation; either version 2 of
       // get the optional parameters
 
       // convert to an int, default to '100'
-      int iOpt1Val =    atoi(cmdLine.GetSafeArgument("-opt1", 0, 100));
+      int iOpt1Val =    atoi(cmdLine.getSafeArgument("-opt1", 0, 100));
 
       // since opt2 has no arguments, just test for the presence of
       // the '-opt2' switch
-      bool bOptVal2 =   cmdLine.HasSwitch("-opt2");
+      bool bOptVal2 =   cmdLine.hasSwitch("-opt2");
 
       .... and so on....
 
@@ -128,6 +128,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 // the command line parser class
 class CCmdLine {
   public:
+    CCmdLine();
     CCmdLine( int argc, char** argv, bool clearArgs = true );
     CCmdLine( const QString& fileName ); 
   

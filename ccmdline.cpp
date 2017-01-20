@@ -55,6 +55,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/qcout.h>
 #include <ar_general_purpose/strutils.h>
 
+CCmdLine::CCmdLine() {
+  _originalString = "";
+}
+
 
 CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs ) {
   _originalString = "";

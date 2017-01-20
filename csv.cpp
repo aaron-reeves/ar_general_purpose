@@ -17,6 +17,8 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #include <QRegExp>
 #include <QDebug>
 
+#include <ar_general_purpose/strutils.h>
+
 QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',' */ ) {
   enum State {Normal, Quote} state = Normal;
   QStringList line;
@@ -166,13 +168,28 @@ QList<QStringList> CSV::parseFromFile(const QString &filename, const QChar delim
 }
 
 
-QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' */ ) {
+QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' */, const int stringCase /* = OriginalCase */ ) {
   QStringList output;
 
   foreach (QString value, line) {
+    switch( stringCase ) {
+      case TitleCase:
+        value = toTitleCase( value );
+        break;
+      case UpperCase:
+        value = value.toUpper();
+        break;
+      case LowerCase:
+        value = value.toLower();
+        break;
+      default:
+        // Do nothing.  Use OriginalCase.
+        break;
+    }
+
     value.replace( "\"", "\"\"" );
 
-    if( value.contains( QRegExp( "\"\r\n") ) || value.contains( delimiter ) || value.contains( QRegExp( "\\s+" ) ) ) {
+    if( value.contains( QRegExp( "\"\r\n" ) ) || value.contains( delimiter ) || value.contains( QRegExp( "\\s+" ) ) ) {
       output << ("\"" + value + "\"");
     } else {
       output << value;

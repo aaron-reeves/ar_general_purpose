@@ -299,6 +299,8 @@ QStringList CFileList::qStringList() const {
 
   for( i = 0; i < this->count(); ++i ) {
     strp = this->at(i);
+    strp.replace( "//", "/" );
+    strp.replace( "\\\\", "\\" );
     sl.append( strp );
   }
   return sl;

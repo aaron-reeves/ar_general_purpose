@@ -41,10 +41,17 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
  */
 
 namespace CSV {
+  enum StringCase {
+    OriginalCase,
+    TitleCase,
+    UpperCase,
+    LowerCase
+  };
+
   QStringList parseLine( const QString& string, const QChar delimiter = ',' );
   QList<QStringList> parseFromString(const QString &string, const QChar delimiter = ',' );
   QList<QStringList> parseFromFile(const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
-  QString writeLine( const QStringList& line, const QChar delimiter = ',' );
+  QString writeLine( const QStringList& line, const QChar delimiter = ',', const int stringCase = OriginalCase );
   bool write(const QList<QStringList> data, const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
 }
 
