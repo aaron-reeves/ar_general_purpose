@@ -28,6 +28,40 @@ QString ConfigReturnCode::resultString( const int& returnCode ) {
   return result;
 }
 
+
+CConfigBlock::CConfigBlock( const QString& name ) : QMap<QString, QString>() {
+  _name = name;
+  _removed = false;
+}
+
+
+CConfigBlock::CConfigBlock( const CConfigBlock& other ) : QMap<QString, QString>( other ) {
+  _name = other._name;
+  _removed = other._removed;
+}
+
+
+CConfigBlock::~CConfigBlock() {
+  // Do nothing.
+}
+
+void CConfigBlock::writeToStream( QTextStream* stream ) {
+  *stream << "[" << this->name() << "]" << endl;
+
+  foreach( const QString& key, this->keys() ) {
+    *stream << "  " << key << " <- " << this->value( key ) << endl;
+  }
+}
+
+
+void CConfigBlock::debug() {
+  qDebug() << QString( "Block '%1':" ).arg( this->name() ) << this->count();
+
+  foreach( const QString& key, this->keys() )
+    qDebug() << key << this->value( key );
+}
+
+
 CConfigFile::CConfigFile( QStringList* args ) {
   _fileName = "";
 
@@ -46,63 +80,152 @@ CConfigFile::CConfigFile( const QString& configFileName ) {
 
 
 CConfigFile::~CConfigFile() {
-  foreach( const QString& key, _blocks->keys() )
-    delete _blocks->take( key );
+  while( !_blockList->isEmpty() )
+    delete _blockList->takeLast();
 
-  delete _blocks;
+  delete _blockList;
+  delete _blockHash;
 }
 
 
 void CConfigFile::buildBasic( const QString& fn ) {
-  QFile* file = NULL;
-
-  _blocks = new QHash< QString, QHash<QString, QString>* >();
+  _blockHash = new QMultiHash<QString, CConfigBlock*>();
+  _blockList = new QList<CConfigBlock*>();
 
   // Until shown otherwise...
   _returnValue = ConfigReturnCode::Success;
   _errorMessage = "";
 
   // Attempt to parse the file.
-  file = new QFile( fn );
+  QFile file( fn );
 
-  if( !file->exists() )
+  if( !file.exists() )
     _returnValue =  ConfigReturnCode::MissingConfigFile;
-  else if (!file->open( QIODevice::ReadOnly | QIODevice::Text))
+  else if (!file.open( QIODevice::ReadOnly | QIODevice::Text))
     _returnValue = ConfigReturnCode::CannotOpenConfigFile;
   else
-    _returnValue = processFile( file );
-
-  delete file;
+    _returnValue = processFile( &file );
 }
 
 
-bool CConfigFile::contains( const QString& blockName, const QString& key ) const {
-  if( !_blocks->contains( blockName.toLower() ) )
-    return false;
-  else if( !_blocks->value( blockName.toLower() )->contains( key.toLower() ) )
-    return false;
-  else
-    return true;
+bool CConfigFile::contains( QString blockName, QString key ) const {
+  // There may be multiple blocks with the same name.
+  // This function checks only the FIRST REMAINING block with the indicated name.
+  bool result = false;
+  key = key.trimmed().toLower();
+  blockName = blockName.trimmed().toLower();
+
+  for( int i = 0; i < _blockList->count(); ++i ) {
+    CConfigBlock* block = _blockList->at(i);
+
+    if( !block->removed() && (block->name().toLower() == blockName) ) {
+      if( block->contains( key ) ) {
+        result = true;
+      }
+      break;
+    }
+  }
+
+  return result;
 }
 
 
-QString CConfigFile::value( const QString& blockName, const QString& key ) const {
-  if( !_blocks->contains( blockName.toLower() ) )
-    return "";
-  else if( !_blocks->value( blockName.toLower() )->contains( key.toLower() ) )
-    return "";
-  else
-    return _blocks->value( blockName.toLower() )->value( key.toLower() );
+QString CConfigFile::value( QString blockName, QString key ) const {
+  // There may be multiple blocks with the same name.
+  // This function checks only the FIRST REMAINING block with the indicated name.
+  QString result;
+  key = key.trimmed().toLower();
+  blockName = blockName.trimmed().toLower();
+
+  for( int i = 0; i < _blockList->count(); ++i ) {
+    CConfigBlock* block = _blockList->at(i);
+
+    if( !block->removed() && (block->name().toLower() == blockName) ) {
+      if( block->contains( key ) ) {
+        result = block->value( key );
+      }
+      break;
+    }
+  }
+
+  return result;
 }
 
 
-void CConfigFile::debug() {
-  foreach( const QString& blockKey, _blocks->keys() ) {
-    qDebug() << QString( "Block '%1':" ).arg( blockKey ) << _blocks->value( blockKey )->count();
+int CConfigFile::multiContains( QString blockName, QString key ) const {
+  int result = 0;
+  key = key.trimmed().toLower();
+  blockName = blockName.trimmed().toLower();
 
-    foreach( const QString& key, _blocks->value( blockKey )->keys() )
-      qDebug() << key << _blocks->value( blockKey )->value( key );
-    qDebug() << endl;
+  QList<CConfigBlock*> blocks = _blockHash->values( blockName );
+  for( int i = 0; i < blocks.count(); ++i ) {
+    CConfigBlock* block = blocks.at(i);
+
+    if( !block->removed() && block->contains( key ) ) {
+      ++result;
+    }
+  }
+
+  return result;
+}
+
+
+QStringList CConfigFile::multiValues( QString blockName, QString key ) const {
+  QStringList result;
+  key = key.trimmed().toLower();
+  blockName = blockName.trimmed().toLower();
+
+  QList<CConfigBlock*> blocks = _blockHash->values( blockName );
+  for( int i = 0; i < blocks.count(); ++i ) {
+    CConfigBlock* block = blocks.at(i);
+
+    if( !block->removed() && block->contains( key ) ) {
+      result.append( block->value( key ) );
+    }
+  }
+
+  return result;
+}
+
+
+bool CConfigFile::contains( QString blockName ) const {
+  bool result = false;
+  blockName = blockName.trimmed().toLower();
+
+  QList<CConfigBlock*> blocks = _blockHash->values( blockName );
+  for( int i = 0; i < blocks.count(); ++i ) {
+    if( !blocks.at(i)->removed() ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+int CConfigFile::multiContains( QString blockName ) const {
+  int result = 0;
+  blockName = blockName.trimmed().toLower();
+
+  QList<CConfigBlock*> blocks = _blockHash->values( blockName );
+  for( int i = 0; i < blocks.count(); ++i ) {
+    if( !blocks.at(i)->removed() ) {
+      ++result;
+    }
+  }
+
+  return result;
+}
+
+
+void CConfigFile::debug( const bool showRemovedBlocks /* = true */ ) {
+  for( int i = 0; i < _blockList->count(); ++i ) {
+    CConfigBlock* block = _blockList->at(i);
+    if( !block->removed() || showRemovedBlocks ) {
+      block->debug();
+      qDebug() << endl;
+    }
   }
 
   qDebug() << "Configuration return code:" << this->_returnValue << ConfigReturnCode::resultString( this->_returnValue );
@@ -110,20 +233,19 @@ void CConfigFile::debug() {
 
 
 void CConfigFile::writeToStream( QTextStream* stream ) {
-  if( !_blocks->isEmpty() && ( NULL != stream ) ) {
-    foreach( const QString& blockKey, _blocks->keys() ) {
-      *stream << "[" << blockKey << "]" << endl;
-
-      foreach( const QString& key, _blocks->value( blockKey )->keys() )
-        *stream << "  " << key << " <- " << _blocks->value( blockKey )->value( key ) << endl;
+  if( !_blockList->isEmpty() && ( NULL != stream ) ) {
+    for( int i = 0; i < _blockList->count(); ++i ) {
+      CConfigBlock* block = _blockList->at(i);
+      if( !block->removed() ) {
+        block->writeToStream( stream );
+        *stream << endl;
+      }
     }
-
-    *stream << endl;
   }
 }
 
 
-int CConfigFile::fillBlock( QHash<QString, QString>* block, QStringList strList ) {
+int CConfigFile::fillBlock( CConfigBlock* block, QStringList strList ) {
   int result = ConfigReturnCode::Success; // until shown otherwise
 
   QStringList lineParts;
@@ -167,6 +289,9 @@ int CConfigFile::processFile( QFile* file ) {
 
     if( line.isEmpty() || line.startsWith('#') )
       continue;
+    else if( 0 == line.compare( "[endconfig]", Qt::CaseInsensitive ) ) {
+      break;
+    }
     else {
       line = line.left( line.indexOf('#') - 1 );
 
@@ -207,11 +332,22 @@ int CConfigFile::processBlock( QStringList strList ) {
   QString line0 = strList.takeFirst().toLower();
 
   QString blockName = line0.mid( 1, line0.length() - 2 );
-  QHash<QString, QString>* block = new QHash<QString, QString>();
+  CConfigBlock* block = new CConfigBlock( blockName );
   result = fillBlock( block, strList );
-  _blocks->insert( blockName, block );
+  _blockList->append( block );
+  _blockHash->insert( blockName, block );
 
   return result;
+}
+
+
+bool CConfigFile::setWorkingDirectory() {
+  if( this->contains( "Directories", "WorkingDir" ) ) {
+    return QDir::setCurrent( this->value( "Directories", "WorkingDir" ) );
+  }
+  else {
+    return true;
+  }
 }
 
 

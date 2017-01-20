@@ -46,6 +46,16 @@ Public License as published by the Free Software Foundation; either version 2 of
  *   list.append( "  show tables:", "Displays a list of tables in the database, excluding Microsoft Access system tables." );
  *   list.append( "  describe <tablename>:", "Describes all tables, excluding system tables." );
  *
+ *   // Another new block, with a bulleted list (note the hyphens):
+ *   list.append( "", "Simpsons characters:" );
+ *   list.append( "  Adults:", "These are the grownups." );
+ *   list.append( "  ", "- Homer" );
+ *   list.append( "  ", "- Marge" );
+ *   list.append( "  Kids:", "These are the Kids." );
+ *   list.append( "  ", "- Bart" );
+ *   list.append( "  ", "- Lisa" );
+ *   list.append( "  ", "- Maggie" );
+ *
  *   // Display the message.
  *   printHelpList( list );
  * }
@@ -57,8 +67,8 @@ class CHelpItem {
     CHelpItem( QString part1, QString part2 );
     CHelpItem( const char* part1, const char* part2 );
 
-    QString part1() { return _part1; }
-    QString part2() { return _part2; }
+    QString part1() const { return _part1; }
+    QString part2() const { return _part2; }
 
   protected:
     QString _part1;
@@ -72,6 +82,7 @@ class CHelpItemList : public QList<CHelpItem> {
     void append( const char* part1, const char* part2 );
     void append( const QString& part1, const QString& part2 );
     void append( const CHelpItemList& otherList );
+    void append();
 };
 
 void printHelpList( CHelpItemList list, const int extraPadding = 0 );

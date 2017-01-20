@@ -36,16 +36,47 @@ class ConfigReturnCode {
 };
 
 
+class CConfigBlock : public QMap<QString, QString> {
+  public:
+    CConfigBlock( const QString& name );
+    CConfigBlock( const CConfigBlock& other );
+    ~CConfigBlock();
+
+    QString name() const { return _name; }
+    bool removed() const { return _removed; }
+    void setRemoved( const bool val ) { _removed = val; }
+
+    void writeToStream( QTextStream* stream );
+    void debug();
+
+  protected:
+    QString _name;
+    bool _removed;
+};
+
+typedef QMapIterator<QString, QString> CConfigBlockIterator;
+
 class CConfigFile {
   public:
     CConfigFile( QStringList* args );
     CConfigFile( const QString& configFileName );
     virtual ~CConfigFile();
 
-    bool contains( const QString& blockName, const QString& key ) const;
-    QString value( const QString& blockName, const QString& key ) const;
+    // Check only the FIRST REMAINING block with the indicated name.
+    //--------------------------------------------------------------
+    bool contains( QString blockName, QString key ) const;
+    QString value( QString blockName, QString key ) const;
 
-    virtual void debug();
+    // Check ALL blocks with the indicated name.
+    //------------------------------------------
+    // How many blocks with the specified name contain the key?
+    int multiContains( QString blockName, QString key ) const;
+    QStringList multiValues( QString blockName, QString key ) const;
+
+    bool contains( QString blockName ) const;
+    int multiContains( QString blockName ) const;
+
+    virtual void debug( const bool showRemovedBlocks = true );
 
     virtual void writeToStream( QTextStream* stream );
 
@@ -56,15 +87,18 @@ class CConfigFile {
 
     QString fileName() { return _fileName; }
 
+    bool setWorkingDirectory();
+
   protected:
     void buildBasic( const QString& fn );
     int processBlock( QStringList strList );
     int processFile( QFile* file );
-    int fillBlock( QHash<QString, QString>* block, QStringList strList );
+    int fillBlock( CConfigBlock* block, QStringList strList );
 
     QString _fileName;
 
-    QHash< QString, QHash<QString, QString>* >* _blocks;
+    QList<CConfigBlock*>* _blockList;
+    QMultiHash<QString, CConfigBlock*>* _blockHash;
 
     QString _errorMessage;
     int _returnValue;
