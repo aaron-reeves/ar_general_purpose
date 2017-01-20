@@ -70,6 +70,11 @@ CHelpItemList::CHelpItemList() : QList<CHelpItem>() {
 }
 
 
+void CHelpItemList::append() {
+  QList<CHelpItem>::append( CHelpItem( "", "" ) );
+}
+
+
 void CHelpItemList::append( const char* part1, const char* part2 ) {
   QList<CHelpItem>::append( CHelpItem( part1, part2 ) );
 }
@@ -92,7 +97,7 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 
 
 void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
-  int i, j, k;
+  int i, j;
   int maxPart1Len = 0;
   int nPadding;
   QStringList lines;
@@ -112,13 +117,26 @@ void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
 
   for( i = 0; i < list.count(); ++i ) {
     if( 0 == list[i].part1().length() )
-      cout << prettyPrint( list[i].part2() );
+      cout << prettyPrint( list[i].part2(), 75 );
     else {
-      lines = prettyPrintedList( list[i].part2(), 50, false, true, nPadding );
+
+      // Make bulleted lists look cool.
+      if( list[i].part2().startsWith( '-' ) ) {
+        QStringList tmpLines = prettyPrintedList( list[i].part2(), 53, false, true, nPadding + 2 );
+        lines.clear();
+        lines.append( tmpLines.at(0) );
+        for( int k = 1; k < tmpLines.count(); ++k ) {
+          lines.append( QString( "  %1" ).arg( tmpLines.at(k) ) );
+        }
+      }
+      else {
+        lines = prettyPrintedList( list[i].part2(), 55, false, true, nPadding );
+      }
+
       if( list[i].part1().length() > maxPart1Len ) {
         cout << list[i].part1() << endl;
         for( j = 0; j < lines.count(); ++j ) {
-          for( k = 0; k < extraPadding; ++k )
+          for( int k = 0; k < extraPadding; ++k )
             cout << " ";
           cout << lines.at(j) << endl;
         }

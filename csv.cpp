@@ -302,21 +302,21 @@ qCSV::qCSV(
 
 qCSV::qCSV( const QStringList& fieldNames ) {
   initialize();
-  _readMode = qCSV_ReadEntireFile;
-
-  _containsFieldList = true;
-
-  QString str;
-  for( int i = 0; i < fieldNames.count(); ++i ) {
-     str = fieldNames.at(i).trimmed();
-    _fieldNames.append( str );
-    _fieldsLookup.insert( str.toLower(), i );
-  }
+  setFieldNames( fieldNames );
 }
 
 
 qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
   initialize();
+  setFieldNames( fieldNames );
+
+  for( int i = 0; i < data.count(); ++i ) {
+    appendRow( data.at(i) );
+  }
+}
+
+
+void qCSV::setFieldNames( const QStringList& fieldNames ) {
   _readMode = qCSV_ReadEntireFile;
 
   _containsFieldList = true;
@@ -326,10 +326,6 @@ qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
      str = fieldNames.at(i).trimmed();
     _fieldNames.append( str );
     _fieldsLookup.insert( str.toLower(), i );
-  }
-
-  for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
   }
 }
 
@@ -354,6 +350,9 @@ void qCSV::initialize() {
   _firstDataRowEncountered = false;
   _checkForComment = false;
   _nCommentRows = 0;
+
+  _linesToSkip = 0;
+  _linesSkipped = 0;
 }
 
 qCSV::qCSV( const qCSV& other ) {
@@ -376,6 +375,9 @@ qCSV::qCSV( const qCSV& other ) {
   _firstDataRowEncountered = other._firstDataRowEncountered;
   _checkForComment = other._checkForComment;
   _nCommentRows = other._nCommentRows;
+
+  _linesToSkip = other._linesToSkip;
+  _linesSkipped = other._linesToSkip;
 
   _fieldsLookup = other._fieldsLookup;
   _fieldNames = other._fieldNames;
@@ -1048,7 +1050,10 @@ int qCSV::readNext() {
   // characters are encountered inside quote marks.
   do {
     tmp = _srcFile->readLine();
-    tmp = tmp.trimmed();
+
+    // FIXME: Is there a better way to handle delimiters here?
+    if( !_delimiter.isSpace() )
+      tmp = tmp.trimmed();
 
     if( !_currentLine.isEmpty() )
       _currentLine.append( _eolDelimiter );
@@ -1061,7 +1066,13 @@ int qCSV::readNext() {
   if( !_currentLine.isEmpty() ) {
     _currentLineNumber++;
 
-    // This next statement handles the situation where the file
+    // If the user wants to skip any lines, do that here.
+    if( _linesSkipped < _linesToSkip ) {
+      ++_linesSkipped;
+      return readNext();
+    }
+
+    // This next block handles the situation where the file
     // begins with a header (indicated by lines that start with #).
     // These lines should simply be skipped.
     if( _checkForComment && isCommentLine( _currentLine ) ) {

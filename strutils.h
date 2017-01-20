@@ -22,6 +22,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
 QString camelCase( const QString& str );
 QString postgresCase( const QString& str );
+QString titleCase( QString str );
 
 QString findAndRemove( QString str3, QString str1 );
 QString findAndReplace( QString str3, QString str2, QString str1 );
@@ -41,8 +42,6 @@ QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 
-QString toTitleCase( QString str );
-
 QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
 QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
@@ -55,8 +54,8 @@ bool isComment( const QString st );
  *
  * If a new list can be constructed that matches all of the regular expressions, then success is set to true.
  */
-bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
-bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts );
+bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts );
+bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringList& newList, const int nExpectedParts, const int nTotalParts );
 
 
 // Replaces single quotes " with double quotes "" and wraps s in double quotes.
