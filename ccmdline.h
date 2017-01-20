@@ -147,15 +147,20 @@ class CCmdLine {
 
     /* Was the switch found on the command line? */
     bool hasSwitch( const QString& pSwitch );
+    bool hasSwitch( const QStringList& pSwitches );
+
+    bool isAmbiguous( const QStringList& pSwitches );
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
     QString safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault);
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
     QString argument( const QString& pSwitch, int iIdx);
+    QString argument( const QStringList& pSwitches, int iIdx );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
     int argumentCount(const QString& pSwitch );
+    int argumentCount( const QStringList& pSwitches );
 
     bool pair( const QString& str1, const QString& str2 );
 

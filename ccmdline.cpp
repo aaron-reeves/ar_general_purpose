@@ -261,6 +261,33 @@ bool CCmdLine::hasSwitch( const QString& pSwitch ) {
 }
 
 
+bool CCmdLine::hasSwitch( const QStringList& switches ) {
+  bool result = false;
+
+  for( int i = 0; i < switches.count(); ++i ) {
+    if( hasSwitch( switches.at(i) ) ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool CCmdLine::isAmbiguous( const QStringList& pSwitches ) {
+  int n = 0;
+
+  for( int i = 0; i < pSwitches.count(); ++i ) {
+    if( hasSwitch( pSwitches.at(i) ) ) {
+      ++n;
+    }
+  }
+
+  return ( n > 1 );
+}
+
+
 /*------------------------------------------------------
    QString CCmdLine::GetSafeArgument(const QString& pSwitch, int iIdx, const QString& pDefault)
 
@@ -322,6 +349,22 @@ QString CCmdLine::argument( const QString& pSwitch, int iIdx ) {
 }
 
 
+QString CCmdLine::argument( const QStringList& pSwitches, int iIdx ) {
+  QString result;
+
+  if( !isAmbiguous( pSwitches ) ) {
+    for( int i = 0; i < pSwitches.count(); ++i ) {
+      if( this->hasSwitch( pSwitches.at(i) ) ) {
+        result = this->argument( pSwitches.at(i), iIdx );
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
 /*------------------------------------------------------
    int CCmdLine::GetArgumentCount(const QString& pSwitch)
 
@@ -334,6 +377,19 @@ int CCmdLine::argumentCount( const QString& pSwitch ) {
     return _hash.value( pSwitch ).count();
   else
     return -1;
+}
+
+int CCmdLine::argumentCount( const QStringList& pSwitches ) {
+  int result = -1;
+
+  for( int i = 0; i < pSwitches.count(); ++i ) {
+    if( hasSwitch( pSwitches.at(i) ) ) {
+      result = argumentCount( pSwitches.at(i) );
+      break;
+    }
+  }
+
+  return result;
 }
 
 
