@@ -371,7 +371,6 @@ QStringList prettyPrintedList( const QString srcStr, int prefLineLen, bool usePu
   int tenPct;
   QString str, str2;
   int maxLen;
-  QString result;
   int i;
 
   for( i = 0; i < indent; ++i )
