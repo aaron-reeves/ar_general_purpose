@@ -93,6 +93,7 @@ class qCSV {
     // This version is used to generate a CSV object from a big, long string.
     // FIXME/WARNING: This function doesn't yet support all of the same capabilities that
     // reading a CSV from a file does.  It almost certainly needs work!
+    // DEPRECATED: Replace with processString();
     qCSV(
       const int dummy,
       QString text,
@@ -108,6 +109,13 @@ class qCSV {
     qCSV( const qCSV& other );
 
     virtual ~qCSV();
+
+    void processString(
+        QString text,
+        const bool containsFieldList,
+        const QChar& stringToken = '\0',
+        const bool stringsContainDelimiters = true
+    );
 
     void debug( int nLines /* = 0 */ );
 

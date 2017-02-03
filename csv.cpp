@@ -270,8 +270,22 @@ qCSV::qCSV(
   const QChar& stringToken /* = '\0' */,
   const bool stringsContainDelimiters /* = true */
 ) {
-  Q_UNUSED( dummy );
+  Q_UNUSED( dummy);
+  Q_UNUSED( text );
+  Q_UNUSED( containsFieldList );
+  Q_UNUSED( stringToken );
+  Q_UNUSED( stringsContainDelimiters );
+  qDebug() << "This qCSV constructor is deprecated.  Use processString() instead!";
+  Q_ASSERT( false );
+}
 
+
+void qCSV::processString(
+    QString text,
+    const bool containsFieldList,
+    const QChar& stringToken /* = '\0' */,
+    const bool stringsContainDelimiters /* = true */
+) {
   initialize();
 
   _srcFilename = QString(); // There is no source file.
@@ -287,7 +301,6 @@ qCSV::qCSV(
 
   QList<QStringList> items = CSV::parseFromString( text );
 
-
   QString str;
   for( int i = 0; i < items.at(0).count(); ++i ) {
     str = items.at(0).at(i).trimmed();
@@ -298,7 +311,10 @@ qCSV::qCSV(
   for( int i = 1; i < items.count(); ++i ) {
     _data.append( items.at( i ) );
   }
+
+  this->toFront();
 }
+
 
 qCSV::qCSV( const QStringList& fieldNames ) {
   initialize();
@@ -336,7 +352,7 @@ void qCSV::initialize() {
   _isOpen = false;
 
   _currentLine = "";
-  _currentLineNumber = 0;
+  _currentLineNumber = -1;
   _error = qCSV_ERROR_NONE;
   _errorMsg = "";
   _stringToken = '\0';
