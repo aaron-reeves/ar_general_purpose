@@ -332,6 +332,54 @@ qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
 }
 
 
+bool qCSV::renameFields( const QStringList& newFieldNames ) {
+  if( newFieldNames.count() != _fieldNames.count() )
+    return false;
+  else {
+    _fieldNames.clear();
+    _fieldsLookup.clear();
+
+    for( int i = 0; i < newFieldNames.count(); ++i ) {
+      _fieldNames.append( newFieldNames.at(i).trimmed() );
+      _fieldsLookup.insert( newFieldNames.at(i).trimmed().toLower(), i );
+    }
+    return true;
+  }
+}
+
+
+bool qCSV::renameField( QString oldName, QString newName ) {
+  newName = newName.trimmed();
+  oldName = oldName.trimmed();
+
+  if( oldName.toLower() == newName.toLower() ) {
+    // This could be a change of case.  Go through the motions, just in case.
+    int idx = fieldIndexOf( oldName );
+
+    _fieldNames.replace( idx, newName );
+    int hashVal = _fieldsLookup.value( oldName.toLower() );
+    _fieldsLookup.remove( oldName.toLower() );
+    _fieldsLookup.insert( newName.toLower(), hashVal );
+
+    return true;
+  }
+  else if( !_fieldNames.contains( oldName, Qt::CaseInsensitive ) )
+    return false;
+  else if( _fieldNames.contains( newName, Qt::CaseInsensitive ) )
+    return false;
+  else {
+    int idx = fieldIndexOf( oldName );
+
+    _fieldNames.replace( idx, newName );
+    int hashVal = _fieldsLookup.value( oldName.toLower() );
+    _fieldsLookup.remove( oldName.toLower() );
+    _fieldsLookup.insert( newName.toLower(), hashVal );
+
+    return true;
+  }
+}
+
+
 void qCSV::setFieldNames( const QStringList& fieldNames ) {
   _readMode = qCSV_ReadEntireFile;
 
@@ -676,19 +724,6 @@ QString qCSV::fieldName( int index ){
 }
 
 
-bool qCSV::renameFields( const QStringList& newFieldNames ) {
-  if( newFieldNames.count() != _fieldNames.count() )
-    return false;
-  else {
-    bool result = true;
-    for( int i = 0; i < newFieldNames.count(); ++i ) {
-      result = result && renameField( _fieldNames.at(i), newFieldNames.at(i) );
-    }
-    return result;
-  }
-}
-
-
 int qCSV::fieldIndexOf( QString fieldName ) {
   fieldName = fieldName.trimmed();
   int result = -1;
@@ -706,38 +741,6 @@ int qCSV::fieldIndexOf( QString fieldName ) {
 
 bool qCSV::containsFieldName( QString fieldName ) {
   return _fieldsLookup.contains( fieldName.trimmed().toLower() );
-}
-
-
-bool qCSV::renameField( QString oldName, QString newName ) {
-  newName = newName.trimmed();
-  oldName = oldName.trimmed();
-
-  if( oldName.toLower() == newName.toLower() ) {
-    // This could be a change of case.  Go through the motions, just in case.
-    int idx = fieldIndexOf( oldName );
-
-    _fieldNames.replace( idx, newName );
-    int hashVal = _fieldsLookup.value( oldName.toLower() );
-    _fieldsLookup.remove( oldName.toLower() );
-    _fieldsLookup.insert( newName.toLower(), hashVal );
-
-    return true;
-  }
-  else if( !_fieldNames.contains( oldName, Qt::CaseInsensitive ) )
-    return false;
-  else if( _fieldNames.contains( newName, Qt::CaseInsensitive ) )
-    return false;
-  else {
-    int idx = fieldIndexOf( oldName );
-
-    _fieldNames.replace( idx, newName );
-    int hashVal = _fieldsLookup.value( oldName.toLower() );
-    _fieldsLookup.remove( oldName.toLower() );
-    _fieldsLookup.insert( newName.toLower(), hashVal );
-
-    return true;
-  }
 }
 
 
