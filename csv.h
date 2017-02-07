@@ -117,7 +117,7 @@ class qCSV {
         const bool stringsContainDelimiters = true
     );
 
-    void debug( int nLines /* = 0 */ );
+    void debug( int nLines = 0 );
 
     // Accessor Members
     QString currentLine(){ clearError(); return _currentLine; }
