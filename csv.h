@@ -120,7 +120,7 @@ class qCSV {
     void debug( int nLines = 0 );
 
     // Accessor Members
-    QString currentLine(){ clearError(); return _currentLine; }
+    QString currentLine();
     int currentLineNumber(){ if( -1 == _currentLineNumber ) return 0; else return _currentLineNumber; }
 
     QString field( const int index );
@@ -185,6 +185,8 @@ class qCSV {
     int readNext();
 
     bool reallyOpen( const bool force );
+    int readHeader();
+    QString readLine();
 
     void clearError();
     QStringList writeLine( const QStringList& line );
@@ -198,7 +200,6 @@ class qCSV {
     bool      _isOpen;
     QString   _currentLine;
     int       _currentLineNumber;
-    bool      _firstDataRowEncountered;
     int       _error;
     QString   _errorMsg;
     QChar     _stringToken;

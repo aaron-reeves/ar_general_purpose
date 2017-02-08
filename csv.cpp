@@ -299,7 +299,7 @@ void qCSV::processString(
   _stringsContainDelimiters = stringsContainDelimiters;
   _readMode = qCSV_ReadEntireFile;
 
-  QList<QStringList> items = CSV::parseFromString( text );
+  QList<QStringList> items = CSV::parseFromString( text.trimmed() );
 
   QString str;
   for( int i = 0; i < items.at(0).count(); ++i ) {
@@ -411,7 +411,6 @@ void qCSV::initialize() {
   _readMode = qCSV_UnspecifiedMode;
   _eolDelimiter = " ";
   _delimiter = ',';
-  _firstDataRowEncountered = false;
   _checkForComment = false;
   _nCommentRows = 0;
 
@@ -436,7 +435,6 @@ qCSV::qCSV( const qCSV& other ) {
   _readMode = other._readMode;
   _eolDelimiter = other._eolDelimiter;
   _delimiter = other._delimiter;
-  _firstDataRowEncountered = other._firstDataRowEncountered;
   _checkForComment = other._checkForComment;
   _nCommentRows = other._nCommentRows;
 
@@ -530,6 +528,21 @@ void qCSV::setField( const int index, const QString& val ) {
 
 
 // Accessors
+QString qCSV::currentLine() {
+  clearError();
+  switch( _readMode ) {
+    case qCSV_ReadLineByLine:
+      return _currentLine;
+      break;
+    case qCSV_ReadEntireFile:
+      return CSV::writeLine( _data.at( _currentLineNumber ) );
+      break;
+    default:
+      return "";
+      break;
+  }
+}
+
 QString qCSV::field( const int index ){
   QStringList* dataList;
   QString ret_val = "";
@@ -1006,6 +1019,9 @@ bool qCSV::reallyOpen( const bool force ) {
       _srcFile = NULL;
       _isOpen = false;
     }
+    else if( _containsFieldList ) {
+      readHeader();
+    }
   }
 
   return _isOpen;
@@ -1025,7 +1041,13 @@ void qCSV::close(){
 
 
 void qCSV::toFront() {
-  _currentLineNumber = -1;
+  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
+  // Think about how it might work for qCSV_ReadLineByLine.
+  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+
+  if( qCSV_ReadEntireFile == _readMode ) {
+    _currentLineNumber = -1;
+  }
 }
 
 
@@ -1049,21 +1071,10 @@ int qCSV::moveNext(){
 }
 
 
-//  Also acts as movefirst...cause a read of a line of data from the csv file.
-//  Returns the number of fields read, or -1 at the end of the file.
-int qCSV::readNext() {
-  int ret_val = -1;
-  int index = 0;
-  QStringList fieldList;
+QString qCSV::readLine() {
   QString tmp;
-  int nQuotes;
-
-  clearError();
-
-  _fieldData.clear();
-
-  _currentLine.clear();
-  nQuotes = 0;
+  int nQuotes = 0;
+  QString result;
 
   // The do loop handles situations where end-of-line
   // characters are encountered inside quote marks.
@@ -1074,21 +1085,34 @@ int qCSV::readNext() {
     if( !_delimiter.isSpace() )
       tmp = tmp.trimmed();
 
-    if( !_currentLine.isEmpty() )
-      _currentLine.append( _eolDelimiter );
+    if( !result.isEmpty() )
+      result.append( _eolDelimiter );
 
-    _currentLine.append( tmp );
+    result.append( tmp );
     nQuotes = nQuotes + tmp.count( '\"' );
   } while( 0 != nQuotes%2 );
 
+  return result;
+}
+
+int qCSV::readHeader() {
+  int ret_val = -1;
+  int index = 0;
+  QStringList fieldList;
+
+  clearError();
+
+  _fieldData.clear();
+
+  _currentLine = readLine();
 
   if( !_currentLine.isEmpty() ) {
-    _currentLineNumber++;
+    ++_currentLineNumber;
 
     // If the user wants to skip any lines, do that here.
     if( _linesSkipped < _linesToSkip ) {
       ++_linesSkipped;
-      return readNext();
+      return readHeader();
     }
 
     // This next block handles the situation where the file
@@ -1096,11 +1120,51 @@ int qCSV::readNext() {
     // These lines should simply be skipped.
     if( _checkForComment && isCommentLine( _currentLine ) ) {
       ++_nCommentRows;
-      return readNext();
+      return readHeader();
     }
 
-    //qDebug() << _currentLine;
-    //qDebug() << "Check 0" << _stringsContainDelimiters << _delimiter;
+    if ( _stringsContainDelimiters )
+      fieldList = CSV::parseLine( _currentLine, _delimiter );
+    else
+      fieldList = _currentLine.split( _delimiter );
+
+    for ( int i = 0; i < fieldList.size(); i++ ){
+      ++index;
+      QString tempString = fieldList.at(i);
+      tempString = tempString.trimmed();
+
+      if ( _usesStringToken ){
+        tempString = tempString.replace( _stringToken, "" );
+      }
+
+      _fieldNames.append( tempString );
+      _fieldsLookup.insert( tempString.toLower(), i );
+    }
+
+    _columnCount = index;
+    _fieldData.clear();
+    ret_val = _columnCount;
+  }
+
+  return ret_val;
+}
+
+
+//  Cause a read of a line of data from the csv file.
+//  Returns the number of fields read, or -1 at the end of the file.
+int qCSV::readNext() {
+  int ret_val = -1;
+  int index = 0;
+  QStringList fieldList;
+
+  clearError();
+
+  _fieldData.clear();
+
+  _currentLine = readLine();
+
+  if( !_currentLine.isEmpty() ) {
+    ++_currentLineNumber;
 
     if ( _stringsContainDelimiters )
       fieldList = CSV::parseLine( _currentLine, _delimiter );
@@ -1116,11 +1180,7 @@ int qCSV::readNext() {
         tempString = tempString.replace( _stringToken, "" );
       }
 
-      if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
-        _fieldNames.append( tempString );
-        _fieldsLookup.insert( tempString.toLower(), i );
-      }
-      else if ( _containsFieldList && _concatenateDanglingEnds ){
+      if ( _containsFieldList && _concatenateDanglingEnds ){
         if ( i < _columnCount )
           _fieldData.insert( i, tempString );
         else{
@@ -1129,61 +1189,16 @@ int qCSV::readNext() {
           _fieldData.insert( _columnCount, tempStr );
         }
       }
-      else
+      else {
         _fieldData.insert( i, tempString );
-    }
-
-    if ( _containsFieldList && ( !_firstDataRowEncountered ) ){
-      _columnCount = index;
-      _fieldData.clear();
-      _firstDataRowEncountered = true;
-      index = ret_val = readNext();
-    }
-    else {
-      ret_val = index;
-      if( qCSV_ReadEntireFile == _readMode ) {
-        _data.append( _fieldData );
       }
     }
 
-    /*  Save this, below, for a switch to check field list lengths later on....some csv formats,
-        such as those created by Microsoft products, unfortunately, make the strings 
-        too short if the last few fields are empty...i.e. they don't save empty strings, or empty 
-        comma separated strings, (such as ",,,,") if they are at the end of a line, and have
-        no data somewhere after them...bad news, if you want to verify fields....
+    ret_val = index;
 
-        (AR: Not sure about the above: it no longer seems to be the case.)
-     */
-
-    /*
-    if ( _containsFieldList )
-    {
-     if ( ( ( index != _fields.size() ) || ( _columnCount != _fields.size()) ) && ((_columnCount - 1) > index) )
-     {
-       ret_val = -1;
-       //  NOTE:  Could be caused by a line exceeding _qCSV_MAX_LINE_LENGTH also...
-       _error = qCSV_ERROR_INVALID_FIELD_COUNT;
-       _errorMsg = "At File Linenumber: " + QString::number ( _currentLineNumber ) + "  Invalid field count while reading data from file.  Should have been" + QString::number ( _fields.size() ) + " but was " + QString::number ( index ) + ".  Check   _qCSV_MAX_LINE_LENGTH, and validate the line's content in the file" ;
-     };
+    if( qCSV_ReadEntireFile == _readMode ) {
+      _data.append( _fieldData );
     }
-    else
-    {
-     if ( _columnCount > 0 )
-     {
-       if ( ( index != _columnCount ) && (( _columnCount - 1 ) > index )  )
-       {
-         ret_val = -1;
-         //  NOTE:  Could be caused by a line exceeding _qCSV_MAX_LINE_LENGTH also...
-         _error = qCSV_ERROR_INVALID_FIELD_COUNT;
-         _errorMsg = "At File Linenumber: " + QString::number ( _currentLineNumber ) + "  Invalid field count while reading data from file.  Should have been" + QString::number ( _columnCount ) + " but was " + QString::number ( index ) + ".  Check   _qCSV_MAX_LINE_LENGTH, and validate the line's content in the file" ;
-       };
-     }
-     else
-     {
-       _columnCount = index;
-     };    
-    };
-    */
   }
   else {
     if ( !_srcFile->atEnd() ){
@@ -1196,7 +1211,7 @@ int qCSV::readNext() {
 }
 
 
-void qCSV::setStringToken ( QChar token ){
+void qCSV::setStringToken( QChar token ){
   _stringToken = token;
   clearError();
 
