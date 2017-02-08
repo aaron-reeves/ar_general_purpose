@@ -31,7 +31,7 @@ QString setMagicPath( bool* error, QString* errorMessage ) {
 }
 
 
-QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* errorMessage /* = NULL */ ) {
+QString magicFileTypeInfo( const QString& fileName, bool* error /* = NULL */, QString* errorMessage /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile = setMagicPath( error, errorMessage );
@@ -83,7 +83,7 @@ QString magicFileTypeInfo( QString fileName, bool* error /* = NULL */, QString* 
 }
 
 
-bool _magicIsType( const int type, QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool _magicIsType( const int type, const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile = setMagicPath( error, errorMessage );
@@ -160,17 +160,40 @@ bool _magicIsType( const int type, QString fileName, bool* error /* = NULL */, Q
 }
 
 
-bool magicIsAsciiTextFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool magicIsAsciiTextFile( const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
   return _magicIsType( CHECKTEXT, fileName, error, returnTypeInfo, errorMessage );
 }
 
 
-bool magicIsXlsxFile( QString fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool magicIsXlsxFile( const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
   return _magicIsType( CHECKXLSX, fileName, error, returnTypeInfo, errorMessage );
 }
 
+bool looksLikeTextFile( const QString& fileName ) {
+  QFile f( fileName );
 
-magic_set* magicLoadMagic( QString magicFile, int flags, QString& errMsg ) {
+  if( f.open( QFile::ReadOnly ) ) {
+    QByteArray sample = f.read( 512 );
+    int nonPrintables = 0;
+
+    for( int i = 0; i < sample.count(); ++i ) {
+      QChar c( sample.at(i) );
+
+      if( !c.isPrint() && !( '\n' == c ) && !( '\r' == c ) ) {
+        ++nonPrintables;
+      }
+    }
+
+    // Be strict for now, and don't allow any non-printable characters.
+    return( 0 == nonPrintables );
+  }
+  else {
+    return false;
+  }
+}
+
+
+magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg ) {
   struct magic_set* magic = magic_open( flags );
 
   if( NULL == magic ) {
@@ -190,7 +213,7 @@ magic_set* magicLoadMagic( QString magicFile, int flags, QString& errMsg ) {
 }
 
 
-bool magicProcess( struct magic_set* ms, QString fileName, QString& fileTypeInfo, QString& errMsg ) {
+bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileTypeInfo, QString& errMsg ) {
   const char* type = magic_file( ms, fileName.toLatin1().data() );
 
   if( NULL == type ) {

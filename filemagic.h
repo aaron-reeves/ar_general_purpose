@@ -11,9 +11,10 @@
  * High-level, user-friendly functions
  * -----------------------------------
  */
-bool magicIsAsciiTextFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
-bool magicIsXlsxFile( QString fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
-QString magicFileTypeInfo( QString fileName, bool* error = NULL, QString* errorMessage = NULL );
+bool magicIsAsciiTextFile( const QString& fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
+bool magicIsXlsxFile( const QString& fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
+QString magicFileTypeInfo( const QString& fileName, bool* error = NULL, QString* errorMessage = NULL );
+bool looksLikeTextFile( const QString& fileName );
 
 
 /*
@@ -21,8 +22,8 @@ QString magicFileTypeInfo( QString fileName, bool* error = NULL, QString* errorM
  * -------------------------------------
  */
 struct magic_set;
-magic_set* magicLoadMagic( QString magicFile, int flags, QString& errMsg );
-bool magicProcess( struct magic_set* ms, QString fileName, QString& fileTypeInfo, QString& errMsg );
+magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg );
+bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileTypeInfo, QString& errMsg );
 void magicCloseMagic( struct magic_set* ms );
 
 
