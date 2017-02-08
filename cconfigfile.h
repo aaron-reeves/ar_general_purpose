@@ -58,8 +58,10 @@ typedef QMapIterator<QString, QString> CConfigBlockIterator;
 
 class CConfigFile {
   public:
+    CConfigFile();
     CConfigFile( QStringList* args );
     CConfigFile( const QString& configFileName );
+    CConfigFile( const CConfigFile& other );
     virtual ~CConfigFile();
 
     // Check only the FIRST REMAINING block with the indicated name.
@@ -97,8 +99,8 @@ class CConfigFile {
 
     QString _fileName;
 
-    QList<CConfigBlock*>* _blockList;
-    QMultiHash<QString, CConfigBlock*>* _blockHash;
+    QList<CConfigBlock*> _blockList;
+    QMultiHash<QString, CConfigBlock*> _blockHash;
 
     QString _errorMessage;
     int _returnValue;
