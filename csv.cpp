@@ -221,91 +221,56 @@ bool CSV::write(const QList<QStringList> data, const QString &filename,  const Q
 }
 
 
-qCSV::qCSV() {
+QCsv::QCsv() {
   initialize();
 }
 
 
-qCSV::qCSV (
+QCsv::QCsv (
   const QString& filename,
   const bool containsFieldList,
-  const QChar& stringToken /* = '\0' */,
   const bool stringsContainDelimiters /* = true */,
-  const int readMode /* = qCsv::ReadLineByLine */,
-  const bool checkForComment /* = false */
+  const QCsvMode mode /* = qCsv::ReadLineByLine */,
+  const bool checkForComments /* = false */
 ) {
   initialize();
 
   _srcFilename = filename;
-  _stringToken = stringToken;
   _containsFieldList = containsFieldList;
-  _checkForComment = checkForComment;
-
-  if ( stringToken != '\0' )
-    _usesStringToken = true;
+  _checkForComments = checkForComments;
 
   _stringsContainDelimiters = stringsContainDelimiters;
-  _readMode = readMode;
+  _mode = mode;
 
-  if( qCSV_ReadEntireFile == _readMode ) {
-    this->reallyOpen( true );
-
-    //qDebug() << "Reading entire file...";
-    int fieldsRead = 0;
-    while( -1 != fieldsRead ) {
-      //qDebug() << fieldsRead;
-      fieldsRead = readNext();
-    }
-
-    this->close();
-    //qDebug() << "Done.";
+  if( EntireFile == _mode ) {
+    this->open();
   }
 }
 
 
-qCSV::qCSV(
-  const int dummy,
-  QString text,
-  const bool containsFieldList,
-  const QChar& stringToken /* = '\0' */,
-  const bool stringsContainDelimiters /* = true */
-) {
-  Q_UNUSED( dummy);
-  Q_UNUSED( text );
-  Q_UNUSED( containsFieldList );
-  Q_UNUSED( stringToken );
-  Q_UNUSED( stringsContainDelimiters );
-  qDebug() << "This qCSV constructor is deprecated.  Use processString() instead!";
-  Q_ASSERT( false );
-}
-
-
-void qCSV::processString(
+void QCsv::processString(
     QString text,
     const bool containsFieldList,
-    const QChar& stringToken /* = '\0' */,
-    const bool stringsContainDelimiters /* = true */
+    const bool stringsContainDelimiters
 ) {
   initialize();
 
   _srcFilename = QString(); // There is no source file.
-  _stringToken = stringToken;
   _containsFieldList = containsFieldList;
-  _checkForComment = false; // There is no allowance for comments here.
-
-  if ( stringToken != '\0' )
-    _usesStringToken = true;
+  _checkForComments = false; // There is no allowance for comments here.
 
   _stringsContainDelimiters = stringsContainDelimiters;
-  _readMode = qCSV_ReadEntireFile;
+  _mode = EntireFile;
 
   QList<QStringList> items = CSV::parseFromString( text.trimmed() );
 
   QString str;
-  for( int i = 0; i < items.at(0).count(); ++i ) {
-    str = items.at(0).at(i).trimmed();
-    _fieldNames.append( str );
-    _fieldsLookup.insert( str.toLower(), i );
+  if( containsFieldList ) {
+    for( int i = 0; i < items.at(0).count(); ++i ) {
+      str = items.at(0).at(i).trimmed();
+      _fieldNames.append( str );
+      _fieldsLookup.insert( str.toLower(), i );
+    }
   }
 
   for( int i = 1; i < items.count(); ++i ) {
@@ -316,13 +281,13 @@ void qCSV::processString(
 }
 
 
-qCSV::qCSV( const QStringList& fieldNames ) {
+QCsv::QCsv( const QStringList& fieldNames ) {
   initialize();
   setFieldNames( fieldNames );
 }
 
 
-qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
+QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
   initialize();
   setFieldNames( fieldNames );
 
@@ -332,7 +297,7 @@ qCSV::qCSV( const QStringList& fieldNames, const QList<QStringList>& data ) {
 }
 
 
-bool qCSV::renameFields( const QStringList& newFieldNames ) {
+bool QCsv::renameFields( const QStringList& newFieldNames ) {
   if( newFieldNames.count() != _fieldNames.count() )
     return false;
   else {
@@ -348,13 +313,13 @@ bool qCSV::renameFields( const QStringList& newFieldNames ) {
 }
 
 
-bool qCSV::renameField( QString oldName, QString newName ) {
+bool QCsv::renameField( QString oldName, QString newName ) {
   newName = newName.trimmed();
   oldName = oldName.trimmed();
 
   if( oldName.toLower() == newName.toLower() ) {
     // This could be a change of case.  Go through the motions, just in case.
-    int idx = fieldIndexOf( oldName );
+    int idx = fieldIndexOf( oldName.toLower() );
 
     _fieldNames.replace( idx, newName );
     int hashVal = _fieldsLookup.value( oldName.toLower() );
@@ -368,7 +333,7 @@ bool qCSV::renameField( QString oldName, QString newName ) {
   else if( _fieldNames.contains( newName, Qt::CaseInsensitive ) )
     return false;
   else {
-    int idx = fieldIndexOf( oldName );
+    int idx = fieldIndexOf( oldName.toLower() );
 
     _fieldNames.replace( idx, newName );
     int hashVal = _fieldsLookup.value( oldName.toLower() );
@@ -380,12 +345,11 @@ bool qCSV::renameField( QString oldName, QString newName ) {
 }
 
 
-void qCSV::setFieldNames( const QStringList& fieldNames ) {
-  _readMode = qCSV_ReadEntireFile;
-
+void QCsv::setFieldNames( const QStringList& fieldNames ) {
+  _mode = EntireFile;
   _containsFieldList = true;
-
   QString str;
+
   for( int i = 0; i < fieldNames.count(); ++i ) {
      str = fieldNames.at(i).trimmed();
     _fieldNames.append( str );
@@ -394,48 +358,55 @@ void qCSV::setFieldNames( const QStringList& fieldNames ) {
 }
 
 
-void qCSV::initialize() {
+void QCsv::initialize() {
   _srcFilename = "";
   _srcFile = NULL;
   _isOpen = false;
 
+  clearError();
+
   _currentLine = "";
-  _currentLineNumber = -1;
-  _error = qCSV_ERROR_NONE;
-  _errorMsg = "";
-  _stringToken = '\0';
-  _usesStringToken = false;
-  _containsFieldList = false;
+  _currentRowNumber = -1;
+  _containsFieldList = true;
   _stringsContainDelimiters = true;
-  _concatenateDanglingEnds = false;
-  _readMode = qCSV_UnspecifiedMode;
+  _mode = UnspecifiedMode;
   _eolDelimiter = " ";
   _delimiter = ',';
-  _checkForComment = false;
+  _checkForComments = false;
   _nCommentRows = 0;
 
   _linesToSkip = 0;
   _linesSkipped = 0;
 }
 
-qCSV::qCSV( const qCSV& other ) {
+
+QCsv::QCsv( const QCsv& other ) {
+  assign( other );
+}
+
+
+QCsv& QCsv::operator=( const QCsv& other ) {
+  assign( other );
+
+  return *this;
+}
+
+
+void QCsv::assign( const QCsv& other ) {
   _srcFilename = other._srcFilename;
   _srcFile = NULL;
   _isOpen = other._isOpen;
 
   _currentLine = other._currentLine;
-  _currentLineNumber = other._currentLineNumber;
+  _currentRowNumber = other._currentRowNumber;
   _error = other._error;
   _errorMsg = other._errorMsg;
-  _stringToken = other._stringToken;
-  _usesStringToken = other._usesStringToken;
   _containsFieldList = other._containsFieldList;
   _stringsContainDelimiters = other._stringsContainDelimiters;
-  _concatenateDanglingEnds = other._concatenateDanglingEnds;
-  _readMode = other._readMode;
+  _mode = other._mode;
   _eolDelimiter = other._eolDelimiter;
   _delimiter = other._delimiter;
-  _checkForComment = other._checkForComment;
+  _checkForComments = other._checkForComments;
   _nCommentRows = other._nCommentRows;
 
   _linesToSkip = other._linesToSkip;
@@ -446,37 +417,22 @@ qCSV::qCSV( const qCSV& other ) {
   _fieldData = other._fieldData;
   _data = other._data;
 
-  if( other._isOpen && ( qCSV_ReadLineByLine == other._readMode ) ) {
+  if( other._isOpen && ( LineByLine == other._mode ) ) {
     this->open();
   }
 }
 
 
-qCSV::~qCSV() {
+QCsv::~QCsv() {
   if( NULL != _srcFile ) {
     _srcFile->close();
-    _isOpen = false;
     delete _srcFile;
     _srcFile = NULL;
   }
-
-  _fieldsLookup.clear();
-  _fieldNames.clear();
-  _data.clear();
-  _fieldData.clear();
-
-  _srcFilename = "";
-  _currentLine = "";
-  _currentLineNumber = -1;
-  _error = qCSV_ERROR_NONE;
-  _errorMsg = "";
-  _stringToken = '\0';
-  _usesStringToken = false;
-  _containsFieldList = false;
 }
 
 
-void qCSV::debug( int nLines /* = 0 */ ) {
+void QCsv::debug( int nLines /* = 0 */ ) {
   qDebug() << "qCSV contents:";
 
   qDebug() << "numFields:" << this->fieldCount();
@@ -485,7 +441,7 @@ void qCSV::debug( int nLines /* = 0 */ ) {
 
   qDebug() << this->fieldNames().join( _delimiter ).prepend( "  " );
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode )
     qDebug() << "(There is nothing to display)";
   else {
     if( (1 > nLines) || ( _data.count() < nLines ) )
@@ -498,44 +454,15 @@ void qCSV::debug( int nLines /* = 0 */ ) {
 }
 
 
-void qCSV::setField( const int index, const QString& val ) {
-  QStringList* dataList;
-  clearError();
-
-  if( qCSV_ReadLineByLine == _readMode )
-    dataList = &_fieldData;
-  else
-    dataList = &( _data[ _currentLineNumber ] );
-
-  if( 0 < dataList->size() ) {
-    if ( index < dataList->size() ) {
-      if( qCSV_ReadLineByLine == _readMode )
-        _fieldData[index] = val.trimmed();
-      else
-        _data[_currentLineNumber][index] = val.trimmed();
-    }
-    else {
-      _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-      _errorMsg = "For File Linenumber: " + QString::number ( _currentLineNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
-    }
-  }
-  else{
-    _error = qCSV_ERROR_LINE_EMPTY;
-    _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
-  }
-}
-
-
-
 // Accessors
-QString qCSV::currentLine() {
+QString QCsv::currentRow() {
   clearError();
-  switch( _readMode ) {
-    case qCSV_ReadLineByLine:
+  switch( _mode ) {
+    case LineByLine:
       return _currentLine;
       break;
-    case qCSV_ReadEntireFile:
-      return CSV::writeLine( _data.at( _currentLineNumber ) );
+    case EntireFile:
+      return CSV::writeLine( _data.at( _currentRowNumber ) );
       break;
     default:
       return "";
@@ -543,98 +470,72 @@ QString qCSV::currentLine() {
   }
 }
 
-QString qCSV::field( const int index ){
+
+QStringList QCsv::rowData() {
+  if( LineByLine == _mode )
+    return _fieldData;
+  else
+    return _data.at( currentRowNumber() )
+  ;
+}
+
+QString QCsv::field( const int index ){
   QStringList* dataList;
   QString ret_val = "";
   clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode )
     dataList = &_fieldData;
   else
-    dataList = &( _data[ _currentLineNumber ] );
+    dataList = &( _data[ _currentRowNumber ] );
 
   if ( dataList->size() > 0 ){
     if ( dataList->size() > index ){
       ret_val = dataList->at( index ).trimmed();
     }
     else{
-      _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-      _errorMsg = "For File Linenumber: " + QString::number ( _currentLineNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
+      _error = ERROR_INDEX_OUT_OF_RANGE;
+      _errorMsg = "For File Linenumber: " + QString::number ( _currentRowNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
     }
   }
   else{
-    _error = qCSV_ERROR_LINE_EMPTY;
-    _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+    _error = ERROR_LINE_EMPTY;
+    _errorMsg = "The current line, " + QString::number ( _currentRowNumber ) + " is empty.  Did you read a line first?";
   }
 
   return ret_val;
 }
 
 
-void qCSV::setField( QString fName, const QString& val ) {
-  fName = fName.toLower();
-  QStringList* dataList;
-  clearError();
-
-  if( qCSV_ReadLineByLine == _readMode )
-    dataList = &_fieldData;
-  else
-    dataList = & (_data[ _currentLineNumber ] );
-
-  if ( _containsFieldList ){
-    if ( dataList->size() > 0 ){
-      if ( _fieldsLookup.contains( fName ) ){
-        int index = _fieldsLookup.value( fName );
-
-        setField( index, val );
-      }
-      else{
-        _error = qCSV_ERROR_INVALID_FIELD_NAME;
-        _errorMsg = "Invalid Field Name: " + fName;
-      }
-    }
-    else{
-      _error = qCSV_ERROR_LINE_EMPTY;
-      _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
-    }
-  }
-  else {
-    _error = qCSV_ERROR_NO_FIELDLIST;
-    _errorMsg = "The current settings do not include a field list.";
-  }
-}
-
-QString qCSV::field( QString fName ){
-  fName = fName.toLower();
-
+QString QCsv::field( const QString& fieldName ){
   QStringList* dataList;
   QString ret_val = "";
   clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode )
     dataList = &_fieldData;
   else
-    dataList = &( _data[ _currentLineNumber ] );
+    dataList = &( _data[ _currentRowNumber ] );
 
   if ( _containsFieldList ){
     if ( dataList->size() > 0 ){
-      if ( _fieldsLookup.contains( fName ) ){
-        int index = _fieldsLookup.value( fName );
+      if ( _fieldsLookup.contains( fieldName.trimmed().toLower() ) ){
+        int index = _fieldsLookup.value( fieldName.trimmed().toLower() );
 
         ret_val = field( index );
       }
       else{
-        _error = qCSV_ERROR_INVALID_FIELD_NAME;
-        _errorMsg = "Invalid Field Name: " + fName;
+        _error = ERROR_INVALID_FIELD_NAME;
+        _errorMsg = "Invalid Field Name: " + fieldName;
       }
     }
     else{
-      _error = qCSV_ERROR_LINE_EMPTY;
-      _errorMsg = "The current line, " + QString::number ( _currentLineNumber ) + " is empty.  Did you read a line first?";
+      _error = ERROR_LINE_EMPTY;
+      _errorMsg = "The current line, " + QString::number ( _currentRowNumber ) + " is empty.  Did you read a line first?";
     }
   }
   else {
-    _error = qCSV_ERROR_NO_FIELDLIST;
+    _error = ERROR_NO_FIELDLIST;
     _errorMsg = "The current settings do not include a field list.";
   }
 
@@ -642,92 +543,178 @@ QString qCSV::field( QString fName ){
 }
 
 
-void qCSV::setField( const int index, const int rowNumber, const QString& val ) {
-  if( rowNumber > (_data.count() - 1) ) {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+bool QCsv::setField( const int index, const QString& val ) {
+  QStringList* dataList;
+  clearError();
+  bool result = true; // until shown otherwise.
+
+  if( LineByLine == _mode )
+    dataList = &_fieldData;
+  else
+    dataList = &( _data[ _currentRowNumber ] );
+
+  if( 0 < dataList->size() ) {
+    if ( index < dataList->size() ) {
+      if( LineByLine == _mode ) {
+        _fieldData[index] = val.trimmed();
+        _currentLine = CSV::writeLine( _fieldData );
+      }
+      else {
+        _data[_currentRowNumber][index] = val.trimmed();
+      }
+    }
+    else {
+      _error = ERROR_INDEX_OUT_OF_RANGE;
+      _errorMsg = "For File Linenumber: " + QString::number ( _currentRowNumber ) + ", Field index, " + QString::number ( index ) + ", out of range";
+      result = false;
+    }
+  }
+  else{
+    _error = ERROR_LINE_EMPTY;
+    _errorMsg = "The current line, " + QString::number ( _currentRowNumber ) + " is empty.  Did you read a line first?";
+    result = false;
+  }
+
+  return result;
+}
+
+
+bool QCsv::setField( const QString& fieldName, const QString& val ) {
+  QStringList* dataList;
+  clearError();
+  bool result = true; // until shown otherwise.
+
+  if( LineByLine == _mode )
+    dataList = &_fieldData;
+  else
+    dataList = & (_data[ _currentRowNumber ] );
+
+  if ( _containsFieldList ){
+    if ( dataList->size() > 0 ){
+      if ( _fieldsLookup.contains( fieldName.trimmed().toLower() ) ){
+        int index = _fieldsLookup.value( fieldName.trimmed().toLower() );
+
+        setField( index, val );
+      }
+      else{
+        _error = ERROR_INVALID_FIELD_NAME;
+        _errorMsg = "Invalid Field Name: " + fieldName;
+        result = false;
+      }
+    }
+    else{
+      _error = ERROR_LINE_EMPTY;
+      _errorMsg = "The current line, " + QString::number ( _currentRowNumber ) + " is empty.  Did you read a line first?";
+      result = false;
+    }
   }
   else {
-    _currentLineNumber = rowNumber;
+    _error = ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
+    result = false;
+  }
+
+  return result;
+}
+
+
+bool QCsv::setField( const int index, const int rowNumber, const QString& val ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+  bool result = true; // until shown otherwise.
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    result = false;
+  }
+  else if( rowNumber > (_data.count() - 1) ) {
+    _error = ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+    result = false;
+  }
+  else {
+    _currentRowNumber = rowNumber;
     setField( index, val );
   }
+
+  return result;
 }
 
-void qCSV::setField( QString fName, const int rowNumber, const QString& val ) {
-  if( rowNumber > (_data.count() - 1) ) {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+
+bool QCsv::setField( const QString& fieldName, const int rowNumber, const QString& val ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+  bool result = true; // until shown otherwise.
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    result = false;
+  }
+  else if ( rowNumber > (_data.count() - 1) ) {
+    _error = ERROR_INDEX_OUT_OF_RANGE;
     _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
+    result = false;
   }
   else {
-    _currentLineNumber = rowNumber;
-    setField( fName, val );
+    _currentRowNumber = rowNumber;
+    setField( fieldName.trimmed(), val );
   }
+
+  return result;
 }
 
-QString qCSV::field( const int index, const int rowNumber ) {
-  if( rowNumber > (_data.count() - 1) ) {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+QString QCsv::field( const int index, const int rowNumber ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    return QString();
+  }
+  else if( rowNumber > (_data.count() - 1) ) {
+    _error = ERROR_INDEX_OUT_OF_RANGE;
     _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
     return QString();
   }
   else {
-    _currentLineNumber = rowNumber;
+    _currentRowNumber = rowNumber;
     return field( index );
   }
 }
 
-QString qCSV::field( QString fName, const int rowNumber ) {
-  if( rowNumber > (_data.count() - 1) ) {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
+QString QCsv::field( const QString& fieldName, const int rowNumber ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    return QString();
+  }
+  else if( rowNumber > (_data.count() - 1) ) {
+    _error = ERROR_INDEX_OUT_OF_RANGE;
     _errorMsg = QString( "There is no row %1" ).arg( rowNumber );
     return QString();
   }
   else {
-    _currentLineNumber = rowNumber;
-    return field( fName );
+    _currentRowNumber = rowNumber;
+    return field( fieldName );
   }
 }
 
-QVariantList qCSV::fields( QString fName ) {
-  fName = fName.toLower();
-  QVariantList result;
-  clearError();
 
-  if ( _containsFieldList ){
-    if ( _fieldsLookup.contains( fName ) ){
-      int index = _fieldsLookup.value( fName );
-
-      result = fields( index );
-    }
-    else{
-      _error = qCSV_ERROR_INVALID_FIELD_NAME;
-      _errorMsg = "Invalid Field Name: " + fName;
-    }
-  }
-  else {
-    _error = qCSV_ERROR_NO_FIELDLIST;
-    _errorMsg = "The current settings do not include a field list.";
-  }
-
-  return result;
+int QCsv::currentRowNumber() const {
+  if( -1 == _currentRowNumber )
+    return 0;
+  else
+    return _currentRowNumber;
 }
 
 
-QVariantList qCSV::fields( int index ) {
-  QVariantList result;
-
-  if( qCSV_ReadLineByLine == _readMode )
-    result.append( this->field( index ) );
-  else {
-    for( int i = 0; i < _data.count(); ++ i )
-      result.append( _data.at(i).at(index) );
-  }
-
-  return result;
-}
-
-
-QString qCSV::fieldName( int index ){
+QString QCsv::fieldName( const int index ){
   QString ret_val = "";
   if ( _containsFieldList ){
     ret_val = _fieldNames.at( index );
@@ -737,12 +724,11 @@ QString qCSV::fieldName( int index ){
 }
 
 
-int qCSV::fieldIndexOf( QString fieldName ) {
-  fieldName = fieldName.trimmed();
+int QCsv::fieldIndexOf( const QString& fieldName ) {
   int result = -1;
 
   for( int i = 0; i < _fieldNames.count(); ++i ) {
-    if( 0 == fieldName.compare( _fieldNames.at(i), Qt::CaseInsensitive ) ) {
+    if( 0 == fieldName.trimmed().compare( _fieldNames.at(i), Qt::CaseInsensitive ) ) {
       result = i;
       break;
     }
@@ -752,18 +738,20 @@ int qCSV::fieldIndexOf( QString fieldName ) {
 }
 
 
-bool qCSV::containsFieldName( QString fieldName ) {
+bool QCsv::containsFieldName( const QString& fieldName ) {
   return _fieldsLookup.contains( fieldName.trimmed().toLower() );
 }
 
 
-bool qCSV::appendField( const QString& fieldName ) {
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+bool QCsv::appendField( const QString& fieldName ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     return false;
+  }
   else {
     _fieldNames.append( fieldName.trimmed() );
     _fieldsLookup.insert( fieldName.trimmed().toLower(), _fieldNames.count() - 1 );
@@ -777,18 +765,20 @@ bool qCSV::appendField( const QString& fieldName ) {
 }
 
 
-bool qCSV::removeField( const QString& fieldName ) {
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+bool QCsv::removeField( const QString& fieldName ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     return false;
+  }
   else {
-    if( _fieldsLookup.contains( fieldName ) )
-      return removeField( _fieldsLookup.value( fieldName ) );
+    if( _fieldsLookup.contains( fieldName.trimmed().toLower() ) )
+      return removeField( _fieldsLookup.value( fieldName.trimmed().toLower() ) );
     else {
-      _error = qCSV_ERROR_INVALID_FIELD_NAME;
+      _error = ERROR_INVALID_FIELD_NAME;
       _errorMsg = "Invalid Field Name: " + fieldName;
       return false;
     }
@@ -796,42 +786,48 @@ bool qCSV::removeField( const QString& fieldName ) {
 }
 
 
-bool qCSV::removeField( const int fieldNumber ) {
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+bool QCsv::removeField( const int index ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     return false;
-  else if( fieldNumber < _fieldNames.count() ) {
-    _fieldNames.removeAt( fieldNumber );
+  }
+  else if( index < fieldCount() ) {
+    if( _containsFieldList ) {
+      _fieldNames.removeAt( index );
 
-    QList<QString> keys = _fieldsLookup.keys( fieldNumber );
-    for( int i = 0; i < keys.count(); ++i ) {
-      _fieldsLookup.remove( keys.at(i) );
+      QList<QString> keys = _fieldsLookup.keys( index );
+      for( int i = 0; i < keys.count(); ++i ) {
+        _fieldsLookup.remove( keys.at(i) );
+      }
     }
 
     for( int i = 0; i < _data.count(); ++i ) {
-      _data[i].removeAt( fieldNumber );
+      _data[i].removeAt( index );
     }
     return true;
   }
   else {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-    _errorMsg = QString( "Invalid Field Number: %1" ).arg( fieldNumber );
+    _error = ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "Invalid Field Number: %1" ).arg( index );
     return false;
   }
 }
 
 
-bool qCSV::appendRow( const QStringList& values ) {
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+bool QCsv::appendRow( const QStringList& values ) {
+  // This function only works for qCSV_EntireFile.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
 
-  if( qCSV_ReadLineByLine == _readMode )
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     return false;
-  else if( values.count() == _fieldNames.count() ) {
+  }
+  else if( values.count() == fieldCount() ) {
     QStringList trimmedVals;
     for( int i = 0; i < values.count(); ++i ) {
       trimmedVals.append( values.at(i).trimmed() );
@@ -841,51 +837,57 @@ bool qCSV::appendRow( const QStringList& values ) {
     return true;
   }
   else {
-    _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-    _errorMsg = QString( "Field count mismatch: %1 <> %2" ).arg( values.count() ).arg( _fieldNames.count() );
+    _error = ERROR_INDEX_OUT_OF_RANGE;
+    _errorMsg = QString( "Field count mismatch: %1 <> %2" ).arg( values.count() ).arg( fieldCount() );
     return false;
   }
 }
 
 
-QStringList qCSV::fieldValues( const QString& fieldName, const bool unique /* = false */ ) {
+QStringList QCsv::fieldValues( const QString& fieldName, const bool unique /* = false */ ) {
   QStringList result;
+  clearError();
 
-  if ( _fieldsLookup.contains( fieldName ) ){
-    int index = _fieldsLookup.value( fieldName );
-
-    result  = fieldValues( index, unique );
+  if( !_containsFieldList ) {
+    _error = ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
   }
-  else{
-    _error = qCSV_ERROR_INVALID_FIELD_NAME;
-    _errorMsg = "Invalid Field Name: " + fieldName;
+  else {
+    if( _fieldsLookup.contains( fieldName.trimmed().toLower() ) ){
+      int index = _fieldsLookup.value( fieldName.trimmed().toLower() );
+
+      result  = fieldValues( index, unique );
+    }
+    else {
+      _error = ERROR_INVALID_FIELD_NAME;
+      _errorMsg = "Invalid Field Name: " + fieldName;
+    }
   }
 
   return result;
 }
 
 
-QStringList qCSV::fieldValues( const int fieldNumber, const bool unique /* = false */ ) {
+QStringList QCsv::fieldValues( const int index, const bool unique /* = false */ ) {
   QStringList result;
+  clearError();
 
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
-
-  if( qCSV_ReadEntireFile == _readMode ) {
-    if( fieldNumber > (_fieldNames.count() - 1) ) {
-      _error = qCSV_ERROR_INDEX_OUT_OF_RANGE;
-      _errorMsg = QString( "There is no column %1" ).arg( fieldNumber );
+  if( LineByLine == _mode ) {
+    result.append( this->field( index ) );
+  }
+  else {
+    if( index > ( fieldCount() - 1) ) {
+      _error = ERROR_INDEX_OUT_OF_RANGE;
+      _errorMsg = QString( "There is no column %1" ).arg( index );
     }
     else {
       for( int i = 0; i < _data.count(); ++i ) {
-
         if( unique ) {
-          if( !result.contains( _data.at( i ).at( fieldNumber ) ) )
-            result.append( _data.at( i ).at( fieldNumber ) );
+          if( !result.contains( _data.at( i ).at( index ) ) )
+            result.append( _data.at( i ).at( index ) );
         }
         else {
-          result.append( _data.at( i ).at( fieldNumber ) );
+          result.append( _data.at( i ).at( index ) );
         }
       }
     }
@@ -895,12 +897,23 @@ QStringList qCSV::fieldValues( const int fieldNumber, const bool unique /* = fal
 }
 
 
-qCSV qCSV::filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs /* = Qt::CaseSensitive */ ) {
-  qCSV result( this->fieldNames() );
+QCsv QCsv::filter( const int index, const QString& value, const Qt::CaseSensitivity cs /* = Qt::CaseSensitive */ ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
 
-  for( int i = 0; i < _data.count(); ++i ) {
-    if( 0 == value.compare( this->field( fieldName, i ), cs ) ) {
-      result.appendRow( _data.at(i) );
+  QCsv result;
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    result.setError( ERROR_WRONG_MODE, "Filtered CSVs can only be created from CSVs in EntireFile mode." );
+  }
+  else {
+    result = QCsv( this->fieldNames() );
+
+    for( int i = 0; i < _data.count(); ++i ) {
+      if( 0 == value.compare( this->field( index, i ), cs ) ) {
+        result.appendRow( _data.at(i) );
+      }
     }
   }
 
@@ -909,11 +922,53 @@ qCSV qCSV::filter( const QString& fieldName, const QString& value, const Qt::Cas
 }
 
 
-int qCSV::rowCount(){
+QCsv QCsv::filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs /* = Qt::CaseSensitive */ ) {
+  QCsv result;
+
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    result.setError( ERROR_WRONG_MODE, "Filtered CSVs can only be created from CSVs in EntireFile mode." );
+  }
+  else if( !_containsFieldList ) {
+    _error = ERROR_NO_FIELDLIST;
+    _errorMsg = "The current settings do not include a field list.";
+    result.setError( _error, _errorMsg );
+  }
+  else if( !_fieldsLookup.contains( fieldName.trimmed().toLower() ) ) {
+    _error = ERROR_INVALID_FIELD_NAME;
+    _errorMsg = "Invalid Field Name: " + fieldName;
+     result.setError( _error, _errorMsg );
+  }
+  else {
+    result = filter( _fieldsLookup.value( fieldName.trimmed().toLower() ), value, cs );
+  }
+
+  return result;
+}
+
+
+int QCsv::fieldCount() {
+  if( _containsFieldList )
+    return _fieldNames.count();
+  else if( LineByLine == _mode )
+    return _fieldData.count();
+  else if( 0 < rowCount() )
+    return _data.at(0).count();
+  else
+    return 0;
+}
+
+int QCsv::rowCount() {
   int result;
 
-  if( _readMode == qCSV_ReadLineByLine )
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     result = -1;
+  }
   else
     result = _data.count();
 
@@ -921,7 +976,9 @@ int qCSV::rowCount(){
 }
 
 
-QStringList qCSV::writeLine( const QStringList& line ) {
+QStringList QCsv::writeLine( const QStringList& line ) {
+  clearError();
+
   QStringList output;
 
   output.clear();
@@ -938,7 +995,9 @@ QStringList qCSV::writeLine( const QStringList& line ) {
 }
 
 
-bool qCSV::writeFile( const QString &filename, const QString &codec ) {
+bool QCsv::writeFile( const QString &filename, const QString &codec ) {
+  clearError();
+
   QStringList output;
   QStringList header;
 
@@ -974,13 +1033,13 @@ bool qCSV::writeFile( const QString &filename, const QString &codec ) {
 
 
 //  Mutators
-void qCSV::setContainsFieldList ( bool setVal ){
+void QCsv::setContainsFieldList ( bool setVal ){
   clearError();
   _containsFieldList = setVal;
 }
 
 
-void qCSV::setFilename( QString filename ){
+void QCsv::setFilename( QString filename ){
   clearError();
   if( NULL != _srcFile ) {
     _srcFile->close();
@@ -993,34 +1052,27 @@ void qCSV::setFilename( QString filename ){
 }
 
 
-bool qCSV::open() {
-  return reallyOpen( false );
-}
-
-
-bool qCSV::reallyOpen( const bool force ) {
-  clearError();
-
-  if( !force && ( _readMode == qCSV_ReadEntireFile ) ) {
-    return true;
+bool QCsv::open() {
+  if( EntireFile != mode() ) {
+    _isOpen = openFileAndReadHeader();
   }
+  else {
+    if( !isOpen() ) {
+      if( openFileAndReadHeader() ) {
+        int fieldsRead = 0;
+        while( -1 != fieldsRead ) {
+          fieldsRead = readNext();
+        }
 
-  if( !_isOpen ) {
-    if( NULL == _srcFile ) {
-      _srcFile = new QFile( _srcFilename );
-    }
+        this->finishWithFile();
 
-    _isOpen = _srcFile->open( QIODevice::ReadOnly | QIODevice::Text );
+        this->toFront();
 
-    if( !_isOpen ) {
-      _error = qCSV_ERROR_OPEN;
-      _errorMsg = "Can not open the source file";
-      delete _srcFile;
-      _srcFile = NULL;
-      _isOpen = false;
-    }
-    else if( _containsFieldList ) {
-      readHeader();
+        _isOpen = true;
+      }
+      else {
+        _isOpen = false;
+      }
     }
   }
 
@@ -1028,41 +1080,82 @@ bool qCSV::reallyOpen( const bool force ) {
 }
 
 
-void qCSV::close(){
+bool QCsv::openFileAndReadHeader() {
   clearError();
 
+  if( NULL != _srcFile ) {
+    delete _srcFile;
+  }
+
+  _srcFile = new QFile( _srcFilename );
+
+  bool result = _srcFile->open( QIODevice::ReadOnly | QIODevice::Text );
+
+  if( !result ) {
+    _error = ERROR_OPEN;
+    _errorMsg = "Can not open the source file";
+    delete _srcFile;
+    _srcFile = NULL;
+  }
+  else if( _containsFieldList ) {
+    readHeader();
+  }
+
+  return result;
+}
+
+
+void QCsv::finishWithFile() {
   if( NULL != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
     _srcFile = NULL;
-    _isOpen = false;
   }
 }
 
 
-void qCSV::toFront() {
-  // FIXME: For now, this function only works for qCSV_ReadEntireFile.
-  // Think about how it might work for qCSV_ReadLineByLine.
-  Q_ASSERT( qCSV_ReadEntireFile == _readMode );
+void QCsv::close(){
+  clearError();
+  finishWithFile();
+  _isOpen = false;
+}
 
-  if( qCSV_ReadEntireFile == _readMode ) {
-    _currentLineNumber = -1;
+
+bool QCsv::toFront() {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    return false;
+  }
+  else {
+    _currentRowNumber = -1;
+    return true;
   }
 }
 
 
 //  Returns the number of fields in the row, or -1 at the end of the file.
-int qCSV::moveNext(){
-  if( qCSV_ReadLineByLine == _readMode ) {
-    return readNext();
+int QCsv::moveNext() {
+  clearError();
+
+  if( LineByLine == _mode ) {
+    if( _isOpen )
+      return readNext();
+    else {
+      this->setError( ERROR_OPEN, "Object is not open." );
+      return -1;
+    }
   }
   else {
-    ++_currentLineNumber;
+    ++_currentRowNumber;
 
-    if( _currentLineNumber < _data.count() ) {
+    if( _currentRowNumber < _data.count() ) {
       _fieldData.clear();
-      _fieldData = _data.at( _currentLineNumber );
-      return _data.at( _currentLineNumber ).count();
+      _fieldData = _data.at( _currentRowNumber );
+      return _data.at( _currentRowNumber ).count();
     }
     else {
       return -1;
@@ -1071,7 +1164,7 @@ int qCSV::moveNext(){
 }
 
 
-QString qCSV::readLine() {
+QString QCsv::readLine() {
   QString tmp;
   int nQuotes = 0;
   QString result;
@@ -1095,9 +1188,8 @@ QString qCSV::readLine() {
   return result;
 }
 
-int qCSV::readHeader() {
-  int ret_val = -1;
-  int index = 0;
+int QCsv::readHeader() {
+  int result = -1;
   QStringList fieldList;
 
   clearError();
@@ -1107,7 +1199,7 @@ int qCSV::readHeader() {
   _currentLine = readLine();
 
   if( !_currentLine.isEmpty() ) {
-    ++_currentLineNumber;
+    ++_currentRowNumber;
 
     // If the user wants to skip any lines, do that here.
     if( _linesSkipped < _linesToSkip ) {
@@ -1118,7 +1210,7 @@ int qCSV::readHeader() {
     // This next block handles the situation where the file
     // begins with a header (indicated by lines that start with #).
     // These lines should simply be skipped.
-    if( _checkForComment && isCommentLine( _currentLine ) ) {
+    if( _checkForComments && isCommentLine( _currentLine ) ) {
       ++_nCommentRows;
       return readHeader();
     }
@@ -1129,32 +1221,25 @@ int qCSV::readHeader() {
       fieldList = _currentLine.split( _delimiter );
 
     for ( int i = 0; i < fieldList.size(); i++ ){
-      ++index;
       QString tempString = fieldList.at(i);
       tempString = tempString.trimmed();
-
-      if ( _usesStringToken ){
-        tempString = tempString.replace( _stringToken, "" );
-      }
 
       _fieldNames.append( tempString );
       _fieldsLookup.insert( tempString.toLower(), i );
     }
 
-    _columnCount = index;
     _fieldData.clear();
-    ret_val = _columnCount;
+    result = _fieldNames.count();
   }
 
-  return ret_val;
+  return result;
 }
 
 
 //  Cause a read of a line of data from the csv file.
 //  Returns the number of fields read, or -1 at the end of the file.
-int qCSV::readNext() {
-  int ret_val = -1;
-  int index = 0;
+int QCsv::readNext() {
+  int result = -1;
   QStringList fieldList;
 
   clearError();
@@ -1164,78 +1249,152 @@ int qCSV::readNext() {
   _currentLine = readLine();
 
   if( !_currentLine.isEmpty() ) {
-    ++_currentLineNumber;
+    ++_currentRowNumber;
 
     if ( _stringsContainDelimiters )
       fieldList = CSV::parseLine( _currentLine, _delimiter );
     else
       fieldList = _currentLine.split( _delimiter );
 
-    for ( int i = 0; i < fieldList.size(); i++ ){
-      index++;
-      QString tempString = fieldList.at(i);
-      tempString = tempString.trimmed();
+    if( 0 != fieldCount() && ( fieldList.count() != fieldCount() ) ) {
+      qDebug() << "Error!";
+      _error = ERROR_INVALID_FIELD_COUNT;
+      _errorMsg = QString( "Line %1: %2 fields expected, but %3 fields encountered.  Please check your file format." ).arg( _currentRowNumber ).arg( fieldCount() ).arg( fieldList.count() );
+      result = -1;
+    }
+    else {
+      for ( int i = 0; i < fieldList.count(); i++ ){
+        QString tempString = fieldList.at(i);
+        tempString = tempString.trimmed();
 
-      if ( _usesStringToken ){
-        tempString = tempString.replace( _stringToken, "" );
-      }
-
-      if ( _containsFieldList && _concatenateDanglingEnds ){
-        if ( i < _columnCount )
-          _fieldData.insert( i, tempString );
-        else{
-          QString tempStr = _fieldData[ _columnCount ];
-          tempStr += ", " + tempString;
-          _fieldData.insert( _columnCount, tempStr );
-        }
-      }
-      else {
         _fieldData.insert( i, tempString );
       }
-    }
 
-    ret_val = index;
+      result = _fieldData.count();
 
-    if( qCSV_ReadEntireFile == _readMode ) {
-      _data.append( _fieldData );
-    }
-  }
-  else {
-    if ( !_srcFile->atEnd() ){
-      _error = qCSV_ERROR_BAD_READ;
-      _errorMsg = "Can not read next line.  Last line number was: " + QString::number ( _currentLineNumber ) + ".  Are we at the end of the file?";
+      if( EntireFile == _mode ) {
+        _data.append( _fieldData );
+      }
     }
   }
+  else if ( !_srcFile->atEnd() ){
+    _error = ERROR_BAD_READ;
+    _errorMsg = "Can not read next line.  Last line number was: " + QString::number ( _currentRowNumber ) + ".  Are we at the end of the file?";
+  }
 
-  return ret_val;
-}
-
-
-void qCSV::setStringToken( QChar token ){
-  _stringToken = token;
-  clearError();
-
-  if ( _stringToken != '\0' )
-    _usesStringToken = true;
-  else
-    _usesStringToken = false;
+  return result;
 }
 
 
 // Protected members
-void qCSV::clearError(){
-  _error = qCSV_ERROR_NONE;
-  _errorMsg = "";
+void QCsv::clearError(){
+  _error = ERROR_NONE;
+  _errorMsg = "(No error)";
 }
 
 
-bool qCSV::isCommentLine( const QString& line ) {
+bool QCsv::isCommentLine( const QString& line ) {
   bool result = ( '#' == line.at(0) );
   return result;
 }
 
 
-QCsvObject::QCsvObject() : QObject(), qCSV() {
+QString QCsv::tableDiv( const int len ) {
+  QString result( "--" );
+  for( int i = 0; i < len; ++i ) {
+    result.append( "-" );
+  }
+
+  return result;
+}
+
+
+QString QCsv::tablePadded( const QString& val, const int len ) {
+  QString result;
+  int i;
+  int lenDiff;
+
+  if( val.length() <= len ) {
+    // Prepend the leading space
+    result = QString( " %1" ).arg( val ); // Note the leading space
+
+    // Add spaces until desired length is reached
+    lenDiff = len - val.length();
+    for( i = 0; lenDiff > i; ++i ) {
+      result.append( " " );
+    }
+
+    // Tack on the trailing space
+    result.append( " " );
+  }
+  else {
+    result = QString( " %1" ).arg( val ); // Note the leading space
+    result = result.left( len - 2 );
+    result = result + "... "; // Note the trailing space
+  }
+
+  return result;
+}
+
+
+QString QCsv::asTable() {
+  if( ERROR_NONE != error() ) {
+    return "";
+  }
+
+  QString result;
+  QList<int> arr;
+
+  if( _containsFieldList ) {
+    for( int i = 0; i < _fieldNames.count(); ++i ) {
+      arr << _fieldNames.at(i).length();
+    }
+  }
+  else {
+    for( int i = 0; i < this->fieldCount(); ++i ) {
+      arr << _data.at(0).at(i).length();
+    }
+  }
+
+  // Loop through the columns once to determine max sizes
+  //-----------------------------------------------------
+  for( int row = 0; row < this->rowCount(); ++row ) {
+    for( int i = 0; i < this->fieldCount(); ++i ) {
+      arr[i] = qMax( arr.at(i), _data.at(row).at(i).length() );
+    }
+  }
+
+  // Start writing
+  //--------------
+  QStringList list;
+
+  if( _containsFieldList ) {
+    list.clear();
+    for( int i = 0; i < _fieldNames.count(); ++i ) {
+      list.append( QString( "%1" ).arg( tablePadded( _fieldNames.at(i), arr.at(i) ) ) );
+    }
+    result.append( QString( "|%1|\n" ).arg( list.join( "|" ) ) );
+
+    list.clear();
+    for( int i = 0; i < _fieldNames.count(); ++i ) {
+      list.append( tableDiv( arr.at(i) ) );
+    }
+    result.append( QString( "+%1+\n" ).arg( list.join( "+" ) ) );
+  }
+
+  for( int row = 0; row < this->rowCount(); ++row ) {
+    list.clear();
+    for( int i = 0; i < this->fieldCount(); ++i ) {
+      list.append( QString( "%1" ).arg( tablePadded( _data.at(row).at(i), arr.at(i) ) ) );
+    }
+    result.append( QString( "|%1|\n" ).arg( list.join( "|" ) ) );
+  }
+
+  return result;
+}
+
+
+QCsvObject::QCsvObject() : QObject(), QCsv() {
   // Do nothing.
 }
 
@@ -1243,32 +1402,20 @@ QCsvObject::QCsvObject() : QObject(), qCSV() {
 QCsvObject::QCsvObject(
   const QString& filename,
   const bool containsFieldList,
-  const QChar& stringToken /* = '\0' */,
   const bool stringsContainDelimiters/*  = true */,
-  const int readMode /* = qCSV::qCSV_ReadLineByLine */,
+  const QCsvMode mode /* = qCSV::LineByLine */,
   const bool checkForComment /* = false */
-) : QObject(), qCSV( filename, containsFieldList, stringToken, stringsContainDelimiters, readMode, checkForComment ) {
+) : QObject(), QCsv( filename, containsFieldList, stringsContainDelimiters, mode, checkForComment ) {
   // Do nothing.
 }
 
 
-QCsvObject::QCsvObject(
-  const int dummy,
-  QString text,
-  const bool containsFieldList,
-  const QChar& stringToken /* = '\0' */,
-  const bool stringsContainDelimiters /* = true */
-) : QObject(), qCSV( dummy, text, containsFieldList, stringToken, stringsContainDelimiters ) {
+QCsvObject::QCsvObject( const QStringList& fieldNames ) : QObject(), QCsv( fieldNames ) {
   // Do nothing.
 }
 
 
-QCsvObject::QCsvObject( const QStringList& fieldNames ) : QObject(), qCSV( fieldNames ) {
-  // Do nothing.
-}
-
-
-QCsvObject::QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data ) : QObject(), qCSV( fieldNames, data ) {
+QCsvObject::QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data ) : QObject(), QCsv( fieldNames, data ) {
   // Do nothing.
 }
 
@@ -1279,7 +1426,7 @@ QCsvObject::~QCsvObject() {
 
 
 int QCsvObject::readNext() {
-  int result = qCSV::readNext();
+  int result = QCsv::readNext();
   emit nBytesRead( _currentLine.toUtf8().size() );
   return result;
 }

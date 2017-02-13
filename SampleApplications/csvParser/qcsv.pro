@@ -6,22 +6,26 @@
 
 QT       += core gui
 
+CONFIG += console
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = qcsv
 TEMPLATE = app
 
 INCLUDEPATH += \
-  C:/libs/Qt_libs
+  ../../../
 
 SOURCES += \
   main.cpp \
   mainwindow.cpp \
-    ../../ar_general_purpose/csv.cpp
+    ../../../ar_general_purpose/csv.cpp \
+    ../../../ar_general_purpose/strutils.cpp
 
 HEADERS  += \
   mainwindow.h \
-    ../../ar_general_purpose/csv.h
+    ../../../ar_general_purpose/csv.h \
+    ../../../ar_general_purpose/strutils.h
 
 FORMS    += \
   ui/mainwindow.ui
