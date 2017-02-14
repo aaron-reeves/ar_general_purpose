@@ -22,7 +22,7 @@ namespace ODS {
   QString getCellValue( ods::Cell *cell );
   QString getCellValue( ods::Sheet *sheet, const int colIdx, const int rowIdx );
   QStringList readRow( ods::Sheet *sheet, const int rowIdx, const bool makeLower = false );
-  qCSV odsToCsv( const QString& filename );
+  QCsv odsToCsv( const QString& filename );
 }
 
 /* SAMPLE CODE

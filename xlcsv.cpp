@@ -13,10 +13,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "xlcsv.h"
 
-CXlCsv::CXlCsv( const QString& filename, const int nCommentRows /* = 0 */, const QString& sheetname /* = "" */ ) : qCSV() {
+CXlCsv::CXlCsv( const QString& filename, const int nCommentRows /* = 0 */, const QString& sheetname /* = "" */ ) : QCsv() {
   QFileInfo fi( filename );
   if( !fi.exists() || !fi.isReadable() ) {
-    _error = qCSV::qCSV_ERROR_OPEN;
+    _error = QCsv::ERROR_OPEN;
     _errorMsg = "Specified input file does not exist or cannot be read.";
     return;
   }
@@ -30,14 +30,14 @@ CXlCsv::CXlCsv( const QString& filename, const int nCommentRows /* = 0 */, const
 
   QXlsx::Document xlsx( filename );
   if( !sheetname.isEmpty() && !xlsx.selectSheet( sheetname ) ) {
-    _error = qCSV::qCSV_ERROR_OTHER;
+    _error = QCsv::ERROR_OTHER;
     _errorMsg = QString( "Specified worksheet (%1) could not be selected." ).arg( sheetname );
     return;
   }
 
   QXlsx::CellRange cellRange = xlsx.dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
-    _error = qCSV::qCSV_ERROR_OTHER;
+    _error = QCsv::ERROR_OTHER;
     _errorMsg = "Cell range is out of bounds.";
     return;
   }

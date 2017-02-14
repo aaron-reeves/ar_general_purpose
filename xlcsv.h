@@ -18,7 +18,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtXlsx>
 #include "csv.h"
 
-class CXlCsv : public qCSV {
+class CXlCsv : public QCsv {
   public:
     CXlCsv( const QString& filename, const int nCommentRows = 0, const QString& sheetname = "" );
     ~CXlCsv();

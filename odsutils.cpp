@@ -13,8 +13,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "odsutils.h"
 
-qCSV ODS::odsToCsv( const QString& filename ) {
-  qCSV csv;
+QCsv ODS::odsToCsv( const QString& filename ) {
+  QCsv csv;
 
   ods::Book book( filename );
   ods::Sheet *sheet = book.sheets().at(0);
@@ -27,7 +27,7 @@ qCSV ODS::odsToCsv( const QString& filename ) {
     // Read the header row first.
     list = ODS::readRow( sheet, row, true );
     if( !list.isEmpty() ) {
-      csv = qCSV( list );
+      csv = QCsv( list );
     }
 
     // Subsequent rows contain data.

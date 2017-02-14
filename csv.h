@@ -103,7 +103,8 @@ class QCsv {
       ERROR_INDEX_OUT_OF_RANGE,
       ERROR_BAD_READ,
       ERROR_INVALID_FIELD_COUNT,
-      ERROR_WRONG_MODE
+      ERROR_WRONG_MODE,
+      ERROR_OTHER
     };
 
     QCsv(); // Constructs an empty CSV object with an unspecified mode.  Use properties below to specify settings.
