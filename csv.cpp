@@ -1039,6 +1039,18 @@ void QCsv::setContainsFieldList ( bool setVal ){
 }
 
 
+bool QCsv::setLinesToSkip( const int val ) {
+  if( 0 > val ) {
+    setError( ERROR_INDEX_OUT_OF_RANGE, "Number of lines to skip must be 0 or more." );
+    return false;
+  }
+  else {
+    _linesToSkip = val;
+    return true;
+  }
+}
+
+
 void QCsv::setFilename( QString filename ){
   clearError();
   if( NULL != _srcFile ) {
@@ -1280,6 +1292,101 @@ int QCsv::readNext() {
   else if ( !_srcFile->atEnd() ){
     _error = ERROR_BAD_READ;
     _errorMsg = "Can not read next line.  Last line number was: " + QString::number ( _currentRowNumber ) + ".  Are we at the end of the file?";
+  }
+
+  return result;
+}
+
+
+bool QCsv::setFieldFormat( const QString& fieldName, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury /* = 2000 */ ) {
+  bool result;
+
+  if( !_isOpen ) {
+    setError( QCsv::ERROR_OPEN, "File must be open to set a field format." );
+    result = false;
+  }
+  else if( !this->containsFieldList() ) {
+    setError( QCsv::ERROR_NO_FIELDLIST, "This file does not have field names." );
+    result = false;
+  }
+  else {
+    int fieldIdx = fieldIndexOf( fieldName.trimmed() );
+    if( -1 == fieldIdx ) {
+      setError( QCsv::ERROR_INVALID_FIELD_NAME, QString( "Field name '%1' does not exist." ).arg( fieldName ) );
+      result = false;
+    }
+    else {
+      result = setFieldFormat( fieldIdx, columnFmt, dateFmt, defaultCentury );
+    }
+  }
+
+  return result;
+}
+
+bool QCsv::setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury /* = 2000 */ ) {
+  bool result = true; // Until shown otherwise.
+
+  if( !_isOpen ) {
+    setError( QCsv::ERROR_OPEN, "File must be open to set a field format." );
+    result = false;
+  }
+  else if( 0 > fieldIdx ) {
+    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, "Negative field index provided." );
+    result = false;
+  }
+  else if( this->fieldCount() <= fieldIdx ) {
+    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, QString( "Field index %1 is out of range." ).arg( fieldIdx ) );
+    result = false;
+  }
+  else {
+    Q_ASSERT( columnFmt == DateFormat ); // FIXME: Eventually, support time and date/time formats.
+
+    switch( columnFmt ) {
+      case DateFormat:
+        if( EntireFile == _mode ) {
+          for( int row = 0; row < this->rowCount(); ++row ) {
+            QString str = _data.at(row).at(fieldIdx);
+            if( !str.isEmpty() ) {
+              QDate date = guessDateFromString( str, dateFmt, defaultCentury );
+
+              if( date.isValid() ) {
+                _data[row][fieldIdx] = date.toString( "yyyy-MM-dd" );
+              }
+              else {
+                setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
+                result = false;
+              }
+            }
+          }
+        }
+        else if( LineByLine == _mode ) {
+          QString str = _fieldData.at( fieldIdx );
+          if( !str.isEmpty() ) {
+            QDate date = guessDateFromString( str, dateFmt, defaultCentury );
+
+            if( date.isValid() ) {
+              _fieldData[fieldIdx] = date.toString( "yyyy-MM-dd" );
+            }
+            else {
+              setError( QCsv::ERROR_OTHER, QString( "Format of data in field %1 cannot be changed to DateFormat." ).arg( fieldIdx ) );
+              result = false;
+            }
+          }
+        }
+        else {
+          // This should never happen: if a file is open, it's mode will have been set.
+          setError( QCsv::ERROR_WRONG_MODE, "Mode must be specified to set a field format." );
+          result = false;
+        }
+
+        break;
+      case TimeFormat: // Fall through, for now.
+      case DateTimeFormat: // Fall through, for now.
+      default:
+        setError( QCsv::ERROR_OTHER, "Specified field format not yet supported." );
+        result = false;
+        break;
+    }
   }
 
   return result;

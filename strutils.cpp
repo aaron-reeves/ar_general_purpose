@@ -658,7 +658,7 @@ bool isEmailAddress( const QString& str ) {
 }
 
 
-QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, const int defaultCentury /* = 2000 */ ) {
+QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const int defaultCentury /* = 2000 */ ) {
   QDate result = QDate(); // An invalid date, unless a better one can be assigned.
 
   dateStr = dateStr.trimmed().toLower();
@@ -700,14 +700,14 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
     result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
   }
 
-  else if( ukDate.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
+  else if( ukDate.exactMatch( dateStr ) && ( UKDateFormat == fmt ) ) {
     result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
       result = QDate::fromString( dateStr, QString( "d%1M%1yyyy" ).arg( separator ) );
     }
   }
-  else if( usDate.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
+  else if( usDate.exactMatch( dateStr ) && ( USDateFormat == fmt ) ) {
     result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
@@ -748,7 +748,7 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
     }
   }
 
-  else if( ukDateTime.exactMatch( dateStr ) && ( ARDateFormat::UK == fmt ) ) {
+  else if( ukDateTime.exactMatch( dateStr ) && ( UKDateFormat == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
     if( !dt.isValid() ) {
       dt = QDateTime::fromString( dateStr, QString( "d%1M%1yyyy hh:mm" ).arg( separator ) );
@@ -762,7 +762,7 @@ QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, 
     result = dt.date();
   }
 
-  else if( usDateTime.exactMatch( dateStr ) && ( ARDateFormat::US == fmt ) ) {
+  else if( usDateTime.exactMatch( dateStr ) && ( USDateFormat == fmt ) ) {
     QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
     if( !dt.isValid() ) {
       dt = QDateTime::fromString( dateStr, QString( "M%1d%1yyyy hh:mm" ).arg( separator ) );

@@ -13,6 +13,7 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
 #define CSV_H
 
 #include <QtCore>
+#include <ar_general_purpose/strutils.h>
 
 /*
  * Basic use:
@@ -107,6 +108,12 @@ class QCsv {
       ERROR_OTHER
     };
 
+    enum ColumnFormat {
+      DateFormat,
+      TimeFormat,
+      DateTimeFormat
+    };
+
     QCsv(); // Constructs an empty CSV object with an unspecified mode.  Use properties below to specify settings.
 
     // Constructs a CSV object from a file, with the indicated properties.
@@ -145,7 +152,7 @@ class QCsv {
     // Opens the file/object for reading/manipulation.  Returns false and sets an error flag if open failed.
     // This isn't strictly necessary for mode EntireFile, as it happens implicitly (at least when the main version of the constructor is used).
     // It's a good habit to get into, however, as explicitly opening a LineByLine file is required.
-    bool open();
+    virtual bool open();
     void close(); // Closes an open file.
     bool toFront(); // Resets to the top of the file, so that moveNext() will return the first row of data.
     int moveNext();  // Moves to the next row of data.  Returns the number of fields encountered, or -1 if the row is empty or does not exist.
@@ -194,6 +201,14 @@ class QCsv {
     // These work only in entire-file mode.
     bool setField( const int index, const int rowNumber, const QString& val );
     bool setField( const QString& fieldName, const int rowNumber, const QString& val );
+
+    // It's not always possible to automatically determine the intended format of a column,
+    // particularly for dates and times.  These functions, which can be called once a file is open,
+    // will properly format a column with the indicated date or time format.
+    // For Excel dates, see CXlCsv::setFieldFormatXl(), which deals with the conversion of integers
+    // to dates using either the 1900 and 1904 date systems.
+    bool setFieldFormat( const QString& fieldName, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
+    bool setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
 
     bool writeFile( const QString &filename, const QString &codec = "" ); // Write contents of the CSV object to a file.
 
@@ -245,7 +260,7 @@ class QCsv {
 
     // Used to specify the number of lines at the start of a file to skip (i.e., not to process).
     // Similar to checkForComments, but skips a fixed number of lines rather than checking for lines that start with #.
-    void setLinesToSkip( const int val ) { _linesToSkip = val; }
+    bool setLinesToSkip( const int val );
     int linesToSkip() const { return _linesToSkip; }
 
     // If true, then check that values contain delimiters, e.g.:

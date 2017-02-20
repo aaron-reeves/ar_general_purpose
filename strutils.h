@@ -65,14 +65,12 @@ bool isHexDigit( const QChar& c );
 
 bool isEmailAddress( const QString& str );
 
-namespace ARDateFormat {
-  enum DateFormat {
-    US,
-    UK
-  };
-}
+enum StrUtilsDateFormat {
+  USDateFormat,
+  UKDateFormat
+};
 
-QDate guessDateFromString( QString dateStr, const ARDateFormat::DateFormat fmt, const int defaultCentury = 2000 );
+QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const int defaultCentury = 2000 );
 
 #if defined(_WIN32) || defined(WIN32)
 #include <tchar.h>
