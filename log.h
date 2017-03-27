@@ -19,6 +19,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qtextstream.h>
 #include <qlist.h>
 
+class CLockFile;
+
+extern CLockFile lockFile;
+
 class CAppLog;
 
 extern CAppLog appLog;
@@ -76,6 +80,9 @@ class CAppLog {
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
+    const QString fileName() { return _logFileName; }
+    const QString path() { return _logPath; }
+
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
@@ -96,12 +103,30 @@ class CAppLog {
     bool _logOpen;
     int _logLineCount;
     QString _logFileName; 
+    QString _logPath;
     TLogMessageList* _pending;
     bool _useStderr;
     bool _autoTruncate;
     FileFrequency _freq;
     bool _consoleEcho;
     QString _msgInProgress;
+};
+
+
+class CLockFile {
+  public:
+    CLockFile( void );
+
+    bool setFileName( const QString& fileName );
+    bool useLockFile();
+    bool exists();
+    bool write();
+    bool remove();
+
+  protected:
+    bool _useLockFile;
+    QString _fileName;
+    QString _path;
 };
 
 #endif // LOG_H
