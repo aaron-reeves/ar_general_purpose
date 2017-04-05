@@ -1281,7 +1281,7 @@ int QCsv::readNext() {
     }
 
     if( 0 != fieldCount() && ( fieldList.count() != fieldCount() ) ) {
-      qDebug() << "Error!";
+      //qDebug() << "Error!";
       _error = ERROR_INVALID_FIELD_COUNT;
       _errorMsg = QString( "Line %1: %2 fields expected, but %3 fields encountered.  Please check your file format." ).arg( _currentRowNumber ).arg( fieldCount() ).arg( fieldList.count() );
       result = -1;
