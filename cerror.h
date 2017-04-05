@@ -1,32 +1,28 @@
+/*
+cerror.h/cpp
+------------
+Begin: 2016/09/17
+Authors: Aaron Reeves <aaron.reeves@sruc.ac.uk>
+         Julie Stirling <julie.stirling@sruc.ac.uk>
+---------------------------------------------------
+Copyright (C) 2016 - 2017 Epidemiology Research Unity, Scotland's Rural College (SRUC)
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
+#ifndef CERROR_H
+#define CERROR_H
+
 #include <QtCore>
+#include <QtSql>
 
-namespace ErrorReturnValue {
-  enum Result {
-    NO_ERROR = 0x0000,                 //    0
-    BAD_COMMAND = 0x0001,              //    1
-    INPUT_FILE_PROBLEM = 0x0002,       //    2
-    DATA_VALIDATION_PROBLEM = 0x0004,  //    4
-    OUTPUT_FILE_PROBLEM = 0x0008,      //    8
-    ERROR_LOG_PROBLEM = 0x0010,        //   16
-    ERROR_VARIANT_CONVERSION = 0x0020, //   32
-    PROCESSING_INTERRUPTED = 0x0040,   //   64
-    FAILED_DB_QUERY = 0x0080,          //  128
-    BAD_CONFIG = 0x0100,               //  256
-    FILE_SYSTEM_PROBLEM = 0x0200,      //  512
-    REQUIRED_FIELDS_MISSING = 0x0400,  // 1024
-    BAD_DATABASE = 0x0800,             // 2048
-    UNSPECIFIED_ERROR = 0x1000         // 4096
-    //NEXT_PROBLEM = 0x2000
-    //...
-    // Don't forget to update CErrorHandler.errors() if new values are added.
-  };
-}
-
+#include <ar_general_purpose/returncodes.h>
 
 class CError {
   public:
-    enum ErrorLevel {
-      NoError,
+    enum ErrorType {
       Unspecified,
       Information,
       Question,
@@ -36,39 +32,53 @@ class CError {
     };
 
     CError();
-    CError( const ErrorLevel level, const QString& msg );
+    CError( const ErrorType type, const QString& msg, const int dataSourceID = -1, const int lineNumber = -1 );
     CError( const CError& other );
     CError& operator=( const CError& other );
 
-    ErrorLevel level() const { return _level; }
+    ErrorType type() const { return _type; }
     QString msg() const { return _msg; }
+    QString logMsg() const;
+    int lineNumber() const { return _lineNumber; }
+    int dataSourceID() const { return _dataSourceID; }
 
-    QString levelAsString();
-    static QString levelAsString( const ErrorLevel level );
+    QString typeAsString() const;
+    static QString typeAsString( const ErrorType type );
+
+    void debug() const;
 
   protected:
-    ErrorLevel _level;
+    ErrorType _type;
     QString _msg;
+    int _lineNumber;
+    int _dataSourceID;
 };
-
 
 class CErrorList {
   public:
-    CErrorList();
+    enum ErrorFileFormat {
+      ErrorFileCSV,
+      ErrorFileLog
+    };
+
+    CErrorList( const bool useAppLog );
     void clear();
     int count();
     QString at( const int i );
     CError itemAt( const int i );
     void append( CError err );
-    void append( CError::ErrorLevel level, const QString& msg );
+    //void append( CError::ErrorType level, const QString& msg );
     void append( CErrorList src );
     QString asText();
+
+    bool writeFile( const QString& filename, const ErrorFileFormat fmt );
     
   protected:
+    bool _useAppLog;
     QList<CError> _list;
 };
 
-
+#ifdef UNDEFINED
 class CErrorHandler {
   public:
     CErrorHandler( const bool writeErrorLog, const QString& errorLogFilename, const bool autoWriteErrorLog = true );
@@ -89,3 +99,6 @@ class CErrorHandler {
    bool _autoWriteErrorLog;
    QString _errorLogFilename;
 };
+#endif
+
+#endif // CERROR_H
