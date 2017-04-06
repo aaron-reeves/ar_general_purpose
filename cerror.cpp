@@ -1,33 +1,94 @@
 #include "cerror.h"
 
+/*
+cerror.h/cpp
+------------
+Begin: 2016/09/17
+Authors: Aaron Reeves <aaron.reeves@sruc.ac.uk>
+         Julie Stirling <julie.stirling@sruc.ac.uk>
+---------------------------------------------------
+Copyright (C) 2016 Epidemiology Research Unity, Scotland's Rural College (SRUC)
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
+#include "cerror.h"
+
+#include <ar_general_purpose/log.h>
+
 CError::CError(){
-  _level = Unspecified;
+  _type = Unspecified;
   _msg = "";
+  _lineNumber = -1;
+  _dataSourceID = -1;
 }
 
 
-CError::CError( const ErrorLevel type, const QString& msg ) {
-  _level = type;
+CError::CError( const ErrorType type, const QString& msg, const int dataSourceID /* = -1 */, const int lineNumber /* = -1 */ ) {
+  _type = type;
   _msg = msg;
+  _lineNumber = lineNumber;
+  _dataSourceID = dataSourceID;
 }
 
 
 CError::CError( const CError& other ) {
-  _level = other._level;
+  _type = other._type;
   _msg = other._msg;
+  _lineNumber = other._lineNumber;
+  _dataSourceID = other._dataSourceID;
 }
 
 
 CError& CError::operator=( const CError& other ) {
-  _level = other._level;
+  _type = other._type;
   _msg = other._msg;
+  _lineNumber = other._lineNumber;
+  _dataSourceID = other._dataSourceID;
 
   return *this;
 }
 
 
-CErrorList::CErrorList(){
-  // Nothing to do here.
+QString CError::logMsg() const {
+  if( -1 == lineNumber() )
+    return msg();
+  else
+    return( QString( "Line %1: %2" ).arg( lineNumber() ).arg( msg() ) );
+}
+
+QString CError::typeAsString() const {
+  return typeAsString( type() );
+}
+
+
+QString CError::typeAsString( const ErrorType type ) {
+  QString typeStr;
+
+  switch( type ) {
+    case CError::Information: typeStr = "Information"; break;
+    case CError::Question: typeStr = "Question"; break;
+    case CError::Warning: typeStr = "Warning"; break;
+    case CError::Critical: typeStr = "Critical"; break;
+    case CError::Fatal: typeStr = "Fatal"; break;
+    default:
+      qDebug() << "Problem encountered in CError::typeAsString()";
+      break;
+  }
+
+  return typeStr;
+}
+
+void CError::debug() const {
+  QString q = QString( "%1: %2, %3, %4" ).arg( this->typeAsString() ).arg( this->msg() ).arg( this->dataSourceID() ).arg( this->lineNumber() );
+  qDebug() << q;
+}
+
+
+CErrorList::CErrorList( const bool useAppLog ){
+  _useAppLog = useAppLog;
 }
 
 
@@ -48,22 +109,38 @@ CError CErrorList::itemAt( const int i ) {
 
 void CErrorList::append( CError err ) {
   _list.append( err );
+
+  if( _useAppLog ) {
+    if( -1 == err.lineNumber() )
+      logMsg( err.msg(), LoggingTypical );
+    else
+      logMsg( QString( "Line %1: %2" ).arg( err.lineNumber() ).arg( err.msg() ), LoggingTypical );
+  }
 }
 
 
-void CErrorList::append( CError::ErrorLevel type, const QString& msg ) {
-  _list.append( CError( type, msg ) );
-}
+//void CErrorList::append( CError::ErrorType type, const QString& msg ) {
+//  CError err( type, msg );
+
+//  _list.append( err );
+
+//  if( _useAppLog )
+//    logMsg( err.logMsg(), LoggingTypical );
+//}
 
 
 void CErrorList::append( CErrorList src ) {
-  for( int i = 0; i < src.count(); ++i )
+  for( int i = 0; i < src.count(); ++i ) {
     _list.append( src.itemAt(i) );
+
+    if( _useAppLog )
+      logMsg( src.itemAt(i).logMsg(), LoggingTypical );
+  }
 }
 
 
 QString CErrorList::at( const int i ) {
-  return _list.at(i).msg();
+  return _list.at(i).logMsg();
 }
 
 
@@ -78,29 +155,53 @@ QString CErrorList::asText() {
 }
 
 
-QString CError::levelAsString() {
-  return levelAsString( level() );
-}
+bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat fmt ) {
+  QFile data( filename );
+  if( data.open( QFile::WriteOnly | QFile::Truncate ) ) {
+    QTextStream out( &data );
 
+    // Header row
+    //-----------
+    switch( fmt ) {
+      case ErrorFileCSV:
+        out << "Line number, Error message, Error type" << endl;
+        break;
+      default: // ErrorFileLog
+        if( _list.isEmpty() ) {
+          out << "(No errors reported)" << endl;
+        }
+        break;
+    }
 
-QString CError::levelAsString( const ErrorLevel type ) {
-  QString typeStr;
+    // Data
+    //-----
+    for( int i = 0; i < _list.count(); ++i ) {
+      CError err = _list.at(i);
 
-  switch( type ) {
-    case CError::Information: typeStr = "Information"; break;
-    case CError::Question: typeStr = "Question"; break;
-    case CError::Warning: typeStr = "Warning"; break;
-    case CError::Critical: typeStr = "Critical"; break;
-    case CError::Fatal: typeStr = "Fatal"; break;
-    default:
-      qDebug() << "Problem encountered in CError::typeAsString()";
-      break;
+      switch( fmt ) {
+        case ErrorFileCSV:
+          out << err.lineNumber() << ", " << err.msg() << ", " << err.typeAsString() << endl;
+          break;
+        default: // ErrorFileLog
+          out << QString( "Line %1: %2" ).arg( err.lineNumber() ).arg( err.msg() ) << endl;
+          break;
+      }
+    }
+
+    return true;
   }
-
-  return typeStr;
+  else
+    return false;
 }
 
 
+
+
+
+
+
+
+#ifdef UNDEFINED
 CErrorHandler::CErrorHandler( const bool writeErrorLog, const QString& errorLogFilename, const bool autoWriteErrorLog /* = true */ ) {
   _maxErrorLevel = CError::NoError;
   _writeErrorLog = writeErrorLog;
@@ -199,3 +300,4 @@ void CErrorHandler::handleError( CError::ErrorLevel level, const QString& msg, c
 //void CErrorHandler::handleError( const CErrorList& msgs ) {
 //  _errMsgs.append( msgs );
 //}
+#endif //UNDEFINED

@@ -1229,8 +1229,14 @@ int QCsv::readHeader() {
 
     if ( _stringsContainDelimiters )
       fieldList = CSV::parseLine( _currentLine, _delimiter );
-    else
+    else {
       fieldList = _currentLine.split( _delimiter );
+      for( int i = 0; i < fieldList.count(); ++i ) {
+        if( fieldList.at(i).startsWith( "\"" ) && fieldList.at(i).endsWith( "\"" ) ) {
+          fieldList[i] = fieldList.at(i).mid( 1, fieldList.at(i).length() - 2 );
+        }
+      }
+    }
 
     for ( int i = 0; i < fieldList.size(); i++ ){
       QString tempString = fieldList.at(i);
@@ -1265,8 +1271,14 @@ int QCsv::readNext() {
 
     if ( _stringsContainDelimiters )
       fieldList = CSV::parseLine( _currentLine, _delimiter );
-    else
+    else {
       fieldList = _currentLine.split( _delimiter );
+      for( int i = 0; i < fieldList.count(); ++i ) {
+        if( fieldList.at(i).startsWith( "\"" ) && fieldList.at(i).endsWith( "\"" ) ) {
+          fieldList[i] = fieldList.at(i).mid( 1, fieldList.at(i).length() - 2 );
+        }
+      }
+    }
 
     if( 0 != fieldCount() && ( fieldList.count() != fieldCount() ) ) {
       //qDebug() << "Error!";

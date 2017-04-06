@@ -25,6 +25,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/qcout.h>
 
 CAppLog appLog;
+CLockFile lockFile;
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessage( msg, logLevel );
@@ -68,6 +69,7 @@ CAppLog::CAppLog( QString fileName, const int logLevel, const FileFrequency freq
 void CAppLog::initialize() {
   _logOpen = false;
   _logFileName = "";
+  _logPath = "";
 
   _logFile = NULL;
   _logTextStream = NULL;
@@ -111,7 +113,7 @@ void CAppLog::setFileName( QString fileName ) {
 
   switch ( _freq ) {
     case DailyFiles:
-      fileName = QString( "%1/%2-%3" ).arg( fi.absoluteDir().absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      fileName = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
       break;
 
     // For now, fall through for all other options.
@@ -121,6 +123,7 @@ void CAppLog::setFileName( QString fileName ) {
   }
 
   _logFileName = fileName;
+  _logPath = fi.absolutePath();
 }
 
 void CAppLog::setLogLevel( const int logLevel ) {
@@ -346,6 +349,52 @@ void CAppLog::processPendingMessages( void ) {
     _pending = NULL; 
   }
 }
+
+
+CLockFile::CLockFile( void ) {
+  _useLockFile = false;
+  _fileName = "";
+  _path = "";
+}
+
+
+bool CLockFile::setFileName( const QString& fileName ) {
+  _fileName = fileName;
+  QFileInfo fi( _fileName );
+  _path = fi.absolutePath();
+  _useLockFile = true;
+
+  return( !fi.exists() && fi.isWritable() );
+}
+
+
+bool CLockFile::useLockFile() {
+  return _useLockFile;
+}
+
+
+bool CLockFile::exists() {
+  return QFileInfo( _fileName ).exists();
+}
+
+
+bool CLockFile::write() {
+  QFile data( _fileName );
+  if( data.open( QFile::WriteOnly | QFile::Truncate ) ) {
+    QTextStream out( &data );
+    out << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss:zzz" );
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+
+bool CLockFile::remove() {
+  return QFile::remove( _fileName );
+}
+
 
 
 

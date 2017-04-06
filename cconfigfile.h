@@ -64,8 +64,8 @@ class CConfigFile {
     CConfigFile( const CConfigFile& other );
     virtual ~CConfigFile();
 
-    // Check only the FIRST REMAINING block with the indicated name.
-    //--------------------------------------------------------------
+    // Check only the FIRST ENCOUNTERED block with the indicated name.
+    //----------------------------------------------------------------
     bool contains( QString blockName, QString key ) const;
     QString value( QString blockName, QString key ) const;
 
