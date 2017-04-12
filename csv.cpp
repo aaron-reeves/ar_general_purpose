@@ -479,6 +479,21 @@ QStringList QCsv::rowData() {
   ;
 }
 
+
+QStringList QCsv::rowData( const int idx ) {
+  Q_ASSERT( LineByLine != _mode );
+  clearError();
+
+  if( ( 0 > idx ) || ( _data.count() < idx ) ) {
+    _error = ERROR_INDEX_OUT_OF_RANGE;
+    return QStringList();
+  }
+  else {
+    return _data.at( idx );
+  }
+}
+
+
 QString QCsv::field( const int index ){
   QStringList* dataList;
   QString ret_val = "";

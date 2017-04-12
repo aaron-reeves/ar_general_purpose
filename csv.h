@@ -185,6 +185,7 @@ class QCsv {
 
     QString currentRow(); // Returns the current line of the object as a CSV-formatted string
     QStringList rowData(); // Returns all of the data from the current line of the object as a QStringList
+    QStringList rowData( const int idx ); // Returns all of the data from line idx of the object as a QStringList (only for entire-file mode)
 
     // Returns all of the values in the column/field specified by 'index' or 'fieldName'.
     // Optionally: return only the unique values in this field (if 'unique' is true).
