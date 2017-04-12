@@ -72,6 +72,8 @@ QString titleCase( QString str ){
 
     if( 0 == i )
       result.append( c.toUpper() );
+    else if( str.at(i-1).isSpace() )
+      result.append( c.toUpper() );
     else if( str.at(i-1).isLetter() )
       result.append( c.toLower() );
     else
