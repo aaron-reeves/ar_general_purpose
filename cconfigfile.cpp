@@ -299,13 +299,25 @@ int CConfigFile::processFile( QFile* file ) {
   QString line = "";
   QStringList block;
   QTextStream in(file);
+  bool inComment = false;
 
   while (!in.atEnd()) {
     line = in.readLine().trimmed();
 
     if( line.isEmpty() || line.startsWith('#') )
       continue;
-    else if( 0 == line.compare( "[endconfig]", Qt::CaseInsensitive ) ) {
+    else if( ( 0 == line.compare( "[startcomment]", Qt::CaseInsensitive ) ) || ( 0 == line.compare( "[begincomment]", Qt::CaseInsensitive ) ) ) {
+      inComment = true;
+      continue;
+    }
+    else if( 0 == line.compare( "[endcomment]", Qt::CaseInsensitive ) ) {
+      inComment = false;
+      continue;
+    }
+    else if( inComment ) {
+      continue;
+    }
+    else if( !inComment && ( 0 == line.compare( "[endconfig]", Qt::CaseInsensitive ) ) ) {
       break;
     }
     else {
