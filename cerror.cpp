@@ -52,11 +52,20 @@ CError& CError::operator=( const CError& other ) {
 }
 
 
-QString CError::logMsg() const {
-  if( -1 == lineNumber() )
-    return msg();
+QString CError::logMessage() const {
+  QString str = this.typeAsString();
+
+  if( -1 < _lineNumber ) {
+    str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( str );
   else
-    return( QString( "Line %1: %2" ).arg( lineNumber() ).arg( msg() ) );
+    str = QString( "%1:" ).arg( str );
+
+  if( this->_msg.contains( "\n" ) )
+    str.append( QString( ">>> %1 <<< (End)" ).arg( this->_msg ) );
+  else
+    str.append( " %1" ).arg( this->_msg );
+  
+  return str.trimmed();
 }
 
 QString CError::typeAsString() const {
@@ -68,6 +77,7 @@ QString CError::typeAsString( const ErrorType type ) {
   QString typeStr;
 
   switch( type ) {
+    case CError::Ok: typeStr = "Ok"; break;
     case CError::Information: typeStr = "Information"; break;
     case CError::Question: typeStr = "Question"; break;
     case CError::Warning: typeStr = "Warning"; break;
@@ -75,6 +85,7 @@ QString CError::typeAsString( const ErrorType type ) {
     case CError::Fatal: typeStr = "Fatal"; break;
     default:
       qDebug() << "Problem encountered in CError::typeAsString()";
+      Q_ASSERT( false );
       break;
   }
 
@@ -101,6 +112,43 @@ int CErrorList::count() {
   return _list.count();
 }
 
+
+bool CErrorList::hasErrors() const
+  bool result = false;
+  for( int i = 0; i < _list.count(); ++i ) {
+    if( ( CError::Critical == _list.at(i).type() ) || ( CError::Fatal == _list.at(i).type() ) ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool CErrorList::hasWarnings() const {
+  bool result = false;
+  for( int i = 0; i < _list.count(); ++i ) {
+    if( CError::Warning == _list.at(i).type() ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+QString CErrorList::logMessage() const {
+  QString result;
+  
+  for( int i = 0; i < _errors.count(); ++i ) {
+    result.append( _errors.at(i).logMessage() );
+    result.append( "\n" );
+  }
+  
+  return result.trimmed();
+}
+  
 
 CError CErrorList::itemAt( const int i ) {
   return _list.at(i);
@@ -134,13 +182,13 @@ void CErrorList::append( CErrorList src ) {
     _list.append( src.itemAt(i) );
 
     if( _useAppLog )
-      logMsg( src.itemAt(i).logMsg(), LoggingTypical );
+      logMsg( src.itemAt(i).logMessage(), LoggingTypical );
   }
 }
 
 
 QString CErrorList::at( const int i ) {
-  return _list.at(i).logMsg();
+  return _list.at(i).logMessage();
 }
 
 

@@ -24,6 +24,7 @@ class CError {
   public:
     enum ErrorType {
       Unspecified,
+      Ok,
       Information,
       Question,
       Warning,
@@ -37,8 +38,8 @@ class CError {
     CError& operator=( const CError& other );
 
     ErrorType type() const { return _type; }
-    QString msg() const { return _msg; }
-    QString logMsg() const;
+    QString msg() const { return _msg.trimmed(); }
+    QString logMessage() const;
     int lineNumber() const { return _lineNumber; }
     int dataSourceID() const { return _dataSourceID; }
 
@@ -61,6 +62,11 @@ class CErrorList {
       ErrorFileLog
     };
 
+    bool hasErrors() const;
+    bool hasWarnings() const;
+    
+    QString logMessage() const;
+    
     CErrorList( const bool useAppLog );
     void clear();
     int count();
