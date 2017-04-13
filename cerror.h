@@ -57,6 +57,10 @@ class CError {
 
 class CErrorList {
   public:
+    CErrorList();
+    CErrorList( const CErrorList& other );
+    ~CErrorList();
+
     enum ErrorFileFormat {
       ErrorFileCSV,
       ErrorFileLog
@@ -70,8 +74,8 @@ class CErrorList {
     CErrorList( const bool useAppLog );
     void clear();
     int count();
-    QString at( const int i );
-    CError itemAt( const int i );
+    QString messageAt( const int i );
+    CError at( const int i );
     void append( CError err );
     //void append( CError::ErrorType level, const QString& msg );
     void append( CErrorList src );

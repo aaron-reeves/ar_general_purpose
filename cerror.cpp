@@ -28,7 +28,7 @@ CError::CError(){
 
 CError::CError( const ErrorType type, const QString& msg, const int dataSourceID /* = -1 */, const int lineNumber /* = -1 */ ) {
   _type = type;
-  _msg = msg;
+  _msg = msg.trimmed();
   _lineNumber = lineNumber;
   _dataSourceID = dataSourceID;
 }
@@ -53,18 +53,22 @@ CError& CError::operator=( const CError& other ) {
 
 
 QString CError::logMessage() const {
-  QString str = this.typeAsString();
+  QString str;
 
-  if( -1 < _lineNumber ) {
-    str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( str );
-  else
-    str = QString( "%1:" ).arg( str );
+  if( !this->_msg.isEmpty() ) {
+    str = this->typeAsString();
 
-  if( this->_msg.contains( "\n" ) )
-    str.append( QString( ">>> %1 <<< (End)" ).arg( this->_msg ) );
-  else
-    str.append( " %1" ).arg( this->_msg );
-  
+    if( -1 < _lineNumber )
+      str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( str );
+    else
+      str = QString( "%1:" ).arg( str );
+
+    if( this->_msg.contains( "\n" ) )
+      str.append( QString( ">>> %1 <<< (End)" ).arg( this->_msg ) );
+    else
+      str.append( QString( " %1" ).arg( this->_msg ) );
+  }
+
   return str.trimmed();
 }
 
@@ -103,6 +107,22 @@ CErrorList::CErrorList( const bool useAppLog ){
 }
 
 
+CErrorList::CErrorList() {
+  _useAppLog = false;
+}
+
+
+CErrorList::CErrorList( const CErrorList& other ) {
+  _useAppLog = other._useAppLog;
+  _list = other._list;
+}
+
+
+CErrorList::~CErrorList() {
+  // Nothing to do here.
+}
+
+
 void CErrorList::clear() {
   _list.clear();
 }
@@ -113,7 +133,7 @@ int CErrorList::count() {
 }
 
 
-bool CErrorList::hasErrors() const
+bool CErrorList::hasErrors() const {
   bool result = false;
   for( int i = 0; i < _list.count(); ++i ) {
     if( ( CError::Critical == _list.at(i).type() ) || ( CError::Fatal == _list.at(i).type() ) ) {
@@ -140,17 +160,19 @@ bool CErrorList::hasWarnings() const {
 
 QString CErrorList::logMessage() const {
   QString result;
-  
-  for( int i = 0; i < _errors.count(); ++i ) {
-    result.append( _errors.at(i).logMessage() );
-    result.append( "\n" );
+
+  for( int i = 0; i < _list.count(); ++i ) {
+    if( !_list.at(i).logMessage().isEmpty() ) {
+      result.append( _list.at(i).logMessage() );
+      result.append( "\r\n" );
+    }
   }
   
   return result.trimmed();
 }
   
 
-CError CErrorList::itemAt( const int i ) {
+CError CErrorList::at( const int i ) {
   return _list.at(i);
 }
 
@@ -179,15 +201,15 @@ void CErrorList::append( CError err ) {
 
 void CErrorList::append( CErrorList src ) {
   for( int i = 0; i < src.count(); ++i ) {
-    _list.append( src.itemAt(i) );
+    _list.append( src.at(i) );
 
     if( _useAppLog )
-      logMsg( src.itemAt(i).logMessage(), LoggingTypical );
+      logMsg( src.at(i).logMessage(), LoggingTypical );
   }
 }
 
 
-QString CErrorList::at( const int i ) {
+QString CErrorList::messageAt( const int i ) {
   return _list.at(i).logMessage();
 }
 
@@ -231,7 +253,8 @@ bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat fmt )
           out << err.lineNumber() << ", " << err.msg() << ", " << err.typeAsString() << endl;
           break;
         default: // ErrorFileLog
-          out << QString( "Line %1: %2" ).arg( err.lineNumber() ).arg( err.msg() ) << endl;
+          if( !err.logMessage().isEmpty() )
+            out << err.logMessage();
           break;
       }
     }
