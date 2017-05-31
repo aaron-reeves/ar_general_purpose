@@ -56,12 +56,10 @@ QString CError::logMessage() const {
   QString str;
 
   if( !this->_msg.isEmpty() ) {
-    str = this->typeAsString();
-
     if( -1 < _lineNumber )
-      str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( str );
+      str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( this->typeAsString().toUpper() );
     else
-      str = QString( "%1:" ).arg( str );
+      str = QString( "%1:" ).arg( this->typeAsString().toUpper() );
 
     if( this->_msg.contains( "\n" ) )
       str.append( QString( ">>> %1 <<< (End)" ).arg( this->_msg ) );
@@ -71,6 +69,7 @@ QString CError::logMessage() const {
 
   return str.trimmed();
 }
+
 
 QString CError::typeAsString() const {
   return typeAsString( type() );
@@ -128,7 +127,7 @@ void CErrorList::clear() {
 }
 
 
-int CErrorList::count() {
+int CErrorList::count() const {
   return _list.count();
 }
 
@@ -172,7 +171,7 @@ QString CErrorList::logMessage() const {
 }
   
 
-CError CErrorList::at( const int i ) {
+CError CErrorList::at( const int i ) const {
   return _list.at(i);
 }
 

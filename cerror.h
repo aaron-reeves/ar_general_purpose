@@ -73,9 +73,9 @@ class CErrorList {
     
     CErrorList( const bool useAppLog );
     void clear();
-    int count();
+    int count() const;
     QString messageAt( const int i );
-    CError at( const int i );
+    CError at( const int i ) const;
     void append( CError err );
     //void append( CError::ErrorType level, const QString& msg );
     void append( CErrorList src );
