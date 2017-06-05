@@ -253,7 +253,7 @@ bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat fmt )
           break;
         default: // ErrorFileLog
           if( !err.logMessage().isEmpty() )
-            out << err.logMessage();
+            out << err.logMessage() << endl;
           break;
       }
     }
