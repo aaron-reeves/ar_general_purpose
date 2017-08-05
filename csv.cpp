@@ -297,6 +297,14 @@ QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
 }
 
 
+QCsv::QCsv( const QStringList& fieldNames, const QStringList& data ) {
+  initialize();
+  setFieldNames( fieldNames );
+
+  appendRow( data );
+}
+
+
 bool QCsv::renameFields( const QStringList& newFieldNames ) {
   if( newFieldNames.count() != _fieldNames.count() )
     return false;

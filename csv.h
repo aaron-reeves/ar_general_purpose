@@ -133,6 +133,7 @@ class QCsv {
     // Both construct a CSV object in qCSV_EntireFile mode.
     QCsv( const QStringList& fieldNames );
     QCsv( const QStringList& fieldNames, const QList<QStringList>& data );
+    QCsv( const QStringList& fieldNames, const QStringList& data );
 
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator
