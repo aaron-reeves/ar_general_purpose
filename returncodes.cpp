@@ -30,7 +30,7 @@ QString ReturnCode::codeList() {
    "  BAD_CONFIG:               512\n"
    "  FILE_SYSTEM_PROBLEM:     1024\n"
    "  REQUIRED_FIELDS_MISSING: 2048\n"
-   "  BAD_DATABASE:            2096\n"
+   "  BAD_DATABASE:            4096\n"
    "  FATAL:                   8192\n"
    "  APPLICATION_ERROR:      16384\n"
  );
