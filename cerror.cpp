@@ -133,28 +133,38 @@ int CErrorList::count() const {
 
 
 bool CErrorList::hasErrors() const {
-  bool result = false;
-  for( int i = 0; i < _list.count(); ++i ) {
-    if( ( CError::Critical == _list.at(i).type() ) || ( CError::Fatal == _list.at(i).type() ) ) {
-      result = true;
-      break;
-    }
+  if( 0 == _list.count() ) {
+    return false;
   }
+  else {
+    bool result = false;
+    for( int i = 0; i < _list.count(); ++i ) {
+      if( ( CError::Critical == _list.at(i).type() ) || ( CError::Fatal == _list.at(i).type() ) ) {
+        result = true;
+        break;
+      }
+    }
 
-  return result;
+    return result;
+  }
 }
 
 
 bool CErrorList::hasWarnings() const {
-  bool result = false;
-  for( int i = 0; i < _list.count(); ++i ) {
-    if( CError::Warning == _list.at(i).type() ) {
-      result = true;
-      break;
-    }
+  if( 0 == _list.count() ) {
+    return false;
   }
+  else {
+    bool result = false;
+    for( int i = 0; i < _list.count(); ++i ) {
+      if( CError::Warning == _list.at(i).type() ) {
+        result = true;
+        break;
+      }
+    }
 
-  return result;
+    return result;
+  }
 }
 
 QString CErrorList::logMessage() const {
