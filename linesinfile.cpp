@@ -29,9 +29,19 @@ sources.
 #include "linesinfile.h"
 
 #include <stdio.h>
-#include <sys/io.h>
-#include <bsd/unistd.h>
-#include <string.h>
+
+//-----------------------------------------------------
+// AR (9 Aug 2017): Not 100% certain what's going on
+// here, but  these work on Windows and Debian Linux.
+//-----------------------------------------------------
+#if defined(_WIN32) || defined(WIN32)
+  #include <io.h>
+#else
+  #include <bsd/unistd.h>
+  #include <string.h>
+#endif
+//-----------------------------------------------------
+
 #include <sys/types.h>
 #include <sys/file.h>
 #include <limits.h>
@@ -43,20 +53,25 @@ sources.
 # define IS_EINTR(x) 0
 #endif
 
+//-----------------------------------------------------
+// AR (9 Aug 2017): Not 100% certain what's going on
+// here, but  these work on Windows and Debian Linux.
+//-----------------------------------------------------
 #ifndef O_BINARY
 #define O_BINARY  0
 #define O_TEXT    0
 #endif
 
-//#define SET_BINARY(_f) do {if (!isatty(_f)) setmode (_f, O_BINARY);} while (0)
-
-//#define SET_BINARY(_f) do {if (!isatty(_f)) setmode (_f);} while (0)
+#if defined(_WIN32) || defined(WIN32)
+  #define SET_BINARY(_f) do {if (!isatty(_f)) setmode (_f, O_BINARY);} while (0)
+  typedef int ssize_t;
+#endif
+//-----------------------------------------------------
 
 /* Size of atomic reads. */
 #define BUFFER_SIZE (16 * 1024)
 #define SAFE_READ_ERROR ((size_t) -1)
 
-//typedef int ssize_t;
 
 size_t safe_read (int fd, char *buf, unsigned int count) {
   /* Work around a bug in Tru64 5.1.  Attempting to read more than
@@ -93,7 +108,11 @@ unsigned long long linesInFile( const char* filename, bool& ok ) {
     size_t bytes_read;
 
     /* We need binary input, since `wc' relies on `lseek' and byte counts.  */
-//    SET_BINARY (fd);
+    // AR (9 Aug 2017): This appears to be unnecessary on Debian Linux.
+    // It's not entirely clear if it's necessary on Windows, but it seems to work...
+    #if defined(_WIN32) || defined(WIN32)
+      SET_BINARY (fd);
+    #endif
 
    /* Use a separate loop when counting only lines or lines and bytes --
    but not chars or words.  */
