@@ -147,8 +147,7 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
 
 CFileList::CFileList() : QList<CPathString>() {
 	_startingDir = "";
-  _dirList = new CFileList( false );
-  _fileList = new CFileList( false );
+
 }
 
 CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) : QList<CPathString>() {
@@ -215,15 +214,20 @@ CFileList::~CFileList() {
 }
 
 
-void CFileList::getFileNames( const QString& dirName, QString filter, const bool recurse ) {
+void CFileList::getFileNames( const QString& dirName, const QString& filter, const bool recurse ) {
   QFileInfo finfo;
   unsigned int i;
   QString completePath;
   QString str;
   CPathString listItem;
+  QStringList filters;
 
-  if( filter.startsWith( "*." ) )
-    filter = filter.right( filter.length() - 1 );
+  filters = filter.split( ';', QString::SkipEmptyParts );
+
+  for( int i = 0; i < filters.count(); ++i ) {
+    if( filters.at(i).startsWith( "*." ) )
+      filters[i] = filters.at(i).right( filters.at(i).length() - 1 );
+  }
 
 	QDir dir( dirName );
 	dir.setFilter( QDir::Files | QDir::Dirs | QDir::Hidden );
@@ -248,12 +252,28 @@ void CFileList::getFileNames( const QString& dirName, QString filter, const bool
 			}
 			else {
         str = finfo.filePath().toLower();
-        if( ( filter == ".*" ) || str.endsWith( filter ) ) {
+
+        // Check for the wildcard that matches all files.
+        if( filters.contains( ".*" ) ) {
           listItem = CPathString( finfo.filePath() );
           if( NULL != _fileList )
             _fileList->append( listItem );
 					this->append( listItem );
 				}
+
+        // If there is no wildcard, go through the filters one at a time to look for matches.
+        else {
+          for( int i = 0; i < filters.count(); ++i ) {
+            if( str.endsWith( filters.at(i) ) ) {
+              listItem = CPathString( finfo.filePath() );
+              if( NULL != _fileList )
+                _fileList->append( listItem );
+              this->append( listItem );
+              break;
+            }
+          }
+        }
+
 			}
 		}
   }

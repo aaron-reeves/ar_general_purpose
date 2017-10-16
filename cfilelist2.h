@@ -156,7 +156,7 @@ class CFileList : public QList<CPathString> {
         If 'recurse' is true, the directory contents will be recursively searched.
 
         @param path QString indicating the directory whose contents will be listed
-        @param filter QString indicating the file name filter to match
+        @param filter QString indicating the file name filter to match (e.g., "*.txt").  Use "*.*" to match all files.  More than one filter may be used, if semicolon-delimited (e.g., "*.cpp;*.h").
         @param recurse bool indicating whether to list directory contents recursively.
         */
         CFileList( const QString& path, const QString& filter,  const bool recurse );
@@ -222,10 +222,10 @@ class CFileList : public QList<CPathString> {
         If 'recurse' is true, this function is called recursively for each directory that it encounters.
 
         @param path QString indicating the directory whose contents will be listed
-        @param filter QString indicating the file name filter to match
-        @param recurse bool indicating whether to list directory contents recursively.
+        @param filter QString indicating the file name filter to match (e.g., "*.txt").  Use "*.*" to match all files.  More than one filter may be used, if semicolon-delimited (e.g., "*.cpp;*.h").
+        @param recurse bool indicating whether to list directory contents recursively
         */
-        void getFileNames( const QString& path, QString filter, const bool recurse );
+        void getFileNames(const QString& path, const QString& filter, const bool recurse );
 
     private:
         CFileList( bool createDirList );
