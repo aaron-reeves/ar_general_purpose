@@ -297,6 +297,14 @@ QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
 }
 
 
+QCsv::QCsv( const QStringList& fieldNames, const QStringList& data ) {
+  initialize();
+  setFieldNames( fieldNames );
+
+  appendRow( data );
+}
+
+
 bool QCsv::renameFields( const QStringList& newFieldNames ) {
   if( newFieldNames.count() != _fieldNames.count() )
     return false;
@@ -1192,27 +1200,32 @@ int QCsv::moveNext() {
 
 
 QString QCsv::readLine() {
-  QString tmp;
+  QByteArray arr;
   int nQuotes = 0;
+  QString tmp;
   QString result;
 
   // The do loop handles situations where end-of-line
   // characters are encountered inside quote marks.
   do {
-    tmp = _srcFile->readLine();
+    arr = _srcFile->readLine();
+    arr.replace( '\0', "" );
+    tmp = arr;
 
     // FIXME: Is there a better way to handle delimiters here?
     if( !_delimiter.isSpace() )
       tmp = tmp.trimmed();
 
+    result.append( tmp );
+
     if( !result.isEmpty() )
       result.append( _eolDelimiter );
 
-    result.append( tmp );
     nQuotes = nQuotes + tmp.count( '\"' );
   } while( 0 != nQuotes%2 );
 
-  return result;
+  //qDebug() << "Result: " << result.trimmed();
+  return result.trimmed();
 }
 
 int QCsv::readHeader() {
