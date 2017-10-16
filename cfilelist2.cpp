@@ -2,7 +2,7 @@
 cfilelist2.h/cpp
 Begin: 2003/06/11
 -----------------
-Copyright (C) 2003 - 2006 by Aaron Reeves
+Copyright (C) 2003 - 2017 by Aaron Reeves
 aaron.reeves@naadsm.org
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
@@ -153,8 +153,7 @@ CFileList::CFileList() : QList<CPathString>() {
 CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) : QList<CPathString>() {
 	//qDebug( "Constructor called" );
 	_startingDir = path;
-  _dirList = new CFileList( false );
-  _fileList = new CFileList( false );
+
 	getFileNames( path, filter, recurse );
 	//qDebug( "Done with CQFileList::CQFileList" );
 }
@@ -162,23 +161,7 @@ CFileList::CFileList( const QString& path, const QString& filter, const bool rec
 
 CFileList::CFileList( const CFileList& other ) : QList<CPathString>( other ) {
   _startingDir = other._startingDir;
-
-  if( NULL != other._dirList )
-    _dirList = new CFileList( other._dirList );
-  else
-    _dirList = NULL;
-
-  if( NULL != other._fileList )
-    _fileList = new CFileList( other._fileList );
-  else
-    _fileList = NULL;
-}
-
-CFileList::CFileList( bool createDirList ) {
-  Q_UNUSED( createDirList );
-
-  _dirList = NULL;
-  _fileList = NULL;
+  _filter = other._filter;
 }
 
 
@@ -186,31 +169,14 @@ CFileList& CFileList::operator=( const CFileList& other ) {
   QList<CPathString>::operator=( other );
 
   _startingDir = other._startingDir;
-
-  if( NULL != other._dirList )
-    _dirList = new CFileList( other._dirList );
-  else
-    _dirList = NULL;
-
-  if( NULL != other._fileList )
-    _fileList = new CFileList( other._fileList );
-  else
-    _fileList = NULL;
+  _filter = other._filter;
 
   return *this;
 }
 
 
 CFileList::~CFileList() {
-  if( NULL != _dirList ) {
-    _dirList->clear();
-    delete _dirList;
-  }
-
-  if( NULL != _fileList ) {
-    _fileList->clear();
-    delete _fileList;
-  }
+  // Nothing to do here.
 }
 
 
@@ -221,6 +187,8 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
   QString str;
   CPathString listItem;
   QStringList filters;
+
+  _filter = filter;
 
   filters = filter.split( ';', QString::SkipEmptyParts );
 
@@ -245,8 +213,6 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
       finfo = QFileInfo( completePath );
 
       if( finfo.isDir() ) {
-        if( NULL != _dirList )
-          _dirList->append( CPathString( finfo.filePath() ) );
         if( recurse )
           getFileNames( finfo.filePath(), filter, recurse );
 			}
@@ -256,8 +222,6 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
         // Check for the wildcard that matches all files.
         if( filters.contains( ".*" ) ) {
           listItem = CPathString( finfo.filePath() );
-          if( NULL != _fileList )
-            _fileList->append( listItem );
 					this->append( listItem );
 				}
 
@@ -266,8 +230,6 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
           for( int i = 0; i < filters.count(); ++i ) {
             if( str.endsWith( filters.at(i) ) ) {
               listItem = CPathString( finfo.filePath() );
-              if( NULL != _fileList )
-                _fileList->append( listItem );
               this->append( listItem );
               break;
             }
@@ -326,29 +288,38 @@ QStringList CFileList::qStringList() const {
   return sl;
 }
 
-void CFileList::clear() {
-  if( NULL != _dirList )
-    _dirList->clear();
-
-  if( NULL != _fileList )
-    _fileList->clear();
-
-  QList<CPathString>::clear();
-}
-
 
 CFileList CFileList::directories() const {
   CFileList result;
-  if( NULL != _dirList )
-    result.merge( *_dirList );
+
+  for( int i = 0; i < this->count(); ++i ) {
+    QFileInfo fi( this->at(i) );
+    QString dir;
+
+    if( fi.isDir() )
+      dir = this->at(i);
+    else if( fi.isFile() )
+      dir = this->at(i).directory();
+
+   Q_ASSERT( !dir.isEmpty() );
+
+    if( !result.contains( dir ) )
+      result.append( dir );
+  }
+
   return result;
 }
 
 
 CFileList CFileList::files() const {
   CFileList result;
-  if( NULL != _fileList )
-    result.merge( *_fileList );
+
+  for( int i = 0; i < this->count(); ++i ) {
+    QFileInfo fi( this->at(i) );
+    if( fi.isFile() )
+      result.append( this->at(i) );
+  }
+
   return result;
 }
 
@@ -362,9 +333,19 @@ void testFileList( const QString& directoryName, const QString& filter ) {
   CFileList listB = CFileList( directoryName, filter, true );
   listB.debug();
 
-  CFileList listC = listA.directories();
+  qDebug() << endl << "--- Directories only (from recursive list):";
+  CFileList listC = listB.directories();
   listC.debug();
 
-  CFileList listD = listA.files();
+  qDebug() << endl << "--- Files only (from recursive list):";
+  CFileList listD = listB.files();
   listD.debug();
+
+   qDebug() << endl << "--- Copy constructor (original list without recursion):";
+  CFileList listE( listA );
+  listE.debug();
+
+    qDebug() << endl << "--- Assignment operator (directories only from recursive list):";
+  CFileList listF = listC;
+  listF.debug();
 }

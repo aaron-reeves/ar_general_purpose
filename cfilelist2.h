@@ -2,7 +2,7 @@
 cfilelist2.h/cpp
 Begin: 2003/06/11
 -----------------
-Copyright (C) 2003 - 2006 by Aaron Reeves
+Copyright (C) 2003 - 2017 by Aaron Reeves
 aaron.reeves@naadsm.org
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
@@ -29,7 +29,7 @@ CPathStrings are closely related to and are used by CFileLists (see @ref CFileLi
 
 @short Specialized strings for file names and paths
 @author Aaron Reeves (aaron.reeves@naadsm.org)
-@version 2.02
+@version 2.03
 */
 class CPathString: public QString {
     public:
@@ -139,7 +139,7 @@ regular expression, but this isn't yet an option.
 
 @short Creates a list of files or subdirectories within a given directory
 @author Aaron Reeves (aaron.reeves@naadsm.org)
-@version 2.02
+@version 2.03
 */
 class CFileList : public QList<CPathString> {
     public:
@@ -212,11 +212,6 @@ class CFileList : public QList<CPathString> {
         void insert( const QString& file ) { insert( CPathString( file ) ); }
 
         /**
-         Clears the list, and optionally deletes all pointers to list elements.
-         */
-        void clear();
-
-        /**
         This function does all of the actual work associated with generating list items and adding them to the list.
         Parameters are identical to the constructor.  File names that match 'filter' are appended to the list.
         If 'recurse' is true, this function is called recursively for each directory that it encounters.
@@ -231,7 +226,8 @@ class CFileList : public QList<CPathString> {
         CFileList( bool createDirList );
 
 				QString _startingDir;
-        CFileList* _dirList;
+        QString _filter;
+
         CFileList* _fileList;
 };
 
