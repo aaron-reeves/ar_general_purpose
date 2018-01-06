@@ -64,6 +64,8 @@ class CConfigFile {
     CConfigFile( const CConfigFile& other );
     virtual ~CConfigFile();
 
+    // FIXME: referencing individual blocks by index may require some work in the code.
+
     // Check only the FIRST ENCOUNTERED block with the indicated name.
     //----------------------------------------------------------------
     bool contains( QString blockName, QString key ) const;

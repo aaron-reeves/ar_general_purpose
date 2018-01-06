@@ -1,0 +1,93 @@
+## Sample configuration file for use with CConfigFile
+##===================================================
+## This sample file illustrates syntax and possible options for use with
+## the class CConfigFile, which is implemented in cconfigfile.h/cpp.
+
+## Comments and white space
+##-------------------------
+## Lines that begin with a pound sign are comments.  These are ignored.
+## (Only a single pound sign is necessary to denote a comment.  It just happens
+## that I like to use two for longer, explanatory comments.)
+
+## White space at the beginning or end of a line is ignored, but can be included
+## to format a configuration file so that it is easier to read.
+
+## Blocks and options
+##-------------------
+## Lines that do not begin with a pound sign will be processed as configuration
+## blocks, options, or commands (described in a following section).  
+
+## All configuration options exist in blocks. The basis of a configuration 
+## file is a block. Each block is identified by its name, in square brackets. 
+## Block names should not contain spaces.
+
+## Options are also specified by name.  Option bames cannot include spaces, and are not
+## treated as case-sensitive (they may be mixed-case for formatting purposes).
+## Values are assigned to options with the "arrow operator" ( <- ).
+## If option values have spaces, these values should be enclosed in quotation marks.
+
+  [OptionsBlock]
+    option1 <- valueOne
+    option2 <- "value two"
+    
+## Individual blocks may be referenced by name.  Within a block, individual option keys
+## may also be accessed by name.    
+  
+## With a few exceptions, applications may define their own block and option names,
+## which are then processed in application-specific ways.
+
+## The Directories block and WorkingDir
+##-------------------------------------
+## One of the exceptions is the Directories block, which specifies the working 
+## directory for the application.  No more than one working directory can be specified.
+## Neither this block nor this option are required, but they may be implemented 
+## in an application.  When they are used, they are specified as follows:
+
+  [Directories]
+    WorkingDir <- /home/areeves/mypath # For Linux
+    #WorkingDir <- C:\MyDocuments\areeves\mypath # For Windows
+    
+## Note the use of comments above.  Any text on a line after a pound sign is
+## treated as a comment and ignored.  Only one of the WorkingDir options above
+## (the second one, in this case) is actually used, as the first one has been
+## commented out.
+
+## Multiple blocks: repeated block and option names
+##-------------------------------------------------
+## Multiple blocks may have the same name.  These can be retrieved in their
+## specified order, and treated as an application sees fit.  Option names
+## may be repeated in different blocks, but a single block cannot have 
+## multiple options with the same name.
+
+## Where multiple option blocks have the same name, they may be referenced by index.
+## FIXME: referencing individual blocks by index may require some work in the code.
+
+  [OptionsBlock]
+    option1 <- valueThree
+    option2 <- valueFour
+    
+## Configuration commands
+##-----------------------
+## Configuration commands are specified like block names, in square brackets.
+## There are three configuration commands currently implemented.  These are
+## BeginComment, EndComment, and EndConfig.
+
+  [BeginComment]
+  Any text between a BeginComment and and EndComment directive is ignored.  
+  It isn't necessary to use pound signs to indicate comments between these two
+  directives.
+  
+  Also, any block that appears between these two directives will be ignored.
+  The following option block and options have no effect:
+  
+    [AnotherOptionsBlock]
+      option1 <- foo
+      option2 <- bar
+  
+  [EndComment]
+  
+[EndConfig]
+
+Any text, including block or options, that occurs after the EndConfig directive is also ignored.
+
+
