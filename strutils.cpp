@@ -156,6 +156,17 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
   }
 }
 
+int strToInt( QString str, const int defaultVal ) {
+  bool ok;
+
+  int result = str.toInt( &ok );
+
+  if( !ok )
+    result = defaultVal;
+
+  return result;
+}
+
 
 QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ ) {
   QString str;

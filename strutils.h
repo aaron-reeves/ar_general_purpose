@@ -38,6 +38,8 @@ QString boolToYesNo( const bool val ); // returns "Yes" or "No"
 bool strToBool( QString val, bool* ok = NULL );
 QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", "true", or "false"
 
+int strToInt( QString str, const int defaultVal );
+
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
@@ -71,6 +73,7 @@ enum StrUtilsDateFormat {
 };
 
 QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const int defaultCentury = 2000 );
+
 
 #if defined(_WIN32) || defined(WIN32)
 #include <tchar.h>
