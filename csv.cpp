@@ -1224,9 +1224,10 @@ QString QCsv::readLine() {
     nQuotes = nQuotes + tmp.count( '\"' );
   } while( 0 != nQuotes%2 );
 
-  //qDebug() << "Result: " << result.trimmed();
-  return result.trimmed();
+  //qDebug() << "Result: " << result;
+  return result;
 }
+
 
 int QCsv::readHeader() {
   int result = -1;
