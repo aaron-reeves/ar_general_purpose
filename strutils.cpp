@@ -306,6 +306,15 @@ QString trimPunct( QString str ) {
   return str;
 }
 
+QString leftTrimmed( QString str ) {
+  return( str.replace( QRegExp( "^\\s+" ), "" ) );
+}
+
+
+QString rightTrimmed( QString str ) {
+  return( str.replace( QRegExp( "\\s+$" ), "" ) );
+}
+
 
 // Remove any line breaks in the provided string, and replace them with spaces.
 QString removeLineBreaks( QString str1 ) {
