@@ -258,6 +258,7 @@ void QCsv::processString(
   _srcFilename = QString(); // There is no source file.
   _containsFieldList = containsFieldList;
   _checkForComments = false; // There is no allowance for comments here.
+  _comments.clear();
 
   _stringsContainDelimiters = stringsContainDelimiters;
   _mode = EntireFile;
@@ -381,7 +382,7 @@ void QCsv::initialize() {
   _eolDelimiter = " ";
   _delimiter = ',';
   _checkForComments = false;
-  _nCommentRows = 0;
+  _comments.clear();
 
   _linesToSkip = 0;
   _linesSkipped = 0;
@@ -415,7 +416,7 @@ void QCsv::assign( const QCsv& other ) {
   _eolDelimiter = other._eolDelimiter;
   _delimiter = other._delimiter;
   _checkForComments = other._checkForComments;
-  _nCommentRows = other._nCommentRows;
+  _comments = other._comments;
 
   _linesToSkip = other._linesToSkip;
   _linesSkipped = other._linesToSkip;
@@ -432,6 +433,8 @@ void QCsv::assign( const QCsv& other ) {
 
 
 QCsv::~QCsv() {
+  this->close();
+
   if( NULL != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
@@ -1252,7 +1255,7 @@ int QCsv::readHeader() {
     // begins with a header (indicated by lines that start with #).
     // These lines should simply be skipped.
     if( _checkForComments && isCommentLine( _currentLine ) ) {
-      ++_nCommentRows;
+      _comments.append( _currentLine );
       return readHeader();
     }
 
@@ -1537,6 +1540,29 @@ QString QCsv::asTable() {
     }
     result.append( QString( "|%1|\n" ).arg( list.join( "|" ) ) );
   }
+
+  return result;
+}
+
+
+QString QCsv::csvQuote( QString s ) {
+  if(  s.contains( '"' ) )
+    s.replace( '"', "\"\"" );
+
+  s = QString( "\"%1\"" ).arg( s );
+  return s;
+}
+
+
+QString QCsv::csvQuote(QStringList s , const QChar delimiter /* = ',' */ ) {
+  QString result;
+
+  for( int i = 0; i < s.count() - 1; ++i ) {
+    result.append( csvQuote( s.at(i) ) );
+    result.append( delimiter );
+  }
+
+  result.append( csvQuote( s.last() ) );
 
   return result;
 }

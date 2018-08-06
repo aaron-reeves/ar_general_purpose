@@ -234,7 +234,9 @@ class QCsv {
 
     // How many comment rows (rows that start with '#') were encountered at the beginning of the file (and not processed)?
     // Used with checkForComment
-    int nCommentRows(){ return _nCommentRows; }
+    int nCommentRows(){ return _comments.count(); }
+    QStringList comments() { return _comments; }
+
     QString sourceFileName() { return _srcFilename; }
 
     // Properties
@@ -284,6 +286,10 @@ class QCsv {
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     QString eolDelimiter() const { return _eolDelimiter; }
 
+    // Replaces single quotes " with double quotes "" and wraps s in double quotes.
+    static QString csvQuote( QString s );
+    static QString csvQuote( QStringList s, const QChar delimiter = ',' );
+
   protected:
     void initialize();
     int readNext();
@@ -319,10 +325,11 @@ class QCsv {
     QString      _eolDelimiter;
     QChar        _delimiter;
     bool         _checkForComments;
-    int          _nCommentRows;
     int          _linesToSkip;
     int          _linesSkipped;
     QCsvMode     _mode;
+
+    QStringList _comments;
 
     // Key is the field name, converted to lower case.
     // Value is the position of the field in the file (i.e., the column number), starting from 0.

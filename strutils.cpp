@@ -662,6 +662,20 @@ QString csvQuote( QString s ) {
 }
 
 
+QString csvQuote(QStringList s , const QChar delimiter /* = ',' */ ) {
+  QString result;
+
+  for( int i = 0; i < s.count() - 1; ++i ) {
+    result.append( csvQuote( s.at(i) ) );
+    result.append( delimiter );
+  }
+
+  result.append( csvQuote( s.last() ) );
+
+  return result;
+}
+
+
 bool isHexDigit( const QChar& c ) {
   bool result;
   if( c.isDigit() )

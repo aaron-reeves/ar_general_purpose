@@ -64,6 +64,7 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 
 // Replaces single quotes " with double quotes "" and wraps s in double quotes.
 QString csvQuote( QString s );
+QString csvQuote( QStringList s, const QChar delimiter = ',' );
 
 bool isHexDigit( const QChar& c );
 
