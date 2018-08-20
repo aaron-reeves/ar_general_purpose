@@ -55,6 +55,7 @@ class CError {
     int _dataSourceID;
 };
 
+
 class CErrorList {
   public:
     CErrorList();
@@ -88,27 +89,5 @@ class CErrorList {
     QList<CError> _list;
 };
 
-#ifdef UNDEFINED
-class CErrorHandler {
-  public:
-    CErrorHandler( const bool writeErrorLog, const QString& errorLogFilename, const bool autoWriteErrorLog = true );
-    ~CErrorHandler();
-
-    QString errors();
-    int maxErrorLevel() { return _maxErrorLevel; }
-
-  protected:
-    void writeErrorLogFile();
-    void handleError( CError::ErrorLevel type, const QString& msg, const ErrorReturnValue::Result result = ErrorReturnValue::UNSPECIFIED_ERROR );
-    //void handleError( const CErrorList& msgs );
-
-   int _maxErrorLevel;
-   int _result;
-   CErrorList _errMsgs;
-   bool _writeErrorLog;
-   bool _autoWriteErrorLog;
-   QString _errorLogFilename;
-};
-#endif
 
 #endif // CERROR_H
