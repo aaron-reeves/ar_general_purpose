@@ -17,25 +17,27 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QString>
 
+// These are listed in approximate order of severity.
 namespace ReturnCode {
   enum Result {
-    SUCCESS = 0x0000,                  //    0
-    DATA_VALIDATION_PROBLEM = 0x0001,  //    1
-    DUPLICATE_RECORD = 0x0002,         //    2
-    BAD_COMMAND = 0x0004,              //    4
-    INPUT_FILE_PROBLEM = 0x0008,       //    8
-    OUTPUT_FILE_PROBLEM = 0x0010,      //   16
-    ERROR_LOG_PROBLEM = 0x0020,        //   32
-    ERROR_VARIANT_CONVERSION = 0x0040, //   64
-    PROCESSING_INTERRUPTED = 0x0080,   //  128
-    FAILED_DB_QUERY = 0x0100,          //  256
-    BAD_CONFIG = 0x0200,               //  512
-    FILE_SYSTEM_PROBLEM = 0x0400,      // 1024
-    REQUIRED_FIELDS_MISSING = 0x0800,  // 2048
-    BAD_DATABASE = 0x1000,             // 4096
-    FATAL_ERROR = 0x2000,              // 8192
-    APPLICATION_ERROR = 0x4000,       // 16384
-    UNRECOGNIZED_FIELD = 0x8000       // 32768
+    SUCCESS                  = 0x00000, //    0
+    EMPTY_INPUT_FILE         = 0x00001, //    1
+    DUPLICATE_RECORD         = 0x00002, //    2
+    DATA_VALIDATION_PROBLEM  = 0x00004, //    4
+    BAD_COMMAND              = 0x00008, //    8
+    INPUT_FILE_PROBLEM       = 0x00010, //   16
+    OUTPUT_FILE_PROBLEM      = 0x00020, //   32
+    ERROR_LOG_PROBLEM        = 0x00040, //   64
+    ERROR_VARIANT_CONVERSION = 0x00080, //  128
+    PROCESSING_INTERRUPTED   = 0x00100, //  256
+    FAILED_DB_QUERY          = 0x00200, //  512
+    BAD_CONFIG               = 0x00400, // 1024
+    FILE_SYSTEM_PROBLEM      = 0x00800, // 2048
+    REQUIRED_FIELDS_MISSING  = 0x01000, // 4096
+    BAD_DATABASE             = 0x02000, // 8192
+    FATAL_ERROR              = 0x04000, // 16384
+    APPLICATION_ERROR        = 0x08000, // 32768
+    UNRECOGNIZED_FIELD       = 0x10000  // 65536
     //NEXT_PROBLEM = ???
     //...
   };
