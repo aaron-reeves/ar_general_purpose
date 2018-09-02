@@ -17,22 +17,24 @@ Public License as published by the Free Software Foundation; either version 2 of
 QString ReturnCode::codeList() {
  return QString(
    "Exit codes (used in combination with one another):\n"
-   "  SUCCESS:                    0\n"
-   "  DATA_VALIDATION_PROBLEM:    1\n"
-   "  DUPLICATE_RECORD:           2\n"
-   "  BAD_COMMAND:                4\n"
-   "  INPUT_FILE_PROBLEM:         8\n"
-   "  OUTPUT_FILE_PROBLEM:       16\n"
-   "  ERROR_LOG_PROBLEM:         32\n"
-   "  ERROR_VARIANT_CONVERSION:  64\n"
-   "  PROCESSING_INTERRUPTED:   128\n"
-   "  FAILED_DB_QUERY:          256\n"
-   "  BAD_CONFIG:               512\n"
-   "  FILE_SYSTEM_PROBLEM:     1024\n"
-   "  REQUIRED_FIELDS_MISSING: 2048\n"
-   "  BAD_DATABASE:            4096\n"
-   "  FATAL:                   8192\n"
-   "  APPLICATION_ERROR:      16384\n"
+   "  SUCCESS                 :     0\n"
+   "  EMPTY_INPUT_FILE        :     1\n"
+   "  DUPLICATE_RECORD        :     2\n"
+   "  DATA_VALIDATION_PROBLEM :     4\n"
+   "  BAD_COMMAND             :     8\n"
+   "  INPUT_FILE_PROBLEM      :    16\n"
+   "  OUTPUT_FILE_PROBLEM     :    32\n"
+   "  ERROR_LOG_PROBLEM       :    64\n"
+   "  ERROR_VARIANT_CONVERSION:   128\n"
+   "  PROCESSING_INTERRUPTED  :   256\n"
+   "  FAILED_DB_QUERY         :   512\n"
+   "  BAD_CONFIG              :  1024\n"
+   "  FILE_SYSTEM_PROBLEM     :  2048\n"
+   "  REQUIRED_FIELDS_MISSING :  4096\n"
+   "  BAD_DATABASE            :  8192\n"
+   "  FATAL_ERROR             : 16384\n"
+   "  APPLICATION_ERROR       : 32768\n"
+   "  UNRECOGNIZED_FIELD      : 65536\n"
  );
 }
 
@@ -42,10 +44,12 @@ QString ReturnCode::codeDescr( const int val ) {
   else {
      QString result;
 
+     if( val & EMPTY_INPUT_FILE )
+       result.append( "EMPTY_INPUT_FILE: The specified input file contains no data.\n" );
+     if( val & DUPLICATE_RECORD )
+       result.append( "DUPLICATE_RECORD: Duplicate records were encountered.\n" );
     if( val & DATA_VALIDATION_PROBLEM )
       result.append( "DATA_VALIDATION_PROBLEM: Some records contain invalid fields.\n" );
-    if( val & DUPLICATE_RECORD )
-      result.append( "DUPLICATE_RECORD: Duplicate records were encountered.\n" );
     if( val & BAD_COMMAND )
       result.append( "BAD_COMMAND: Command line arguments are invalid.  RTFM and try again.\n" );
     if( val & INPUT_FILE_PROBLEM )
@@ -69,9 +73,11 @@ QString ReturnCode::codeDescr( const int val ) {
     if( val & BAD_DATABASE )
       result.append( "BAD_DATABASE: Specified database could not be accessed.  Check your network and the specified database parameters.\n" );
     if( val & FATAL_ERROR )
-      result.append( "FATAL_ERROR: A fatal error occurred.  Please check with the developer: this is our bad.\n" );
+      result.append( "FATAL_ERROR: A fatal error occurred.  Please check with the developers: this is our bad.\n" );
     if( val & APPLICATION_ERROR )
       result.append( "APPLICATION_ERROR: An application error occurred.  Please check with the developers.\n" );
+    if( val & UNRECOGNIZED_FIELD )
+      result.append( "UNRECOGNIZED_FIELD: A database field specified in the applicatoin does not exist.  Please check with the developers.\n" );
 
     return result.trimmed();
   }
