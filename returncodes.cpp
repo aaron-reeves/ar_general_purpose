@@ -17,24 +17,25 @@ Public License as published by the Free Software Foundation; either version 2 of
 QString ReturnCode::codeList() {
  return QString(
    "Exit codes (used in combination with one another):\n"
-   "  SUCCESS                 :     0\n"
-   "  EMPTY_INPUT_FILE        :     1\n"
-   "  DUPLICATE_RECORD        :     2\n"
-   "  DATA_VALIDATION_PROBLEM :     4\n"
-   "  BAD_COMMAND             :     8\n"
-   "  INPUT_FILE_PROBLEM      :    16\n"
-   "  OUTPUT_FILE_PROBLEM     :    32\n"
-   "  ERROR_LOG_PROBLEM       :    64\n"
-   "  ERROR_VARIANT_CONVERSION:   128\n"
-   "  PROCESSING_INTERRUPTED  :   256\n"
-   "  FAILED_DB_QUERY         :   512\n"
-   "  BAD_CONFIG              :  1024\n"
-   "  FILE_SYSTEM_PROBLEM     :  2048\n"
-   "  REQUIRED_FIELDS_MISSING :  4096\n"
-   "  BAD_DATABASE            :  8192\n"
-   "  FATAL_ERROR             : 16384\n"
-   "  APPLICATION_ERROR       : 32768\n"
-   "  UNRECOGNIZED_FIELD      : 65536\n"
+   "  SUCCESS                  :      0\n"
+   "  EMPTY_INPUT_FILE         :      1\n"
+   "  DUPLICATE_RECORD         :      2\n"
+   "  KNOWN_VALIDATION_ISSUE   :      4\n"
+   "  DATA_VALIDATION_PROBLEM  :      8\n"
+   "  BAD_COMMAND              :     16\n"
+   "  INPUT_FILE_PROBLEM       :     32\n"
+   "  OUTPUT_FILE_PROBLEM      :     64\n"
+   "  ERROR_LOG_PROBLEM        :    128\n"
+   "  ERROR_VARIANT_CONVERSION :    256\n"
+   "  PROCESSING_INTERRUPTED   :    512\n"
+   "  FAILED_DB_QUERY          :   1024\n"
+   "  BAD_CONFIG               :   2048\n"
+   "  FILE_SYSTEM_PROBLEM      :   4096\n"
+   "  REQUIRED_FIELDS_MISSING  :   8192\n"
+   "  BAD_DATABASE             :  16384\n"
+   "  FATAL_ERROR              :  32768\n"
+   "  APPLICATION_ERROR        :  65536\n"
+   "  UNRECOGNIZED_FIELD       : 131072\n"
  );
 }
 
@@ -48,8 +49,10 @@ QString ReturnCode::codeDescr( const int val ) {
        result.append( "EMPTY_INPUT_FILE: The specified input file contains no data.\n" );
      if( val & DUPLICATE_RECORD )
        result.append( "DUPLICATE_RECORD: Duplicate records were encountered.\n" );
+     if( val & KNOWN_VALIDATION_ISSUE )
+       result.append( "KNOWN_VALIDATION_ISSUE: Some records contain recognized but invalid field values.\n" );
     if( val & DATA_VALIDATION_PROBLEM )
-      result.append( "DATA_VALIDATION_PROBLEM: Some records contain invalid fields.\n" );
+      result.append( "DATA_VALIDATION_PROBLEM: Some records contain invalid field values.\n" );
     if( val & BAD_COMMAND )
       result.append( "BAD_COMMAND: Command line arguments are invalid.  RTFM and try again.\n" );
     if( val & INPUT_FILE_PROBLEM )
