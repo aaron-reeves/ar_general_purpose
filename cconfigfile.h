@@ -69,6 +69,7 @@ class CConfigFile {
     // Check only the FIRST ENCOUNTERED block with the indicated name.
     //----------------------------------------------------------------
     bool contains( QString blockName, QString key ) const;
+    bool contains( QString blockName, QString key, QString value ) const;
     QString value( QString blockName, QString key ) const;
 
     // Check ALL blocks with the indicated name.

@@ -146,6 +146,31 @@ bool CConfigFile::contains( QString blockName, QString key ) const {
 }
 
 
+bool CConfigFile::contains( QString blockName, QString key, QString value ) const {
+  // There may be multiple blocks with the same name.
+  // This function checks only the FIRST REMAINING block with the indicated name.
+  bool result = false;
+  key = key.trimmed().toLower();
+  blockName = blockName.trimmed().toLower();
+
+  for( int i = 0; i < _blockList.count(); ++i ) {
+    CConfigBlock* block = _blockList.at(i);
+
+    if( !block->removed() && (block->name().toLower() == blockName) ) {
+      if( block->contains( key ) ) {
+        if( value == block->value( key ) )
+          result = true;
+        else
+          result = false;
+      }
+      break;
+    }
+  }
+
+  return result;
+}
+
+
 QString CConfigFile::value( QString blockName, QString key ) const {
   // There may be multiple blocks with the same name.
   // This function checks only the FIRST REMAINING block with the indicated name.
@@ -271,14 +296,18 @@ int CConfigFile::fillBlock( CConfigBlock* block, QStringList strList ) {
     lineParts.clear();
     lineParts = strList.at(i).split( "<-" );
 
-    if( 2 != lineParts.count() )
-      result = ConfigReturnCode::BadDatabaseConfiguration;
+    if( 2 != lineParts.count() ) {
+      qDebug() << "Wrong number of line parts:" << lineParts;
+      result = ConfigReturnCode::BadConfiguration;
+    }
     else {
       key = lineParts.at(0).trimmed().toLower();
       val = lineParts.at(1).trimmed();
 
-     if( block->contains( key ) )
-       result = ConfigReturnCode::BadDatabaseConfiguration;
+     if( block->contains( key ) ) {
+       qDebug() << "Duplicated block key";
+       result = ConfigReturnCode::BadConfiguration;
+     }
      else
       block->insert( key, val );
     }
