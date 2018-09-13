@@ -230,7 +230,7 @@ bool CXlCsv::openXls() {
   QStringList list;
   bool lineWritten = false;
 
-  qDebug() << "rows:" <<  pWS->rows.lastrow << ", cols:" << pWS->rows.lastcol;
+  //qDebug() << "rows:" <<  pWS->rows.lastrow << ", cols:" << pWS->rows.lastcol;
 
   for( t=0; t <= pWS->rows.lastrow; ++t ) {
     row = &pWS->rows.row[t];
