@@ -853,7 +853,7 @@ bool QCsv::appendRow( const QStringList& values ) {
     setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     return false;
   }
-  else if( values.count() == fieldCount() ) {
+  else if( _data.isEmpty() || ( values.count() == fieldCount() ) ) {
     QStringList trimmedVals;
     for( int i = 0; i < values.count(); ++i ) {
       trimmedVals.append( values.at(i).trimmed() );
