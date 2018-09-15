@@ -28,6 +28,20 @@ class CTwoDArray {
       setSize( nCols, nRows, defaultVal );
     }
 
+    CTwoDArray( const CTwoDArray& other ) {
+      _nCols = other._nCols;
+      _nRows = other._nRows;
+      _data = other._data;
+    }
+
+    CTwoDArray& operator= ( const CTwoDArray& other ) {
+      _nCols = other._nCols;
+      _nRows = other._nRows;
+      _data = other._data;
+
+      return* this;
+    }
+
     ~CTwoDArray() {
       // Do nothing else
     }
