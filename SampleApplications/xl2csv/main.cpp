@@ -15,17 +15,17 @@ int main( int argc, char* argv[] ) {
     cout << csv.error() << ": " << csv.errorMsg() << endl << flush;
   }
 
-  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::Format97_2003, argv[1] );
-  wb.readSheet( 0 );
+//  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::Format97_2003, argv[1] );
+//  wb.readSheet( 0 );
 
-  QCsv csv2 = wb.sheet(0).asCsv( true );
+//  QCsv csv2 = wb.sheet(0).asCsv( true );
 
-  cout << endl << endl << "Now let's do it again:" << endl;
+//  cout << endl << endl << "Now let's do it again:" << endl;
 
-  if( QCsv::ERROR_NONE == csv2.error() )
-    cout << csv2.asTable() << endl;
-  else
-    cout << csv2.error() << ": " << csv2.errorMsg() << endl << flush;
+//  if( QCsv::ERROR_NONE == csv2.error() )
+//    cout << csv2.asTable() << endl;
+//  else
+//    cout << csv2.error() << ": " << csv2.errorMsg() << endl << flush;
 
 
   cout << endl << endl << "Do the new version:" << endl;

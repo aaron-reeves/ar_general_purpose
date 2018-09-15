@@ -715,28 +715,20 @@ bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
   else {
     bool looksLikeDate, looksLikeTime;
 
-    double wholeNumberPart = ::floor( d );
-    bool isRemainder = !qFuzzyCompare( (0.0 + 1.0), ( d - wholeNumberPart + 1.0 ) );
+    QString fmtStr = _xlsFormats.value( fmt );
 
-    if( ( 1.0 < d ) && isRemainder ) {
-      result = true;
-    }
-    else {
-      QString fmtStr = _xlsFormats.value( fmt );
+    looksLikeDate = (
+      fmtStr.contains( "yy" )
+      || fmtStr.contains( "dd" )
+    );
 
-      looksLikeDate = (
-        fmtStr.contains( "yy" )
-        || fmtStr.contains( "dd" )
-      );
+    looksLikeTime = (
+      fmtStr.contains( "AM/PM" )
+      || fmtStr.contains( "h" )
+      || fmtStr.contains( "s" )
+    );
 
-      looksLikeTime = (
-        fmtStr.contains( "AM/PM" )
-        || fmtStr.contains( "h" )
-        || fmtStr.contains( "s" )
-      );
-
-      result = ( looksLikeDate && looksLikeTime );
-    }
+    result = ( looksLikeDate && looksLikeTime );
   }
 
   return result;
