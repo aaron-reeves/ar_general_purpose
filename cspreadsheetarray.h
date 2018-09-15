@@ -19,8 +19,13 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtXlsx>
 
 #include <ar_general_purpose/ctwodarray.h>
+#include <ar_general_purpose/creverselookupmap.h>
+#include <ar_general_purpose/csv.h>
 
 #include <xls.h>
+
+
+class CSpreadsheetWorkBook;
 
 
 class CSpreadsheetCell {
@@ -34,6 +39,7 @@ class CSpreadsheetCell {
 
     void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
     bool hasSpan() const { return ( (0 != _colSpan) || (0 != _rowSpan) ); }
+    bool isMerged() const { return hasSpan(); }
     const QXlsx::CellRange mergedRange( const int col, const int row ) const;
 
     void setValue( QVariant value ) { _value = value; }
@@ -48,20 +54,85 @@ class CSpreadsheetCell {
 };
 
 
-class CSpreadsheetCellArray : public CTwoDArray<CSpreadsheetCell> {
+class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
   public:
-    CSpreadsheetCellArray();
-    CSpreadsheetCellArray( const int nCols, const int nRows );
-    CSpreadsheetCellArray( const int nCols, const int nRows, const QVariant defaultVal );
-    CSpreadsheetCellArray( const int nCols, const int nRows, const CSpreadsheetCell defaultVal );
-    ~CSpreadsheetCellArray();
+    CSpreadsheet();
+    CSpreadsheet( CSpreadsheetWorkBook* wb );
+    CSpreadsheet( const int nCols, const int nRows );
+    CSpreadsheet( const int nCols, const int nRows, const QVariant defaultVal );
+    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell defaultVal );
+    CSpreadsheet( const CSpreadsheet& other );
+    CSpreadsheet& operator=( const CSpreadsheet& other );
 
-    bool readXls(const QString& fileName, const bool displayVerboseOutput = false );
+    ~CSpreadsheet();
+
+    bool isTidy( const bool containsHeaderRow );
+    QStringList rowAsStringList( const int rowNumber );
+    QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
+
+    bool readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
     void debug( const int padding = 10 ) const;
 
   protected:
+    void initialize();
+
+    CSpreadsheetWorkBook* _wb;
+    bool _hasMergedCells;
+
+    void assign( const CSpreadsheet& other );
+
+    // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
+    QDate xlsDate( const int val, const bool is1904DateSystem );
+    QTime xlsTime( const double d );
+    QDateTime xlsDateTime( const double d, const bool is1904DateSystem );
+};
+
+
+class CSpreadsheetWorkBook {
+  public:
+    enum  SpreadsheetFileFormat {
+      FormatUnknown,
+      Format2007,   // *.xlsx format, Excel 2007 onward
+      Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
+    };
+
+    CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput = false );
+    ~CSpreadsheetWorkBook();
+
+    bool readSheet( const int sheetIdx );
+    bool readSheet( const QString& sheetName );
+    bool readAllSheets();
+
+    bool error() const { return !_ok; }
+    QString erroMessage() const { return _errMsg; }
+
+    bool hasSheet( const int idx );
+    bool hasSheet( const QString& sheetName );
+    int sheetIndex( const QString& sheetName );
+    QString sheetName( const int idx );
+    CSpreadsheet& sheet( const int idx );
+    CSpreadsheet& sheet( const QString& sheetName );
+
+    bool isXls1904DateSystem();
+    bool isXlsDate( const int xf, const double d );
+    bool isXlsTime( const int xf, const double d );
+    bool isXlsDateTime( const int xf, const double d );
+
+  protected:
+    QString _srcFileName;
+    SpreadsheetFileFormat _fileFormat;
+    bool _displayVerboseOutput;
+
+    QHash<int, CSpreadsheet> _sheets; // Sheets don't have to be read consecutively.  Key is the sheet index, value is the sheet itself.
+    CReverseLookupMap<int, QString> _sheetNames;
+
+    bool _ok; // True if the file could be read, etc.
+    QString _errMsg;
+
+    xls::xlsWorkBook* _pWB;
+
     //---------------------------------------------------------------------------------
     // It's not straightforward in old Excel files to distinguish dates and times from
     // numbers, because dates and times in Excel are internally represented as numbers.
@@ -79,14 +150,6 @@ class CSpreadsheetCellArray : public CTwoDArray<CSpreadsheetCell> {
     QHash<int, int> _xlsXFs; // key = xf index, value = format index
     QHash<int, QString> _xlsFormats; // key = format index, value = string format
     bool _xlsIs1904;
-
-    bool isXlsDate( const int xf, const double d );
-    bool isXlsTime( const int xf, const double d );
-    bool isXlsDateTime( const int xf, const double d );
-
-    QDate xlsDate( const int val );
-    QTime xlsTime( const double d );
-    QDateTime xlsDateTime( const double d );
     //---------------------------------------------------------------------------------
 };
 

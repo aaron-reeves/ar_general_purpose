@@ -78,17 +78,25 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
 }
 
 
-CSpreadsheetCellArray::CSpreadsheetCellArray() : CTwoDArray<CSpreadsheetCell>() {
-  // Do nothing else
+CSpreadsheet::CSpreadsheet() : CTwoDArray<CSpreadsheetCell>() {
+  initialize();
 }
 
 
-CSpreadsheetCellArray::CSpreadsheetCellArray( const int nCols, const int nRows ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
-  // Do nothing else
+CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb ) : CTwoDArray<CSpreadsheetCell>() {
+  initialize();
+  _wb = wb;
 }
 
 
-CSpreadsheetCellArray::CSpreadsheetCellArray( const int nCols, const int nRows, const QVariant defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+  initialize();
+}
+
+
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+  initialize();
+
   for( int c = 0; c < nCols; ++c ) {
     for( int r = 0; r < nRows; ++r ) {
       this->at( c, r ).setValue( defaultVal );
@@ -97,17 +105,43 @@ CSpreadsheetCellArray::CSpreadsheetCellArray( const int nCols, const int nRows, 
 }
 
 
-CSpreadsheetCellArray::CSpreadsheetCellArray( const int nCols, const int nRows, const CSpreadsheetCell defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal ) {
+  initialize();
+}
+
+
+void CSpreadsheet::initialize() {
+  _wb = NULL;
+  _hasMergedCells = false;
+}
+
+
+CSpreadsheet::~CSpreadsheet() {
   // Do nothing else
 }
 
 
-CSpreadsheetCellArray::~CSpreadsheetCellArray() {
-  // Do nothing else
+CSpreadsheet::CSpreadsheet( const CSpreadsheet& other ) : CTwoDArray<CSpreadsheetCell>( other ) {
+  assign( other );
 }
 
 
-void CSpreadsheetCellArray::debug( const int padding /* = 10 */) const {
+CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
+  CTwoDArray<CSpreadsheetCell>::operator= ( other );
+
+  assign( other );
+
+  return *this;
+}
+
+
+void CSpreadsheet::assign( const CSpreadsheet& other ) {
+  _wb = other._wb;
+  _hasMergedCells = other._hasMergedCells;
+}
+
+
+void CSpreadsheet::debug( const int padding /* = 10 */) const {
   qDebug() << QString( "Matrix %1 cols x %2 rows:" ).arg( nCols() ).arg( nRows() );
 
   for( int r = 0; r < this->nRows(); ++r ) {
@@ -124,8 +158,89 @@ void CSpreadsheetCellArray::debug( const int padding /* = 10 */) const {
 }
 
 
+bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
+  bool result = true;
 
-bool CSpreadsheetCellArray::writeXlsx( const QString& fileName ) {
+  // Criteria for tidy spreadsheets:
+  //  1. No merged cells.
+  //  2. If the first row is a header:
+  //    a) It should not contain any blanks.
+  //    b) Every value in the first row should be a string(?)
+
+  if( this->_hasMergedCells ) {
+    result = false;
+  }
+  else if( containsHeaderRow ) {
+    for( int c = 0; c < this->nCols(); ++c ) {
+      if(
+         this->at( c, 0 ).value().isNull()
+         || ( QVariant::String != this->at( c, 0 ).value().type() )
+         || ( 0 == this->at( c, 0 ).value().toString().length() )
+       ) {
+        result = false;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
+  QStringList list;
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    list.append( this->at( c, rowNumber).value().toString() );
+  }
+
+  return list;
+}
+
+
+QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /* = ',' */ ) {
+  QCsv csv;
+
+  if( this->isEmpty() ) {
+    csv.setError( QCsv::ERROR_OTHER, "Specified worksheet is empty." );
+  }
+  else if( !this->isTidy( containsHeaderRow ) ) {
+    csv.setError( QCsv::ERROR_OTHER, "Specified worksheet does not have a tidy CSV format." );
+  }
+  else {
+    QStringList headerRow;
+    QList<QStringList> data;
+
+    int startRow = 0;
+    if( containsHeaderRow ) {
+      headerRow = this->rowAsStringList( 0 );
+      startRow = 1;
+    }
+    for( int i = startRow; i < this->nRows(); ++i ) {
+      data.append( this->rowAsStringList( i ) );
+    }
+
+    if( containsHeaderRow ) {
+      csv = QCsv( headerRow, data );
+    }
+    else {
+      csv = QCsv( data );
+    }
+
+    csv.open();
+  }
+
+  csv.setMode( QCsv::EntireFile );
+  csv.setDelimiter( delimiter );
+  csv.setCheckForComments( false );
+  csv.setStringsContainDelimiters( true );
+  csv.toFront();
+
+  return csv;
+}
+
+
+bool CSpreadsheet::writeXlsx( const QString& fileName ) {
   QXlsx::Document xlsx;
 
   QXlsx::Format format;
@@ -146,129 +261,29 @@ bool CSpreadsheetCellArray::writeXlsx( const QString& fileName ) {
 }
 
 
-bool CSpreadsheetCellArray::isXlsDate(const int xf, const double d ) {
-  bool result;
-  int fmt = _xlsXFs.value( xf );
+QDate CSpreadsheet::xlsDate( const int val, const bool is1904DateSystem ) {
+  QDate result;
 
-  // Check for built-in date formats
-  if(
-    ((14 <= fmt) && (17 >= fmt)) // Default date formats: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
-    || ((27 <= fmt) && (36 >= fmt)) // Special default Japanese date formats: see FORMAT (p. 175) in http://www.openoffice.org/sc/excelfileformat.pdf
-    || ((50 <= fmt) && (58 >= fmt)) // More special default Japanese date formats: see FORMAT (p. 175) in http://www.openoffice.org/sc/excelfileformat.pdf
-  ) {
-    result = true;
+  if( is1904DateSystem ) { // Treat the date with the 1904 date system.
+    result = QDate( 1904, 1, 1 ).addDays( val );
   }
   else {
-    bool looksLikeDate, looksLikeTime;
+    result = QDate( 1899, 12, 31 );
 
-    double wholeNumberPart = ::floor( d );
-    bool isRemainder = !qFuzzyCompare( (0.0 + 1.0), ( d - wholeNumberPart + 1.0 ) );
-
-    if( isRemainder ) {
-      result = false;
-    }
-    else {
-      QString fmtStr = _xlsFormats.value( fmt );
-
-      looksLikeDate = (
-        fmtStr.contains( "yy" )
-        || fmtStr.contains( "dd" )
-      );
-
-      looksLikeTime = (
-        fmtStr.contains( "AM/PM" )
-        || fmtStr.contains( "h" )
-        || fmtStr.contains( "s" )
-      );
-
-      result = ( looksLikeDate && !looksLikeTime );
-    }
+    // There is an intentional leap-year bug in Excel. It thinks that 1900 was a leap year.
+    // It wasn't, but the bug was introduced to maintain compatibility with Lotus 1-2-3.
+    // Any date beyond Feb 28 1900 will be off by a day, if we just add the number of days.
+    if( val < 60 )
+      result = result.addDays( val );
+    else
+      result = result.addDays( val - 1 );
   }
 
   return result;
 }
 
 
-bool CSpreadsheetCellArray::isXlsTime( const int xf, const double d ) {
-  bool result;
-  int fmt = _xlsXFs.value( xf );
-
-  // Check for built-in date formats
-  if( (18 <= fmt) && (21 >= fmt) ) { // Default time formats: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
-    result = true;
-  }
-  else {
-    bool looksLikeDate, looksLikeTime;
-
-    QString fmtStr = _xlsFormats.value( fmt );
-
-    looksLikeDate = (
-      ( fmtStr.contains( "yy" ) || fmtStr.contains( "dd" ) )
-    );
-
-    looksLikeTime = (
-      ( fmtStr.contains( "AM/PM" ) || fmtStr.contains( "h" ) || fmtStr.contains( "s" ) )
-      && ( 1.0 > d )
-    );
-
-    result = ( !looksLikeDate && looksLikeTime );
-  }
-
-  return result;
-}
-
-
-bool CSpreadsheetCellArray::isXlsDateTime(const int xf, const double d ) {
-  bool result;
-  int fmt = _xlsXFs.value( xf );
-
-  // Check for built-in date formats
-  if( 22 == fmt ) { // Default date/time format: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
-    result = true;
-  }
-  else {
-    bool looksLikeDate, looksLikeTime;
-
-    double wholeNumberPart = ::floor( d );
-    bool isRemainder = !qFuzzyCompare( (0.0 + 1.0), ( d - wholeNumberPart + 1.0 ) );
-
-    if( ( 1.0 < d ) && isRemainder ) {
-      result = true;
-    }
-    else {
-      QString fmtStr = _xlsFormats.value( fmt );
-
-      looksLikeDate = (
-        fmtStr.contains( "yy" )
-        || fmtStr.contains( "dd" )
-      );
-
-      looksLikeTime = (
-        fmtStr.contains( "AM/PM" )
-        || fmtStr.contains( "h" )
-        || fmtStr.contains( "s" )
-      );
-
-      result = ( looksLikeDate && looksLikeTime );
-    }
-  }
-
-  return result;
-}
-
-
-QDate CSpreadsheetCellArray::xlsDate( const int val ) {
-  int startDate;
-  if( _xlsIs1904 )
-    startDate = QDate( 1904, 1, 1 ).toJulianDay() - 1;
-  else
-    startDate = QDate( 1900, 1, 1 ).toJulianDay() - 1;
-
-  return QDate::fromJulianDay( startDate + val - 1 );
-}
-
-
-QTime CSpreadsheetCellArray::xlsTime( const double d ) {
+QTime CSpreadsheet::xlsTime( const double d ) {
   QTime result( 0, 0, 0, 0 );
 
   double ms = d * 24.0 * 60.0 * 60.0 * 1000.0;
@@ -277,9 +292,9 @@ QTime CSpreadsheetCellArray::xlsTime( const double d ) {
 }
 
 
-QDateTime CSpreadsheetCellArray::xlsDateTime( const double d ) {
+QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem ) {
   double val = ::floor( d );
-  QDate date = xlsDate( int( val ) );
+  QDate date = xlsDate( int( val ), is1904DateSystem );
   QTime time = xlsTime( d - val );
 
   QDateTime result;
@@ -291,53 +306,10 @@ QDateTime CSpreadsheetCellArray::xlsDateTime( const double d ) {
 }
 
 
-bool CSpreadsheetCellArray::readXls( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
-  // Open workbook, choose standard conversion
-  //==========================================
-  QString encoding = "UTF-8"; // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
-  xls::xlsWorkBook* pWB = xls::xls_open( fileName.toLatin1().data(), encoding.toLatin1().data() );
-
-  if( NULL == pWB ) {
-    qDebug() << "Specified file could not be opened.  Wrong format?";
-    return false;
-  }
-
-  // Generate some helper bits that will let us determine further down which cells contain dates, times, or date/times
-  //------------------------------------------------------------------------------------------------------------------
-  _xlsIs1904 = ( 1 == pWB->is1904 );
-
-  _xlsFormats.clear();
-  for( unsigned int i = 0; i < pWB->formats.count; ++i ) {
-    _xlsFormats.insert( pWB->formats.format[i].index, pWB->formats.format[i].value );
-
-    if( displayVerboseOutput )
-      cout << "Format: " << "i: " << i << ", idx: " << pWB->formats.format[i].index << ", val: " << pWB->formats.format[i].value << endl;
-  }
-  if( displayVerboseOutput )
-    cout << endl;
-
-  _xlsXFs.clear();
-  for( unsigned int i = 0; i < pWB->xfs.count; ++i ) {
-    if( 0 != pWB->xfs.xf[i].format ) {
-      _xlsXFs.insert( i, pWB->xfs.xf[i].format );
-
-      if( displayVerboseOutput )
-        cout << "XFs: " << "i: " << i << ", format: " << pWB->xfs.xf[i].format << ", type: " << pWB->xfs.xf[i].type << endl;
-    }
-  }
-  if( displayVerboseOutput )
-    cout << endl;
-
-  //qDebug() << "Sheet names:";
-  //for( int i = 0; i < pWB->sheets.count; ++i ) {
-  //  qDebug() << pWB->sheets.sheet[i].name;
-  //}
-  //qDebug();
-
-
+bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput /* = false */ ) {
   // Open and parse the sheet
   //=========================
-  xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, 0 );
+  xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
 
 
@@ -383,14 +355,14 @@ bool CSpreadsheetCellArray::readXls( const QString& fileName, const bool display
         // XLS_RECORD_NUMBER = 0x203
         // XLS_RECORD_MULRK = 0x00BD
         if( ( XLS_RECORD_RK == cell->id ) || ( XLS_RECORD_MULRK == cell->id ) || ( XLS_RECORD_NUMBER == cell->id ) ) {
-          if( isXlsDate( cell->xf, cell->d ) ) {
-            val = xlsDate( (int)cell->d );
+          if( _wb->isXlsDate( cell->xf, cell->d ) ) {
+            val = xlsDate( (int)cell->d, _wb->isXls1904DateSystem() );
           }
-          else if( isXlsTime( cell->xf, cell->d ) ) {
+          else if( _wb->isXlsTime( cell->xf, cell->d ) ) {
             val = xlsTime( cell->d );
           }
-          else if( isXlsDateTime( cell->xf, cell->d ) ) {
-            val = xlsDateTime( cell->d );
+          else if( _wb->isXlsDateTime( cell->xf, cell->d ) ) {
+            val = xlsDateTime( cell->d, _wb->isXls1904DateSystem() );
           }
           else {
             val = cell->d;
@@ -455,7 +427,12 @@ bool CSpreadsheetCellArray::readXls( const QString& fileName, const bool display
         }
 
         msg.append( QString( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
-        this->setValue( cellCol, cellRow, CSpreadsheetCell( val, cell->colspan, cell->rowspan ) );
+
+        CSpreadsheetCell ssCell( val, cell->colspan, cell->rowspan );
+        this->setValue( cellCol, cellRow, ssCell );
+
+        // Make a note if the cell is merged.
+        _hasMergedCells = ( _hasMergedCells || ssCell.isMerged() );
 
         if( displayVerboseOutput ) {
           cout << msg << endl;
@@ -464,7 +441,303 @@ bool CSpreadsheetCellArray::readXls( const QString& fileName, const bool display
     }
   }
 
-  xls_close( pWB );
-
   return true;
+}
+
+
+
+CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
+  _srcFileName = fileName;
+  _fileFormat = fileFormat;
+  _displayVerboseOutput = displayVerboseOutput;
+  _pWB = NULL;
+
+  Q_ASSERT( Format97_2003 == fileFormat );
+  if( Format97_2003 != fileFormat ) {
+    _errMsg = "Selected file format is not yet supported.";
+    _ok = false;
+    return;
+  }
+
+  // Open workbook, choose standard conversion
+  //------------------------------------------
+  QString encoding = "UTF-8"; // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
+  _pWB = xls::xls_open( fileName.toLatin1().data(), encoding.toLatin1().data() );
+
+  if( NULL == _pWB ) {
+    _errMsg = "Specified file could not be opened.  Wrong format?";
+    _ok = false;
+    return;
+  }
+
+  // Generate some helper bits that will let us determine further down which cells contain dates, times, or date/times
+  //------------------------------------------------------------------------------------------------------------------
+  _xlsIs1904 = ( 1 == _pWB->is1904 );
+
+  _xlsFormats.clear();
+  for( unsigned int i = 0; i < _pWB->formats.count; ++i ) {
+    _xlsFormats.insert( _pWB->formats.format[i].index, _pWB->formats.format[i].value );
+
+    if( displayVerboseOutput )
+      cout << "Format: " << "i: " << i << ", idx: " << _pWB->formats.format[i].index << ", val: " << _pWB->formats.format[i].value << endl;
+  }
+  if( displayVerboseOutput )
+    cout << endl;
+
+  _xlsXFs.clear();
+  for( unsigned int i = 0; i < _pWB->xfs.count; ++i ) {
+    if( 0 != _pWB->xfs.xf[i].format ) {
+      _xlsXFs.insert( i, _pWB->xfs.xf[i].format );
+
+      if( displayVerboseOutput )
+        cout << "XFs: " << "i: " << i << ", format: " << _pWB->xfs.xf[i].format << ", type: " << _pWB->xfs.xf[i].type << endl;
+    }
+  }
+  if( displayVerboseOutput )
+    cout << endl;
+
+
+  for( unsigned int i = 0; i < _pWB->sheets.count; ++i ) {
+    _sheetNames.insert( i, _pWB->sheets.sheet[i].name );
+
+    if( displayVerboseOutput )
+      cout << _pWB->sheets.sheet[i].name << endl;
+  }
+  if( displayVerboseOutput )
+    cout << endl;
+
+  _ok = true;
+}
+
+
+CSpreadsheetWorkBook::~CSpreadsheetWorkBook() {
+  if( NULL != _pWB )
+    xls::xls_close( _pWB );
+}
+
+
+bool CSpreadsheetWorkBook::hasSheet( const int idx ) {
+  return _sheetNames.containsKey( idx );
+}
+
+bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) {
+  return _sheetNames.containsValue( sheetName );
+}
+
+int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) {
+  if( this->hasSheet( sheetName ) )
+    return _sheetNames.retrieveKey( sheetName );
+  else
+    return -1;
+}
+
+QString CSpreadsheetWorkBook::sheetName( const int idx ) {
+  if( this->hasSheet( idx ) )
+    return _sheetNames.retrieveValue( idx );
+  else
+    return QString();
+}
+
+CSpreadsheet& CSpreadsheetWorkBook::sheet( const int idx ) {
+  return _sheets[idx];
+}
+
+CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
+  return _sheets[ _sheetNames.retrieveKey( sheetName ) ];
+}
+
+
+bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
+  if( !_ok ) {
+    _errMsg = "Workbook is not open.";
+    return false;
+  }
+
+  if( !_sheetNames.containsKey( sheetIdx ) ) {
+    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
+    return false;
+  }
+
+  if( _sheets.contains( sheetIdx ) ) {
+    _errMsg = QString( "The selected sheet has already been read: %1" ).arg( sheetIdx );
+  }
+
+  CSpreadsheet sheet( this );
+  bool result;
+
+  switch( _fileFormat ) {
+    case Format2007:
+      // FIXME: Write this function some day.
+      break;
+    case Format97_2003:
+      result = sheet.readXls( sheetIdx, _pWB, _displayVerboseOutput );
+      break;
+    default:
+      Q_UNREACHABLE();
+      _errMsg = "Format is not specified.";
+      return false;
+      break;
+  }
+
+  if( result )
+    _sheets.insert( sheetIdx, sheet );
+
+  return result;
+}
+
+
+bool CSpreadsheetWorkBook::readSheet( const QString& sheetName ) {
+  if( !_sheetNames.containsValue( sheetName ) ) {
+    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetName );
+    return false;
+  }
+  else {
+    return readSheet( _sheetNames.retrieveKey( sheetName ) );
+  }
+}
+
+
+bool CSpreadsheetWorkBook::readAllSheets() {
+  if( !_ok ) {
+    _errMsg = "Workbook is not open.";
+    return false;
+  }
+
+  bool result = true;
+  for( int i = 0; i < _sheetNames.count(); ++i ) {
+    result = ( result && readSheet( i ) );
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheetWorkBook::isXls1904DateSystem() {
+  if( Format97_2003 != _fileFormat )
+    return false;
+  else
+    return _xlsIs1904;
+}
+
+
+bool CSpreadsheetWorkBook::isXlsDate(const int xf, const double d ) {
+  if( Format97_2003 != _fileFormat ) {
+    return false;
+  }
+
+  bool result;
+  int fmt = _xlsXFs.value( xf );
+
+  // Check for built-in date formats
+  if(
+    ((14 <= fmt) && (17 >= fmt)) // Default date formats: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
+    || ((27 <= fmt) && (36 >= fmt)) // Special default Japanese date formats: see FORMAT (p. 175) in http://www.openoffice.org/sc/excelfileformat.pdf
+    || ((50 <= fmt) && (58 >= fmt)) // More special default Japanese date formats: see FORMAT (p. 175) in http://www.openoffice.org/sc/excelfileformat.pdf
+  ) {
+    result = true;
+  }
+  else {
+    bool looksLikeDate, looksLikeTime;
+
+    double wholeNumberPart = ::floor( d );
+    bool isRemainder = !qFuzzyCompare( (0.0 + 1.0), ( d - wholeNumberPart + 1.0 ) );
+
+    if( isRemainder ) {
+      result = false;
+    }
+    else {
+      QString fmtStr = _xlsFormats.value( fmt );
+
+      looksLikeDate = (
+        fmtStr.contains( "yy" )
+        || fmtStr.contains( "dd" )
+      );
+
+      looksLikeTime = (
+        fmtStr.contains( "AM/PM" )
+        || fmtStr.contains( "h" )
+        || fmtStr.contains( "s" )
+      );
+
+      result = ( looksLikeDate && !looksLikeTime );
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) {
+  if( Format97_2003 != _fileFormat ) {
+    return false;
+  }
+
+  bool result;
+  int fmt = _xlsXFs.value( xf );
+
+  // Check for built-in date formats
+  if( (18 <= fmt) && (21 >= fmt) ) { // Default time formats: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
+    result = true;
+  }
+  else {
+    bool looksLikeDate, looksLikeTime;
+
+    QString fmtStr = _xlsFormats.value( fmt );
+
+    looksLikeDate = (
+      ( fmtStr.contains( "yy" ) || fmtStr.contains( "dd" ) )
+    );
+
+    looksLikeTime = (
+      ( fmtStr.contains( "AM/PM" ) || fmtStr.contains( "h" ) || fmtStr.contains( "s" ) )
+      && ( 1.0 > d )
+    );
+
+    result = ( !looksLikeDate && looksLikeTime );
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
+  if( Format97_2003 != _fileFormat ) {
+    return false;
+  }
+
+  bool result;
+  int fmt = _xlsXFs.value( xf );
+
+  // Check for built-in date formats
+  if( 22 == fmt ) { // Default date/time format: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
+    result = true;
+  }
+  else {
+    bool looksLikeDate, looksLikeTime;
+
+    double wholeNumberPart = ::floor( d );
+    bool isRemainder = !qFuzzyCompare( (0.0 + 1.0), ( d - wholeNumberPart + 1.0 ) );
+
+    if( ( 1.0 < d ) && isRemainder ) {
+      result = true;
+    }
+    else {
+      QString fmtStr = _xlsFormats.value( fmt );
+
+      looksLikeDate = (
+        fmtStr.contains( "yy" )
+        || fmtStr.contains( "dd" )
+      );
+
+      looksLikeTime = (
+        fmtStr.contains( "AM/PM" )
+        || fmtStr.contains( "h" )
+        || fmtStr.contains( "s" )
+      );
+
+      result = ( looksLikeDate && looksLikeTime );
+    }
+  }
+
+  return result;
 }
