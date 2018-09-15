@@ -232,12 +232,12 @@ bool CXlCsv::openXls() {
 
   int starti = this->_linesToSkip;
   if( this->containsFieldList() ) {
-    this->setFieldNames( CSV::csvStringList( sheet.rowAsStringList( starti ), this->_delimiter ) );
+    this->setFieldNames( sheet.rowAsStringList( starti ) );
     ++starti;
   }
 
   for( int i = starti; i < sheet.nRows(); ++i ) {
-    this->appendRow( CSV::csvStringList( sheet.rowAsStringList( i ), this->_delimiter ) );
+    this->appendRow( sheet.rowAsStringList( i ) );
   }
 
   _isOpen = true;
