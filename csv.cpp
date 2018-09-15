@@ -138,7 +138,7 @@ QList<QStringList> parse(const QString &string, const QChar delimiter /* = ',' *
 }
 
 
-QString initString(const QString &string){
+QString initString( const QString &string ){
   QString result = string;
   result.replace("\r\n", "\n");
 
@@ -149,12 +149,12 @@ QString initString(const QString &string){
 }
 
 
-QList<QStringList> CSV::parseFromString(const QString &string , const QChar delimiter /* = ',' */){
+QList<QStringList> CSV::parseFromString( const QString &string , const QChar delimiter /* = ',' */ ){
   return parse( initString(string), delimiter );
 }
 
 
-QList<QStringList> CSV::parseFromFile(const QString &filename, const QChar delimiter /* = ',' */, const QString &codec){
+QList<QStringList> CSV::parseFromFile( const QString &filename, const QChar delimiter /* = ',' */, const QString &codec ){
   QString string;
   QFile file(filename);
   if (file.open(QIODevice::ReadOnly)) {
@@ -168,10 +168,10 @@ QList<QStringList> CSV::parseFromFile(const QString &filename, const QChar delim
 }
 
 
-QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' */, const int stringCase /* = OriginalCase */ ) {
+QStringList CSV::csvStringList( const QStringList& elements, const QChar delimiter /* = ',' */, const StringCase stringCase /* = OriginalCase */ ) {
   QStringList output;
 
-  foreach (QString value, line) {
+  foreach (QString value, elements) {
     switch( stringCase ) {
       case TitleCase:
         value = titleCase( value );
@@ -196,11 +196,18 @@ QString CSV::writeLine( const QStringList& line, const QChar delimiter /* = ',' 
     }
   }
 
-  return( output.join( delimiter ) );
+  return output;
 }
 
 
-bool CSV::write(const QList<QStringList> data, const QString &filename,  const QChar delimiter /* = ',' */, const QString &codec){
+QString CSV::writeLine( const QStringList& elements, const QChar delimiter /* = ',' */, const StringCase stringCase /* = OriginalCase */ ) {
+  QStringList list = csvStringList( elements, delimiter, stringCase );
+
+  return( list.join( delimiter ) );
+}
+
+
+bool CSV::write( const QList<QStringList> data, const QString &filename, const QChar delimiter /* = ',' */, const QString &codec ) {
   QFile file(filename);
   if (!file.open( QFile::WriteOnly | QFile::Text )) {
     return false;
@@ -262,6 +269,7 @@ void QCsv::processString(
 
   _stringsContainDelimiters = stringsContainDelimiters;
   _mode = EntireFile;
+  _isOpen = true;
 
   QList<QStringList> items = CSV::parseFromString( text.trimmed() );
 
@@ -285,16 +293,21 @@ void QCsv::processString(
 QCsv::QCsv( const QStringList& fieldNames ) {
   initialize();
   setFieldNames( fieldNames );
+
+  _isOpen = true;
 }
 
 
 QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
   initialize();
+
   setFieldNames( fieldNames );
 
   for( int i = 0; i < data.count(); ++i ) {
     appendRow( data.at(i) );
   }
+
+  _isOpen = true;
 }
 
 
@@ -303,6 +316,21 @@ QCsv::QCsv( const QStringList& fieldNames, const QStringList& data ) {
   setFieldNames( fieldNames );
 
   appendRow( data );
+
+  _isOpen = true;
+}
+
+
+QCsv::QCsv( const QList<QStringList>& data ) {
+  initialize();
+  _mode = EntireFile;
+  _containsFieldList = false;
+
+  for( int i = 0; i < data.count(); ++i ) {
+    appendRow( data.at(i) );
+  }
+
+  _isOpen = true;
 }
 
 
@@ -1094,24 +1122,31 @@ bool QCsv::open() {
   if( EntireFile != mode() ) {
     _isOpen = openFileAndReadHeader();
   }
-  else {
-    if( !isOpen() ) {
-      if( openFileAndReadHeader() ) {
-        int fieldsRead = 0;
-        while( -1 != fieldsRead ) {
-          fieldsRead = readNext();
-        }
-
-        this->finishWithFile();
-
-        this->toFront();
-
-        _isOpen = true;
+  else if( this->_containsFieldList &&  !( this->_fieldNames.isEmpty() && this->_data.isEmpty() ) ) {
+    _isOpen = true;
+  }
+  else if( !this->_containsFieldList && !this->_data.isEmpty() ) {
+    _isOpen = true;
+  }
+  else if( !isOpen() ) {
+    if( openFileAndReadHeader() ) {
+      int fieldsRead = 0;
+      while( -1 != fieldsRead ) {
+        fieldsRead = readNext();
       }
-      else {
-        _isOpen = false;
-      }
+
+      this->finishWithFile();
+
+      this->toFront();
+
+      _isOpen = true;
     }
+    else {
+      _isOpen = false;
+    }
+  }
+  else {
+    // The object is aleady open, so there is no need to do anything else.
   }
 
   return _isOpen;

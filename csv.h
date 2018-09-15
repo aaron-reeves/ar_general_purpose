@@ -57,8 +57,11 @@ namespace CSV {
   // Parses a CSV file
   QList<QStringList> parseFromFile(const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
 
+  // Generates a string list containing properly formatted CSV elements
+  QStringList csvStringList( const QStringList& elements, const QChar delimiter = ',', const StringCase stringCase = OriginalCase );
+
   // Writes a properly formatted CSV line from its component parts
-  QString writeLine( const QStringList& line, const QChar delimiter = ',', const int stringCase = OriginalCase );
+  QString writeLine( const QStringList& elements, const QChar delimiter = ',', const StringCase stringCase = OriginalCase );
 
   // Writes a properly formatted multi-line CSV string from its component parts
   bool write(const QList<QStringList> data, const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
@@ -127,13 +130,12 @@ class QCsv {
       const bool checkForComments = false
     );
 
-    // These two constructors are used to build a CSV data set from scratch.
-    // The first specifies column names for a new CSV object, but includes no data.
-    // The second specifies column names as well as data.
-    // Both construct a CSV object in qCSV_EntireFile mode.
-    QCsv( const QStringList& fieldNames );
-    QCsv( const QStringList& fieldNames, const QList<QStringList>& data );
-    QCsv( const QStringList& fieldNames, const QStringList& data );
+    // These constructors are used to build a CSV data set from scratch.
+    // All will construct a CSV object in qCSV_EntireFile mode.
+    QCsv( const QStringList& fieldNames ); // Column names are specified, but no data is provided.
+    QCsv( const QStringList& fieldNames, const QList<QStringList>& data ); // Column names and data are provided.
+    QCsv( const QStringList& fieldNames, const QStringList& data ); // Column names and a single row of data are provided.
+    QCsv( const QList<QStringList>& data ); // Data only without field names.
 
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator
@@ -223,7 +225,7 @@ class QCsv {
     bool appendField( const QString& fieldName ); // Add a new field/column with the name 'fieldName'.  The field will be empty, but can be added to with setField.
     bool removeField( const QString& fieldName ); // Remove the field/column 'fieldName' (as well as all data in the column!)
     bool removeField( const int index ); // Remove the field/column at 'index' (as well as all data in the column)
-    bool appendRow( const QStringList& values ); // Add a new row to the end of the CSV structur.
+    bool appendRow( const QStringList& values ); // Add a new row to the end of the CSV structure.
 
     QString asTable(); // Renders the CSV object as a formatted table with fixed-width columns.
     void debug( int nLines = 0 ); // Prints contents of the object to the debugging console.
@@ -231,6 +233,7 @@ class QCsv {
     // Return any current error flag or a human-readable error message.
     CSVErrorCode error(){return _error;}
     QString errorMsg(){ return _errorMsg; }
+    void setError( const CSVErrorCode error, const QString& msg ) { _error = error; _errorMsg = msg; } // Almost exclusively used internally, but there are cases when this might be set.
 
     // How many comment rows (rows that start with '#') were encountered at the beginning of the file (and not processed)?
     // Used with checkForComment
@@ -307,8 +310,6 @@ class QCsv {
     void setFieldNames( const QStringList& fieldNames );
 
     void finishWithFile();
-
-    void setError( const CSVErrorCode error, const QString& msg ) { _error = error; _errorMsg = msg; }
 
     QString tablePadded( const QString& val, const int len );
     QString tableDiv( const int len );
