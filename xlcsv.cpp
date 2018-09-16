@@ -284,7 +284,7 @@ bool CXlCsv::openXlsx() {
   QStringList list;
   QVariant val;
 
-  // Read the first row (which may be a header row) to estableish the number of columns.
+  // Read the first row (which may be a header row) to establish the number of columns.
   while( !nullFound ) {
     val = xlsx.read( row, col );
     if( !val.isValid() )
@@ -315,7 +315,11 @@ bool CXlCsv::openXlsx() {
       if( !val.isValid() ) {
         ++nullsFound;
       }
-      list.append( val.toString() );
+
+      if( QVariant::DateTime == val.type() )
+        list.append( val.toDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) );
+      else
+        list.append( val.toString() );
     }
 
     if( nullsFound < nCols ) {

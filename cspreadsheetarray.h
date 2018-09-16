@@ -146,6 +146,10 @@ class CSpreadsheetWorkBook {
     // which in turns holds a reference to an actual format (format).
     // libxls structures st_cell, st_xf, and st_format store this information,
     // which is recreated in these two hash tables for convenience.
+
+    // Note: In this version, at least, date/time stamps are accurate only to the
+    // nearest minute, and time zones/daylight savings time are ignored completely.
+    // (The time zone was when/where a spreadsheet was created can't be determined.)
     //---------------------------------------------------------------------------------
     QHash<int, int> _xlsXFs; // key = xf index, value = format index
     QHash<int, QString> _xlsFormats; // key = format index, value = string format

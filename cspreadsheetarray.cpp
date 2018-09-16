@@ -191,7 +191,10 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
   QStringList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
-    list.append( this->at( c, rowNumber).value().toString() );
+    if( QVariant::DateTime == this->at( c, rowNumber ).value().type() )
+      list.append( this->at( c, rowNumber).value().toDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) );
+    else
+      list.append( this->at( c, rowNumber).value().toString() );
   }
 
   return list;
@@ -286,9 +289,17 @@ QDate CSpreadsheet::xlsDate( const int val, const bool is1904DateSystem ) {
 QTime CSpreadsheet::xlsTime( const double d ) {
   QTime result( 0, 0, 0, 0 );
 
-  double ms = d * 24.0 * 60.0 * 60.0 * 1000.0;
+  double s =  d * 24.0 * 60.0 * 60.0;
 
-  return result.addMSecs( ms );
+  result = result.addSecs( s );
+
+  int seconds = result.second();
+  if( seconds < 30 )
+    result = result.addSecs( -1 * seconds );
+  else
+    result = result.addSecs( 60 - seconds );
+
+  return result;
 }
 
 
@@ -299,6 +310,7 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 
   QDateTime result;
 
+  result.setTimeSpec( Qt::UTC );
   result.setDate( date );
   result.setTime( time );
 
@@ -701,21 +713,23 @@ bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) {
 
 
 bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
+  Q_UNUSED( d );
+
   if( Format97_2003 != _fileFormat ) {
     return false;
   }
 
   bool result;
   int fmt = _xlsXFs.value( xf );
+  bool looksLikeDate, looksLikeTime;
+  QString fmtStr;
 
   // Check for built-in date formats
   if( 22 == fmt ) { // Default date/time format: see FORMAT (p. 174) in http://www.openoffice.org/sc/excelfileformat.pdf
     result = true;
   }
   else {
-    bool looksLikeDate, looksLikeTime;
-
-    QString fmtStr = _xlsFormats.value( fmt );
+    fmtStr = _xlsFormats.value( fmt );
 
     looksLikeDate = (
       fmtStr.contains( "yy" )
