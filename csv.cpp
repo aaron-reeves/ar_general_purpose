@@ -24,7 +24,11 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
   QStringList line;
   QString temp, value;
 
-  temp = string.trimmed();
+  // FIXME: Is there a better way to handle delimiters here?
+  if( !delimiter.isSpace())
+    temp = string.trimmed();
+  else
+    temp = string;
 
   //qDebug() << "String size:" << temp.size();
 
@@ -271,7 +275,7 @@ void QCsv::processString(
   _mode = EntireFile;
   _isOpen = true;
 
-  QList<QStringList> items = CSV::parseFromString( text.trimmed() );
+  QList<QStringList> items = CSV::parseFromString( text, _delimiter );
 
   QString str;
   if( containsFieldList ) {
