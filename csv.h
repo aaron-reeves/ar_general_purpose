@@ -22,7 +22,7 @@ Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Co
  *    csvFileName,      // const QString& filename,
  *    true,             // const bool containsFieldList,
  *    true,             //const bool stringsContainCommas = true,
- *    qCSV::LineByLine, // const int mode = qCSV::LineByLine,
+ *    QCsv::LineByLine, // const int mode = qCSV::LineByLine,
  *    false             // const bool checkForComment = false
  *  );
  *
