@@ -16,7 +16,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #define CERROR_H
 
 #include <QtCore>
-#include <QtSql>
+//#include <QtSql>
 
 #include <ar_general_purpose/returncodes.h>
 

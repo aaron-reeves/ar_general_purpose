@@ -100,4 +100,4 @@ class CReverseLookupMap {
         QMap<T, K> reverseMap;
 };
 
-#endif
+#endif // CREVERSELOOKUPMAP_H
