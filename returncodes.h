@@ -23,7 +23,7 @@ namespace ReturnCode {
     SUCCESS                  = 0x00000, //      0
     EMPTY_INPUT_FILE         = 0x00001, //      1
     DUPLICATE_RECORD         = 0x00002, //      2
-    KNOWN_VALIDATION_ISSUE = 0x00004, //      4
+    KNOWN_VALIDATION_ISSUE   = 0x00004, //      4
     DATA_VALIDATION_PROBLEM  = 0x00008, //      8
     BAD_COMMAND              = 0x00010, //     16
     INPUT_FILE_PROBLEM       = 0x00020, //     32
