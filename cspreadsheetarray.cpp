@@ -19,6 +19,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/strutils.h>
 #include <ar_general_purpose/qcout.h>
 
+typedef uint16_t xlsWORD;
 
 CSpreadsheetCell::CSpreadsheetCell() {
   // _value is initialized by default
@@ -327,7 +328,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   // Process all cells of the sheet
   //===============================
-  WORD cellRow, cellCol;
+  xlsWORD cellRow, cellCol;
 
   //qDebug() << "cols:" <<  pWS->rows.lastcol << ", rows:" << pWS->rows.lastrow;
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
