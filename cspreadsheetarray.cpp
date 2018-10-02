@@ -581,6 +581,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   switch( _fileFormat ) {
     case Format2007:
       // FIXME: Write this function some day.
+      result = false;
       break;
     case Format97_2003:
       result = sheet.readXls( sheetIdx, _pWB, _displayVerboseOutput );
@@ -588,7 +589,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
     default:
       Q_UNREACHABLE();
       _errMsg = "Format is not specified.";
-      return false;
+      result = false;
       break;
   }
 
