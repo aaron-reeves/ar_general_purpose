@@ -71,6 +71,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
     bool readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput = false );
+    bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
     void debug( const int padding = 10 ) const;
@@ -105,6 +106,8 @@ class CSpreadsheetWorkBook {
     bool readSheet( const QString& sheetName );
     bool readAllSheets();
 
+    QVariantList firstLine( const int sheetIdx );
+
     bool error() const { return !_ok; }
     QString erroMessage() const { return _errMsg; }
 
@@ -121,6 +124,11 @@ class CSpreadsheetWorkBook {
     bool isXlsDateTime( const int xf, const double d );
 
   protected:
+    bool openXlsWorkbook();
+    bool openXlsxWorkbook();
+
+    QVariantList firstLineXlsx( const QString& sheetName );
+
     QString _srcFileName;
     SpreadsheetFileFormat _fileFormat;
     bool _displayVerboseOutput;
@@ -131,6 +139,7 @@ class CSpreadsheetWorkBook {
     bool _ok; // True if the file could be read, etc.
     QString _errMsg;
 
+    QXlsx::Document* _xlsx;
     xls::xlsWorkBook* _pWB;
 
     //---------------------------------------------------------------------------------

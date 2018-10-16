@@ -319,6 +319,43 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 }
 
 
+bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
+  if( !xlsx->selectSheet( sheetName ) ) {
+    if( displayVerboseOutput )
+      cout << QString( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
+    return false;
+  }
+  if( displayVerboseOutput )
+    cout << "Worksheet is open." << endl;
+
+  QXlsx::CellRange cellRange = xlsx->dimension();
+  if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
+    cout << "Cell range is out of bounds." << endl;
+    return false;
+  }
+  if( displayVerboseOutput )
+    cout << QString( "Cell range: rows( %1, %2 ), columns (%3, %4)" ).arg( cellRange.firstRow() ).arg( cellRange.lastRow() ).arg( cellRange.firstColumn() ).arg( cellRange.lastColumn() ) << endl;
+
+  this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
+
+  // FIXME: This does not account for merged cells.
+  for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
+    for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
+
+      QVariant val = xlsx->read( row, col );
+      if( val.type() == QVariant::String ) {
+        val = val.toString().replace( "_x000D_\n", "\n" );
+      }
+
+      CSpreadsheetCell ssCell( val, 0, 0 );
+      this->setValue( col - 1, row - 1, ssCell );
+    }
+  }
+
+  return true;
+}
+
+
 bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput /* = false */ ) {
   // Open and parse the sheet
   //=========================
@@ -464,23 +501,45 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
   _fileFormat = fileFormat;
   _displayVerboseOutput = displayVerboseOutput;
   _pWB = NULL;
+  _xlsx = NULL;
 
-  Q_ASSERT( Format97_2003 == fileFormat );
-  if( Format97_2003 != fileFormat ) {
-    _errMsg = "Selected file format is not yet supported.";
-    _ok = false;
-    return;
+  switch( fileFormat ) {
+    case  Format97_2003:
+      _ok = openXlsWorkbook();
+      break;
+    case Format2007:
+      _ok = openXlsxWorkbook();
+      break;
+    default:
+      Q_UNREACHABLE();
+      _ok = false;
+      break;
+  }
+}
+
+
+bool CSpreadsheetWorkBook::openXlsxWorkbook() {
+  _xlsx = new QXlsx::Document( _srcFileName );
+
+  for( int i = 0; i < _xlsx->sheetNames().count(); ++i ) {
+    _sheetNames.insert( i, _xlsx->sheetNames().at(i) );
   }
 
+  _xlsIs1904 = false;
+
+  return true;
+}
+
+
+bool CSpreadsheetWorkBook::openXlsWorkbook() {
   // Open workbook, choose standard conversion
   //------------------------------------------
   QString encoding = "UTF-8"; // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
-  _pWB = xls::xls_open( fileName.toLatin1().data(), encoding.toLatin1().data() );
+  _pWB = xls::xls_open( _srcFileName.toLatin1().data(), encoding.toLatin1().data() );
 
   if( NULL == _pWB ) {
     _errMsg = "Specified file could not be opened.  Wrong format?";
-    _ok = false;
-    return;
+    return false;
   }
 
   // Generate some helper bits that will let us determine further down which cells contain dates, times, or date/times
@@ -491,10 +550,10 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
   for( unsigned int i = 0; i < _pWB->formats.count; ++i ) {
     _xlsFormats.insert( _pWB->formats.format[i].index, _pWB->formats.format[i].value );
 
-    if( displayVerboseOutput )
+    if( _displayVerboseOutput )
       cout << "Format: " << "i: " << i << ", idx: " << _pWB->formats.format[i].index << ", val: " << _pWB->formats.format[i].value << endl;
   }
-  if( displayVerboseOutput )
+  if( _displayVerboseOutput )
     cout << endl;
 
   _xlsXFs.clear();
@@ -502,30 +561,33 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
     if( 0 != _pWB->xfs.xf[i].format ) {
       _xlsXFs.insert( i, _pWB->xfs.xf[i].format );
 
-      if( displayVerboseOutput )
+      if( _displayVerboseOutput )
         cout << "XFs: " << "i: " << i << ", format: " << _pWB->xfs.xf[i].format << ", type: " << _pWB->xfs.xf[i].type << endl;
     }
   }
-  if( displayVerboseOutput )
+  if( _displayVerboseOutput )
     cout << endl;
 
 
   for( unsigned int i = 0; i < _pWB->sheets.count; ++i ) {
     _sheetNames.insert( i, _pWB->sheets.sheet[i].name );
 
-    if( displayVerboseOutput )
+    if( _displayVerboseOutput )
       cout << _pWB->sheets.sheet[i].name << endl;
   }
-  if( displayVerboseOutput )
+  if( _displayVerboseOutput )
     cout << endl;
 
-  _ok = true;
+  return true;
 }
 
 
 CSpreadsheetWorkBook::~CSpreadsheetWorkBook() {
   if( NULL != _pWB )
     xls::xls_close( _pWB );
+
+  if( NULL != _xlsx )
+    delete _xlsx;
 }
 
 
@@ -560,6 +622,70 @@ CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
 }
 
 
+QVariantList CSpreadsheetWorkBook::firstLineXlsx( const QString& sheetName ) {
+  QVariantList result;
+
+  if( !_xlsx->selectSheet( sheetName ) ) {
+    _errMsg = QString( "Specified worksheet (%1) could not be selected." ).arg( sheetName );
+    return result;
+  }
+
+  QXlsx::CellRange cellRange = _xlsx->dimension();
+  if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
+    _errMsg = "Cell range is out of bounds.";
+    return result;
+  }
+
+
+  // FIXME: This does not account for merged cells.
+  int row = 1;
+  for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
+
+    QVariant val = _xlsx->read( row, col );
+    if( val.type() == QVariant::String ) {
+      val = val.toString().replace( "_x000D_\n", "\n" );
+    }
+
+    result.append( val );
+  }
+
+  return result;
+}
+
+
+QVariantList CSpreadsheetWorkBook::firstLine( const int sheetIdx ) {
+  QVariantList result;
+
+  if( !_ok ) {
+    _errMsg = "Workbook is not open.";
+    return result;
+  }
+
+  if( !_sheetNames.containsKey( sheetIdx ) ) {
+    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
+    return result;
+  }
+
+  switch( _fileFormat ) {
+    case Format2007:
+      result = firstLineXlsx( _sheetNames.retrieveValue( sheetIdx ) );
+      break;
+    case Format97_2003:
+      // FIXME: Write this function.
+      qDebug() << "Format is not supported.";
+      Q_UNREACHABLE();
+      _errMsg = "Format is not supported.";
+      break;
+    default:
+      Q_UNREACHABLE();
+      _errMsg = "Format is not specified.";
+      break;
+  }
+
+  return result;
+}
+
+
 bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   if( !_ok ) {
     _errMsg = "Workbook is not open.";
@@ -580,8 +706,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
   switch( _fileFormat ) {
     case Format2007:
-      // FIXME: Write this function some day.
-      result = false;
+      result = sheet.readXlsx( _sheetNames.retrieveValue( sheetIdx ), _xlsx, _displayVerboseOutput );
       break;
     case Format97_2003:
       result = sheet.readXls( sheetIdx, _pWB, _displayVerboseOutput );
