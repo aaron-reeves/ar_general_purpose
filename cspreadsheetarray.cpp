@@ -622,7 +622,7 @@ CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
 }
 
 
-QVariantList CSpreadsheetWorkBook::firstLineXlsx( const QString& sheetName ) {
+QVariantList CSpreadsheetWorkBook::rowXlsx( const int rowIdx, const QString& sheetName ) {
   QVariantList result;
 
   if( !_xlsx->selectSheet( sheetName ) ) {
@@ -632,13 +632,18 @@ QVariantList CSpreadsheetWorkBook::firstLineXlsx( const QString& sheetName ) {
 
   QXlsx::CellRange cellRange = _xlsx->dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
+    _errMsg = "Sheet dimensions appear to be incorrect.";
+    return result;
+  }
+
+  int row = rowIdx + 1;
+
+  if( (row < cellRange.firstRow()) || (row > cellRange.lastRow()) ) {
     _errMsg = "Cell range is out of bounds.";
     return result;
   }
 
-
   // FIXME: This does not account for merged cells.
-  int row = 1;
   for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
 
     QVariant val = _xlsx->read( row, col );
@@ -653,7 +658,12 @@ QVariantList CSpreadsheetWorkBook::firstLineXlsx( const QString& sheetName ) {
 }
 
 
-QVariantList CSpreadsheetWorkBook::firstLine( const int sheetIdx ) {
+QVariantList CSpreadsheetWorkBook::firstRow( const int sheetIdx ) {
+  return this->row( 0, sheetIdx );
+}
+
+
+QVariantList CSpreadsheetWorkBook::row( const int rowIdx, const int sheetIdx ) {
   QVariantList result;
 
   if( !_ok ) {
@@ -668,7 +678,7 @@ QVariantList CSpreadsheetWorkBook::firstLine( const int sheetIdx ) {
 
   switch( _fileFormat ) {
     case Format2007:
-      result = firstLineXlsx( _sheetNames.retrieveValue( sheetIdx ) );
+      result = rowXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ) );
       break;
     case Format97_2003:
       // FIXME: Write this function.
