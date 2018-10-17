@@ -106,8 +106,8 @@ class CSpreadsheetWorkBook {
     bool readSheet( const QString& sheetName );
     bool readAllSheets();
 
-    QVariantList firstRow( const int sheetIdx );
-    QVariantList row( const int rowIdx, const int sheetIdx );
+    QVariantList firstRowFromSheet( const int sheetIdx );
+    QVariantList rowFromSheet( const int rowIdx, const int sheetIdx );
 
     bool error() const { return !_ok; }
     QString erroMessage() const { return _errMsg; }
@@ -128,7 +128,7 @@ class CSpreadsheetWorkBook {
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
 
-    QVariantList rowXlsx( const int rowIdx, const QString& sheetName );
+    QVariantList rowFromSheetXlsx( const int rowIdx, const QString& sheetName );
 
     QString _srcFileName;
     SpreadsheetFileFormat _fileFormat;

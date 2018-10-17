@@ -622,7 +622,7 @@ CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
 }
 
 
-QVariantList CSpreadsheetWorkBook::rowXlsx( const int rowIdx, const QString& sheetName ) {
+QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QString& sheetName ) {
   QVariantList result;
 
   if( !_xlsx->selectSheet( sheetName ) ) {
@@ -658,12 +658,12 @@ QVariantList CSpreadsheetWorkBook::rowXlsx( const int rowIdx, const QString& she
 }
 
 
-QVariantList CSpreadsheetWorkBook::firstRow( const int sheetIdx ) {
-  return this->row( 0, sheetIdx );
+QVariantList CSpreadsheetWorkBook::firstRowFromSheet( const int sheetIdx ) {
+  return this->rowFromSheet( 0, sheetIdx );
 }
 
 
-QVariantList CSpreadsheetWorkBook::row( const int rowIdx, const int sheetIdx ) {
+QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int sheetIdx ) {
   QVariantList result;
 
   if( !_ok ) {
@@ -678,7 +678,7 @@ QVariantList CSpreadsheetWorkBook::row( const int rowIdx, const int sheetIdx ) {
 
   switch( _fileFormat ) {
     case Format2007:
-      result = rowXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ) );
+      result = rowFromSheetXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ) );
       break;
     case Format97_2003:
       // FIXME: Write this function.
