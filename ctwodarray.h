@@ -13,97 +13,106 @@ Public License as published by the Free Software Foundation; either version 2 of
 #ifndef CTWODARRAY_H
 #define CTWODARRAY_H
 
+#include <QtCore>
+
 template <class T>
 class CTwoDArray {
   public:
-    CTwoDArray() {
-      setSize( 0, 0 );
-    }
+    CTwoDArray();
+    CTwoDArray( const int nCols, const int nRows );
+    CTwoDArray( const int nCols, const int nRows, const T defaultVal );
+    CTwoDArray( const CTwoDArray& other );
 
-    CTwoDArray( const int nCols, const int nRows ) {
-      setSize( nCols, nRows );
-    }
+    CTwoDArray& operator= ( const CTwoDArray& other );
+    void assign( const CTwoDArray& other );
 
-    CTwoDArray( const int nCols, const int nRows, const T defaultVal ) {
-      setSize( nCols, nRows, defaultVal );
-    }
+    ~CTwoDArray();
 
-    CTwoDArray( const CTwoDArray& other ) {
-      _nCols = other._nCols;
-      _nRows = other._nRows;
-      _data = other._data;
-    }
+    // Sizing
+    //-------
+    void setSize( const int nCols, const int nRows ); // This currently assumes that the object is empty.
+    void setSize( const int nCols, const int nRows, const T defaultVal ); // This currently assumes that the object is empty.
+    void fill( const T val ); // Will overwrite existing data
+    void fillRow( const int rowIdx, const T val ); // Will overwrite existing data
+    void appendRow();
+    void appendRow( const T defaultVal );
+    void appendRow( const QString& rowName );
+    void appendRow(  const QString& rowName, const T defaultVal );
 
-    CTwoDArray& operator= ( const CTwoDArray& other ) {
-      _nCols = other._nCols;
-      _nRows = other._nRows;
-      _data = other._data;
+    // Basic setter and getters
+    //-------------------------
+    void setValue( const int c, const int r, const T val );
+    const T& value( const int c, const int r ) const;
+    T& value( const int c, const int r );
 
-      return* this;
-    }
-
-    ~CTwoDArray() {
-      // Do nothing else
-    }
-
-    void setSize( const int nCols, const int nRows ) {
-      _data.clear();
-
-      _nCols = nCols;
-      _nRows = nRows;
-
-      for( int c = 0; c < nCols; ++c ) {
-        _data.append( QVector<T>( _nRows ) );
-      }
-    }
-
-    void setSize( const int nCols, const int nRows, const T defaultVal ) {
-      _data.clear();
-
-      _nCols = nCols;
-      _nRows = nRows;
-
-      for( int c = 0; c < nCols; ++c ) {
-        QVector<T> row( _nRows );
-        row.fill( defaultVal );
-        _data.append( row );
-      }
-    }
-
-
-    void setValue( const int c, const int r, const T val ) {
-      _data[c][r] = val;
-    }
-
-    const T& value( const int c, const int r ) const {
-      return _data.at(c).at(r);
-    }
-
-    T& value( const int c, const int r ) {
-      return _data[c][r];
-    }
-
-    const T& at( const int c, const int r ) const {
-      return this->value( c, r );
-    }
-
-    T& at( const int c, const int r ) {
-      return _data[c][r];
-    }
+    // at() is a synonym for value(), because I'm forgetful.
+    const T& at( const int c, const int r ) const { return this->value( c, r ); }
+    T& at( const int c, const int r ) { return this->value( c, r ); }
 
     int nCols() const { return _nCols; }
     int nRows() const { return _nRows; }
+    int colCount() const { return _nCols; }
+    int rowCount() const { return _nRows; }
+
     bool isEmpty() const { return( (0 == _nCols) && (0 == _nRows) ); }
 
+
+    // Column and row names
+    //---------------------
+    bool hasColNames() const { return !_colNames.isEmpty(); }
+    bool hasRowNames() const { return !_rowNames.isEmpty(); }
+
+    void setColNames( const QStringList& names );
+    void setRowNames( const QStringList& names );
+
+    const QStringList& colNames() const { return _colNames; }
+    const QStringList& rowNames() const { return _rowNames; }
+
+
+    // Setters, getters, and at() for use with cell and row names
+    //-----------------------------------------------------------
+    void setValue( const QString& colName, const int r, const T val );
+    void setValue( const int c, const QString& rowName, const T val );
+    void setValue( const QString& colName, const QString& rowName, const T val );
+
+    T& value( const QString& colName, const int r );
+    T& value( const int c, const QString& rowName );
+    T& value( const QString& colName, const QString& rowName );
+
+    const T& value( const QString& colName, const int r ) const;
+    const T& value( const int c, const QString& rowName ) const;
+    const T& value( const QString& colName, const QString& rowName ) const;
+
+    T& at( const QString& colName, const int r ) { return this->value( colName, r ); }
+    T& at( const int c, const QString& rowName ) { return this->value( c, rowName ); }
+    T& at( const QString& colName, const QString& rowName ) { return this->value( colName, rowName ); }
+
+    const T& at( const QString& colName, const int r ) const { return this->value( colName, r ); }
+    const T& at( const int c, const QString& rowName ) const { return this->value( c, rowName ); }
+    const T& at( const QString& colName, const QString& rowName ) const { return this->value( colName, rowName ); }
+
   protected:
+    void initialize();
+
+    // Do this some day, if sizing becomes dynamic.
+    //void resizeNames();
+
     int _nCols;
     int _nRows;
+
+    bool _useDefaultVal;
+    T _defaultVal;
+
+    bool _hasColNames;
+    bool _hasRowNames;
+    QStringList _colNames;
+    QStringList _rowNames;
 
     // Each vector represents a column with size of _nRows.
     // The list represents the columns.
     QList< QVector<T> > _data;
 };
 
-
+#include "ctwodarray.tpp"
 
 #endif // CTWODARRAY_H
