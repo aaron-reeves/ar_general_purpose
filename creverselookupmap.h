@@ -42,62 +42,79 @@ int main(int argc, char** argv) {
 template <class K, class T>
 class CReverseLookupMap {
     public:
-    // use default construction, destruction
+      CReverseLookupMap() {
+        /* nothing to do here */
+      }
 
-    // I don't really know how to write templates, and my attempts to put these
-    // functions in the source file were unsuccessful.  Maybe some day,
-    // someone should figure it out...
-    inline void insert( const K& key, const T& value ) {
-      forwardMap.insert( key, value );
-      reverseMap.insert( value, key );
-    }
+      CReverseLookupMap( const CReverseLookupMap& other ) {
+        assign( other );
+      }
 
-    inline T retrieveValue( const K& key ) {
-      return forwardMap.find( key ).value();
-    }
+      CReverseLookupMap& operator=( const CReverseLookupMap& other ) {
+        assign( other );
+        return *this;
+      }
 
-    inline K retrieveKey( const T& value ) {
-      return reverseMap.find( value ).value();
-    }
+      ~CReverseLookupMap() {
+        /* nothing to do here */
+      }
 
-    inline bool containsValue( const T& value ){
-      return reverseMap.contains( value );
-    }
+      inline void insert( const K& key, const T& value ) {
+        forwardMap.insert( key, value );
+        reverseMap.insert( value, key );
+      }
 
-    inline bool containsKey( const K& key ) {
-      return forwardMap.contains( key );
-    }
+      inline T retrieveValue( const K& key ) const {
+        return forwardMap.find( key ).value();
+      }
 
-    inline T valueAtIndex( const int i ) {
-      return forwardMap.values().at(i);
-    }
+      inline K retrieveKey( const T& value ) {
+        return reverseMap.find( value ).value();
+      }
 
-    inline K keyAtIndex( const int i ) {
-      return forwardMap.keys().at(i);
-    }
+      inline bool containsValue( const T& value ) const {
+        return reverseMap.contains( value );
+      }
 
-    void clear( void ) {
-      forwardMap.clear();
-      reverseMap.clear();
-    }
+      inline bool containsKey( const K& key ) const {
+        return forwardMap.contains( key );
+      }
 
-    int count( void ) {
-      return forwardMap.count();
-    }
+      inline T valueAtIndex( const int i ) {
+        return forwardMap.values().at(i);
+      }
 
-    void debug() {
-      int i;
-      qDebug() << QString( "Forward:" );
-      for( i = 0; i < forwardMap.count(); ++i )
-        qDebug() << "  " << forwardMap.keys().at(i) << forwardMap.values().at(i);
-      qDebug() << "Backward:";
-      for( i = 0; i < reverseMap.count(); ++i )
-        qDebug() << "  " << reverseMap.keys().at(i) << reverseMap.values().at(i);
-    }
+      inline K keyAtIndex( const int i ) {
+        return forwardMap.keys().at(i);
+      }
+
+      void clear( void ) {
+        forwardMap.clear();
+        reverseMap.clear();
+      }
+
+      int count( void ) {
+        return forwardMap.count();
+      }
+
+      void debug() {
+        int i;
+        qDebug() << QString( "Forward:" );
+        for( i = 0; i < forwardMap.count(); ++i )
+          qDebug() << "  " << forwardMap.keys().at(i) << forwardMap.values().at(i);
+        qDebug() << "Backward:";
+        for( i = 0; i < reverseMap.count(); ++i )
+          qDebug() << "  " << reverseMap.keys().at(i) << reverseMap.values().at(i);
+      }
 
     protected:
-        QMap<K, T> forwardMap;
-        QMap<T, K> reverseMap;
+      void assign( const CReverseLookupMap& other ) {
+        forwardMap = other.forwardMap;
+        reverseMap = other.reverseMap;
+      }
+
+      QMap<K, T> forwardMap;
+      QMap<T, K> reverseMap;
 };
 
 #endif // CREVERSELOOKUPMAP_H
