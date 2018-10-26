@@ -99,12 +99,12 @@ CAppLog::~CAppLog( void ) {
 }
 
 
-void CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+bool CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
   setFileFrequency( freq );
   setFileName( fileName );
   setLogLevel( logLevel );
 
-  //qDebug() << "Log" << _logFileName << "will open.";
+  return _logOpen;
 }
 
 

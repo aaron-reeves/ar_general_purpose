@@ -65,7 +65,7 @@ class CAppLog {
     // Creates a log with the indicated file name, that will eventually be written to.
     CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
-    void openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
+    bool openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
     virtual ~CAppLog( void );
     
