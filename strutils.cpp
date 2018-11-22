@@ -3,7 +3,7 @@ strutils.h/cpp
 --------------
 Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
-Copyright (C) 2007 - 2014 Aaron Reeves
+Copyright (C) 2007 - 2018 Aaron Reeves
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -813,6 +813,111 @@ QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const 
   }
 
   return result;
+}
+
+
+QString stringListListTableHeader( const QList<int>& arr ) {
+  int i, j;
+  int spaces;
+  QString head = "";
+
+  for( i = 0; arr.size() > i; ++i ) {
+    head.append( "+" );
+    spaces = arr.at( i );
+    for( j = 0; (spaces+2) > j; ++j ) {
+      head.append( "-" );
+    }
+  }
+
+  head.append( "+" );
+
+  return head;
+}
+
+
+QString stringListListTableRow( QString label, int len ) {
+  QString row;
+  int i;
+  int lenDiff;
+
+  if( label.length() <= len ) {
+    // Prepend the leading space
+    row = QString( " %1" ).arg( label ); // Note the leading space
+
+    // Add spaces until desired length is reached
+    lenDiff = len - label.length();
+    for( i = 0; lenDiff > i; ++i ) {
+      row.append( " " );
+    }
+
+    // Tack on the trailing space
+    row.append( " " );
+  }
+  else {
+    row = QString( " %1" ).arg( label ); // Note the leading space
+    row = row.left( len - 2 );
+    row = row + "... "; // Note the trailing space
+  }
+
+  return row;
+}
+
+
+void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader ) {
+  if(( NULL == stream) ) {
+    //qDebug() << "No stream in printTableFormat()";
+    return;
+  }
+
+  QStringList row;
+  QList<int> colWidths;
+
+  for( int c = 0; c < rows.at(0).count(); ++c ) {
+    colWidths.append( rows.at(0).at(c).length() );
+  }
+
+  // Loop through once to determine max column widths
+  for( int r = 1; r < rows.count(); ++r ) {
+    for( int c = 0; c < rows.at(r).count(); ++c ) {
+      if( colWidths.at(c) < rows.at(r).at(c).length() ) {
+        colWidths.replace( c, rows.at(r).at(c).length() );
+      }
+    }
+  }
+
+  // Start writing!
+  //===============
+
+  // Header row first, if present
+  //-----------------------------
+  *stream << stringListListTableHeader( colWidths ) << endl;
+  int firstRow;
+
+  if( useHeader ) {
+    row = rows.at(0);
+    for( int c = 0; c < row.count(); ++c ) {
+       *stream << "|" << stringListListTableRow( row.at(c), colWidths.at(c) );
+    }
+    *stream << "|" << endl;
+    *stream << stringListListTableHeader( colWidths ) << endl;
+    firstRow = 1;
+  }
+  else {
+    firstRow = 0;
+  }
+
+  // Then all other rows
+  //--------------------
+  for( int r = firstRow; r < rows.count(); ++r ) {
+    row = rows.at(r);
+    for( int c = 0; c < row.count(); ++c ) {
+       *stream << "|" << stringListListTableRow( row.at(c), colWidths.at(c) );
+    }
+    *stream << "|" << endl;
+  }
+
+  *stream << stringListListTableHeader( colWidths ) << endl;
+  *stream << flush;
 }
 
 

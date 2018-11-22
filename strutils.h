@@ -3,7 +3,7 @@ strutils.h/cpp
 --------------
 Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
-Copyright (C) 2007 - 2014 Aaron Reeves
+Copyright (C) 2007 - 2018 Aaron Reeves
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -51,6 +51,8 @@ QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool 
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 
 bool isComment( const QString st );
+
+void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader );
 
 /* This function attempts to rebuild a properly formatted comma-separated list from one that
  * was poorly formatted.  The function needs to know how many parts were expected and must have
