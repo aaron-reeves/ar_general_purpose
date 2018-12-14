@@ -80,11 +80,11 @@ class CReverseLookupMap {
         return forwardMap.contains( key );
       }
 
-      inline T valueAtIndex( const int i ) {
+      inline T valueAtIndex( const int i ) const {
         return forwardMap.values().at(i);
       }
 
-      inline K keyAtIndex( const int i ) {
+      inline K keyAtIndex( const int i ) const {
         return forwardMap.keys().at(i);
       }
 
@@ -93,7 +93,7 @@ class CReverseLookupMap {
         reverseMap.clear();
       }
 
-      int count( void ) {
+      int count( void ) const {
         return forwardMap.count();
       }
 
