@@ -53,6 +53,7 @@ QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct =
 bool isComment( const QString st );
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader );
+bool isEmptyStringList( const QStringList& list );
 
 /* This function attempts to rebuild a properly formatted comma-separated list from one that
  * was poorly formatted.  The function needs to know how many parts were expected and must have

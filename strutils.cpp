@@ -178,26 +178,27 @@ QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ 
 
 
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
-  QString str;
   int i;
   int origStrLen;
 
-  str = QString( "%1" ).arg( toPad );
+  //Q_ASSERT( str.length() <= places );
 
-  Q_ASSERT( str.length() <= places );
+  if( toPad.length() >= places ) {
+    toPad = toPad.left( places - 1 );
+  }
 
   //qDebug() << places << str.length() << (places - str.length());
 
-  origStrLen = str.length();
+  origStrLen = toPad.length();
 
   if( origStrLen < places ) {
     for( i = 0; i < places - origStrLen; ++i ) {
-      str.prepend( padChar );
-      //qDebug() << i << str;
+      toPad.prepend( padChar );
+      //qDebug() << i << toPad;
     }
   }
 
-  return str;
+  return toPad;
 }
 
 
@@ -208,7 +209,11 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* 
   if( toPad.length() > places )
     qDebug() << toPad << places << toPad.length() << (places - toPad.length());
 
-  Q_ASSERT( toPad.length() <= places );
+  //Q_ASSERT( toPad.length() <= places );
+
+  if( toPad.length() >= places ) {
+    toPad = toPad.left( places - 1 );
+  }
 
   origStrLen = toPad.length();
 
@@ -918,6 +923,20 @@ void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream,
 
   *stream << stringListListTableHeader( colWidths ) << endl;
   *stream << flush;
+}
+
+
+bool isEmptyStringList( const QStringList& list ) {
+  bool result = true;
+
+  for( int i = 0; i < list.count(); ++i ) {
+    if( 0 < list.at(i).trimmed().length() ) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
 }
 
 
