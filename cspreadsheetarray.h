@@ -55,6 +55,7 @@ class CSpreadsheetCell {
 
 
 class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
+  friend class CSpreadsheetWorkBook;
   public:
     CSpreadsheet();
     CSpreadsheet( CSpreadsheetWorkBook* wb );
@@ -84,10 +85,12 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     void assign( const CSpreadsheet& other );
 
+    static QVariant processCellXls( xls::xlsCell* cell, QString& msg, CSpreadsheetWorkBook* wb );
+
     // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
-    QDate xlsDate( const int val, const bool is1904DateSystem );
-    QTime xlsTime( const double d );
-    QDateTime xlsDateTime( const double d, const bool is1904DateSystem );
+    static QDate xlsDate( const int val, const bool is1904DateSystem );
+    static QTime xlsTime( const double d );
+    static QDateTime xlsDateTime( const double d, const bool is1904DateSystem );
 };
 
 
@@ -129,6 +132,8 @@ class CSpreadsheetWorkBook {
     bool openXlsxWorkbook();
 
     QVariantList rowFromSheetXlsx( const int rowIdx, const QString& sheetName );
+    QVariantList rowFromSheetXls( const int rowIdx, const QString& sheetName );
+    QVariantList rowFromSheetXls( const int rowIdx, const int sheetIdx );
 
     QString _srcFileName;
     SpreadsheetFileFormat _fileFormat;

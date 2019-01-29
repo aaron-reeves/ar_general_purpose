@@ -165,22 +165,68 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   // Criteria for tidy spreadsheets:
   //  1. No merged cells.
   //  2. If the first row is a header:
-  //    a) It should not contain any blanks.
+  //    a) It should not contain any blanks (blanks at the end are OK)
   //    b) Every value in the first row should be a string(?)
+  //    c) For all subsequent rows, there cannot be more columns than in the header row.
 
   if( this->_hasMergedCells ) {
     result = false;
   }
   else if( containsHeaderRow ) {
+    // Check the header row
+    //---------------------
+    QStringList headers;
     for( int c = 0; c < this->nCols(); ++c ) {
+      headers.append( this->at( c, 0 ).value().toString() );
+    }
+
+    bool ok = false;
+    while( !ok ) {
+      if( 0 < headers.last().trimmed().length() ) {
+        ok = true;
+      }
+      else {
+        headers.removeLast();
+      }
+    }
+
+    for( int c = 0; c < headers.length(); ++c ) {
       if(
          this->at( c, 0 ).value().isNull()
          || ( QVariant::String != this->at( c, 0 ).value().type() )
          || ( 0 == this->at( c, 0 ).value().toString().length() )
        ) {
         result = false;
+      }
+    }
+
+    if( false == result ) {
+      return result;
+    }
+
+    // Check all subsequent rows
+    //--------------------------
+    for( int r = 1; r < this->nRows(); ++r ) {
+      QStringList data;
+      for( int c = 0; c < this->nCols(); ++c ) {
+        data.append( this->at( c, r ).value().toString() );
+      }
+
+      bool ok = false;
+      while( !ok && !data.isEmpty() ) {
+        if( 0 < data.last().trimmed().length() ) {
+          ok = true;
+        }
+        else {
+          data.removeLast();
+        }
+      }
+
+      if( data.length() > headers.length() ) {
+        result = false;
         break;
       }
+
     }
   }
 
@@ -195,7 +241,7 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
     if( QVariant::DateTime == this->at( c, rowNumber ).value().type() )
       list.append( this->at( c, rowNumber).value().toDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) );
     else
-      list.append( this->at( c, rowNumber).value().toString() );
+      list.append( this->at( c, rowNumber).value().toString().trimmed() );
   }
 
   return list;
@@ -206,26 +252,45 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
   QCsv csv;
 
   if( this->isEmpty() ) {
+    qDebug() << "is empty";
     csv.setError( QCsv::ERROR_OTHER, "Specified worksheet is empty." );
   }
   else if( !this->isTidy( containsHeaderRow ) ) {
+    qDebug() << "Not tidy";
     csv.setError( QCsv::ERROR_OTHER, "Specified worksheet does not have a tidy CSV format." );
   }
   else {
-    QStringList headerRow;
+    QStringList firstRow;
     QList<QStringList> data;
 
-    int startRow = 0;
-    if( containsHeaderRow ) {
-      headerRow = this->rowAsStringList( 0 );
-      startRow = 1;
+    firstRow = this->rowAsStringList( 0 );
+
+    bool ok = false;
+    while( !ok ) {
+      if( 0 < firstRow.last().trimmed().length() ) {
+        ok = true;
+      }
+      else {
+        firstRow.removeLast();
+      }
     }
-    for( int i = startRow; i < this->nRows(); ++i ) {
-      data.append( this->rowAsStringList( i ) );
+
+    for( int i = 1; i < this->nRows(); ++i ) {
+      QStringList tmp = this->rowAsStringList( i );
+      data.append( tmp.mid( 0, firstRow.length() ) );
+    }
+
+    if( !containsHeaderRow ) {
+      data.prepend( firstRow );
+    }
+
+    // Trim off trailing empty rows
+    while( CSV::isEmptyList( data.last() ) ) {
+      data.removeLast();
     }
 
     if( containsHeaderRow ) {
-      csv = QCsv( headerRow, data );
+      csv = QCsv( firstRow, data );
     }
     else {
       csv = QCsv( data );
@@ -238,7 +303,10 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
   csv.setDelimiter( delimiter );
   csv.setCheckForComments( false );
   csv.setStringsContainDelimiters( true );
-  csv.toFront();
+
+  if( QCsv::ERROR_NONE == csv.error() ) {
+    csv.toFront();
+  }
 
   return csv;
 }
@@ -362,12 +430,10 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
 
-
   // Process all cells of the sheet
   //===============================
   xlsWORD cellRow, cellCol;
 
-  //qDebug() << "cols:" <<  pWS->rows.lastcol << ", rows:" << pWS->rows.lastrow;
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
   for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
@@ -375,108 +441,13 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
 
       if( !cell || cell->isHidden ) {
+        qDebug() << "Hidden cell";
         continue;
       }
       else {
         QString msg;
-        QVariant val;
 
-        // Display the value of the cell (either numeric or string)
-        //========================================================
-
-        // Deal with numbers
-        //------------------
-        if( displayVerboseOutput ) {
-          cout <<
-            QString( "Row: %1, Col: %2, id: %3, row: %4, col, %5, xf: %6, l: %7, d: %8, str: %9" )
-            .arg( cellRow )
-            .arg( cellCol )
-            .arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
-            .arg( cell->row )
-            .arg( cell->col )
-            .arg( cell->xf )
-            .arg( cell->l )
-            .arg( cell->d )
-            .arg( (char*)cell->str ) << endl
-          ;
-        }
-
-        // XLS_RECORD_RK = 0x027E
-        // XLS_RECORD_NUMBER = 0x203
-        // XLS_RECORD_MULRK = 0x00BD
-        if( ( XLS_RECORD_RK == cell->id ) || ( XLS_RECORD_MULRK == cell->id ) || ( XLS_RECORD_NUMBER == cell->id ) ) {
-          if( _wb->isXlsDate( cell->xf, cell->d ) ) {
-            val = xlsDate( (int)cell->d, _wb->isXls1904DateSystem() );
-          }
-          else if( _wb->isXlsTime( cell->xf, cell->d ) ) {
-            val = xlsTime( cell->d );
-          }
-          else if( _wb->isXlsDateTime( cell->xf, cell->d ) ) {
-            val = xlsDateTime( cell->d, _wb->isXls1904DateSystem() );
-          }
-          else {
-            val = cell->d;
-          }
-          msg = QString( "Row: %1, Col: %2, Value (numeric): %3, ID: %4" ).arg( cellRow ).arg( cellCol ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) );
-        }
-
-        // Deal with formulas
-        //-------------------
-        // XLS_RECORD_FORMULA = 0x0006
-        // XLS_RECORD_FORMULA_ALT = 0x0406
-        else if ( (XLS_RECORD_FORMULA == cell->id) || (XLS_RECORD_FORMULA_ALT == cell->id) ) {
-          if (cell->l == 0) { // its a number
-            val = cell->d;
-            msg = QString( "Row: %1, Col: %2, Value (formula numeric): %3, ID: %4" ).arg( cellRow ).arg( cellCol ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) );
-          }
-          else {
-            if (!strcmp((char *)cell->str, "bool")) { // its boolean, and test cell->d
-              if( 1 == (int)cell->d ) {
-                val = true;
-              }
-              else {
-                val = false;
-              }
-              msg = QString( "Row: %1, Col: %2, Value (formula boolean): %3, ID: %4" ).arg( cellRow ).arg( cellCol ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) );
-            }
-            else if (!strcmp((char *)cell->str, "error")) { // formula is in error
-              val = "*error*";
-              msg = QString( "Row: %1, Col: %2, Value (formula error): %3, ID: %4" ).arg( cellRow ).arg( cellCol ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) );
-            }
-            else { // ... cell->str is valid as the result of a string formula.
-              val = QString( "%1" ).arg( (char*)cell->str );
-              msg = QString( "Row: %1, Col: %2, Value (formula string): %3" ).arg( cellRow ).arg( cellCol ).arg( val.toString() );
-            }
-          }
-        }
-
-        // Deal with booleans
-        //-------------------
-        // XLS_RECORD_BOOLERR = 0x0205
-        else if( XLS_RECORD_BOOLERR == cell->id ) {
-          if( 0 == (int)cell->d ) {
-            val = false;
-          }
-          else {
-            val = true;
-          }
-        }
-
-
-        // Deal with strings
-        //------------------
-        else if( NULL != cell->str ) {
-           val = QString( "%1" ).arg( (char*)cell->str );
-           msg = QString( "Row: %1, Col: %2, Value (string): %3" ).arg( cellRow ).arg( cellCol ).arg( val.toString() );
-        }
-
-        // Deal with 'empty' cells
-        //------------------------
-        else {
-          msg = QString( "Row: %1, Col: %2, (Empty cell)" ).arg( cellRow ).arg( cellCol );
-        }
-
-        msg.append( QString( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
+        QVariant val = processCellXls( cell, msg, _wb );
 
         CSpreadsheetCell ssCell( val, cell->colspan, cell->rowspan );
         this->setValue( cellCol, cellRow, ssCell );
@@ -485,6 +456,8 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         _hasMergedCells = ( _hasMergedCells || ssCell.isMerged() );
 
         if( displayVerboseOutput ) {
+          msg.replace( "CELLCOL", QString::number( cellCol ), Qt::CaseSensitive );
+          msg.replace( "CELLROW", QString::number( cellRow ), Qt::CaseSensitive );
           cout << msg << endl;
         }
       }
@@ -492,6 +465,106 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   }
 
   return true;
+}
+
+
+QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpreadsheetWorkBook* wb ) {
+  QVariant val;
+
+  // Display the value of the cell (either numeric or string)
+  //========================================================
+
+  // Deal with numbers
+  //------------------
+  msg =
+    QString( "Row: CELLROW, Col: CELLCOL, id: %1, row: %2, col, %3, xf: %4, l: %5, d: %6, str: %7\n" )
+    .arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
+    .arg( cell->row )
+    .arg( cell->col )
+    .arg( cell->xf )
+    .arg( cell->l )
+    .arg( cell->d )
+    .arg( (char*)cell->str )
+  ;
+
+  // XLS_RECORD_RK = 0x027E
+  // XLS_RECORD_NUMBER = 0x203
+  // XLS_RECORD_MULRK = 0x00BD
+  if( ( XLS_RECORD_RK == cell->id ) || ( XLS_RECORD_MULRK == cell->id ) || ( XLS_RECORD_NUMBER == cell->id ) ) {
+    if( wb->isXlsDate( cell->xf, cell->d ) ) {
+      val = xlsDate( (int)cell->d, wb->isXls1904DateSystem() );
+    }
+    else if( wb->isXlsTime( cell->xf, cell->d ) ) {
+      val = xlsTime( cell->d );
+    }
+    else if( wb->isXlsDateTime( cell->xf, cell->d ) ) {
+      val = xlsDateTime( cell->d, wb->isXls1904DateSystem() );
+    }
+    else {
+      val = cell->d;
+    }
+    msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (numeric): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+  }
+
+  // Deal with formulas
+  //-------------------
+  // XLS_RECORD_FORMULA = 0x0006
+  // XLS_RECORD_FORMULA_ALT = 0x0406
+  else if ( (XLS_RECORD_FORMULA == cell->id) || (XLS_RECORD_FORMULA_ALT == cell->id) ) {
+    if (cell->l == 0) { // its a number
+      val = cell->d;
+      msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+    }
+    else {
+      if (!strcmp((char *)cell->str, "bool")) { // its boolean, and test cell->d
+        if( 1 == (int)cell->d ) {
+          val = true;
+        }
+        else {
+          val = false;
+        }
+        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+      }
+      else if (!strcmp((char *)cell->str, "error")) { // formula is in error
+        val = "*error*";
+        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+      }
+      else { // ... cell->str is valid as the result of a string formula.
+        val = QString( "%1" ).arg( (char*)cell->str );
+        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
+      }
+    }
+  }
+
+  // Deal with booleans
+  //-------------------
+  // XLS_RECORD_BOOLERR = 0x0205
+  else if( XLS_RECORD_BOOLERR == cell->id ) {
+    if( 0 == (int)cell->d ) {
+      val = false;
+    }
+    else {
+      val = true;
+    }
+  }
+
+
+  // Deal with strings
+  //------------------
+  else if( NULL != cell->str ) {
+     val = QString( "%1" ).arg( (char*)cell->str );
+     msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
+  }
+
+  // Deal with 'empty' cells
+  //------------------------
+  else {
+    msg.append( QString( "Row: CELLROW, Col: CELLCOL, (Empty cell)" ) );
+  }
+
+  msg.append( QString( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
+
+  return val;
 }
 
 
@@ -658,6 +731,37 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QSt
 }
 
 
+QVariantList CSpreadsheetWorkBook::rowFromSheetXls( const int rowIdx, const int sheetIdx ) {
+  QVariantList result;
+
+  // Open and parse the sheet
+  //=========================
+  xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( _pWB, sheetIdx );
+  xls::xls_parseWorkSheet( pWS );
+
+  // Process the indicated row
+  //==========================
+  xlsWORD cellRow, cellCol;
+  cellRow = rowIdx;
+
+  for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
+    xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
+
+    if( !cell || cell->isHidden ) {
+      continue;
+    }
+    else {
+      QString msg;
+      QVariant val = CSpreadsheet::processCellXls( cell, msg, this );
+
+      result.append( val );
+    }
+  }
+
+  return result;
+}
+
+
 QVariantList CSpreadsheetWorkBook::firstRowFromSheet( const int sheetIdx ) {
   return this->rowFromSheet( 0, sheetIdx );
 }
@@ -681,10 +785,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
       result = rowFromSheetXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ) );
       break;
     case Format97_2003:
-      // FIXME: Write this function.
-      qDebug() << "Format is not supported.";
-      Q_UNREACHABLE();
-      _errMsg = "Format is not supported.";
+      result = rowFromSheetXls( rowIdx, sheetIdx );
       break;
     default:
       Q_UNREACHABLE();
