@@ -285,7 +285,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
     }
 
     // Trim off trailing empty rows
-    while( CSV::isEmptyList( data.last() ) ) {
+    while( isEmptyStringList( data.last() ) ) {
       data.removeLast();
     }
 
