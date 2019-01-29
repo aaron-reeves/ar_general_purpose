@@ -97,6 +97,9 @@ class CReverseLookupMap {
         return forwardMap.count();
       }
 
+      QList<K> keys() const { return forwardMap.keys(); }
+      QList<T> values() const { return forwardMap.values(); }
+
       void debug() {
         int i;
         qDebug() << QString( "Forward:" );
