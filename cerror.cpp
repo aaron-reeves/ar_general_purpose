@@ -191,9 +191,9 @@ void CErrorList::append( CError err ) {
 
   if( _useAppLog ) {
     if( -1 == err.lineNumber() )
-      logMsg( QString( "??? LINE -1: %1" ).arg( err.msg() ), LoggingTypical );
+      logMsg( QString( "??? LINE -1: (%1) %2" ).arg( err.typeAsString() ).arg( err.msg() ), LoggingTypical );
     else
-      logMsg( QString( "Line %1: %2" ).arg( err.lineNumber() ).arg( err.msg() ), LoggingTypical );
+      logMsg( QString( "Line %1: (%2) %3" ).arg( err.lineNumber() ).arg( err.typeAsString() ).arg( err.msg() ), LoggingTypical );
   }
 }
 
