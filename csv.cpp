@@ -481,18 +481,25 @@ void QCsv::debug( int nLines /* = 0 */ ) {
   qDebug() << "numFields:" << this->fieldCount();
   qDebug() << "numFieldNames:" << this->fieldNames().count();
   qDebug() << "numRows:" << this->rowCount();
+  qDebug() << "error code:" << this->error();
+  qDebug() << "error message:" << this->errorMsg();
 
   qDebug() << this->fieldNames().join( _delimiter ).prepend( "  " );
 
-  if( LineByLine == _mode )
-    qDebug() << "(There is nothing to display)";
-  else {
-    if( (1 > nLines) || ( _data.count() < nLines ) )
-      nLines = _data.count();
+  if( this->rowCount() > 0 ) {
+    if( LineByLine == _mode )
+      qDebug() << "(There is nothing to display)";
+    else {
+      if( (1 > nLines) || ( _data.count() < nLines ) )
+        nLines = _data.count();
 
-    for( int i = 0; i < nLines; ++i ) {
-      qDebug() << _data.at(i).join( _delimiter ).prepend( "  " );
+      for( int i = 0; i < nLines; ++i ) {
+        qDebug() << _data.at(i).join( _delimiter ).prepend( "  " );
+      }
     }
+  }
+  else {
+    qDebug() << "(Nothing can be displayed)";
   }
 }
 
