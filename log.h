@@ -75,6 +75,8 @@ class CAppLog {
     void setUseStderr( const bool& val ) { _useStderr = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
+
+    void cout();
     
     void logMessage( const QString& message, const int logLevel ); 
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }

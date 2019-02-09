@@ -211,6 +211,13 @@ void CAppLog::closeLog( void ) {
 }
 
 
+void CAppLog::cout() {
+  for( int i = 0; i < this->_pending->count(); ++i ) {
+    ::cout << _pending->at(i)->_msg << endl << ::flush;
+  }
+}
+
+
 // Keep the last 3000 lines of the file, and eliminate the rest.
 void CAppLog::truncateLogFile( void ) {
   QStringList list;
@@ -265,7 +272,7 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
   }
 
   if( _consoleEcho ) {
-    cout << message << endl << ::flush;
+    ::cout << message << endl << ::flush;
   }
   
   if( LoggingPending == _logLevel ) {
