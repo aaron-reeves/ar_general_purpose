@@ -18,6 +18,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <ar_general_purpose/strutils.h>
 #include <ar_general_purpose/qcout.h>
+#include <ar_general_purpose/filemagic.h>
 
 typedef uint16_t xlsWORD;
 
@@ -156,6 +157,43 @@ void CSpreadsheet::debug( const int padding /* = 10 */) const {
   }
 
   qDebug();
+}
+
+
+QVariant CSpreadsheet::cellValue(const QString& cellLabel ) const {
+  QString col, row;
+  int c, r;
+
+  if( cellLabel.at(1).isLetter() ) {
+    col = cellLabel.left( 2 ).toUpper();
+    row = cellLabel.right( cellLabel.length() - 2 );
+  }
+  else {
+    col = cellLabel.left( 1 ).toUpper();
+    row = cellLabel.right( cellLabel.length() - 1 );
+  }
+
+  r = row.toInt() - 1;
+
+  // Remember: A = 65, Z = 90
+  // This class expects columns to be 0-indexed, so column A is column 0.
+  if( 1 == col.length() ) {
+    c = col.at(0).unicode() - 65;
+  }
+  else {
+    c = ( 26 * (col.at(0).unicode() - 64 ) ) + ( col.at(1).unicode() - 65 );
+  }
+
+  return this->cellValue( c, r );
+}
+
+
+bool CSpreadsheet::compareCell( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
+  return( 0 == this->cellValue( c, r ).toString().trimmed().compare( str, caseSens ) );
+}
+
+bool CSpreadsheet::compareCell( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
+  return( 0 == this->cellValue( cellLabel ).toString().trimmed().compare( str, caseSens ) );
 }
 
 
@@ -570,6 +608,18 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
+  openWorkbook( fileFormat, fileName, displayVerboseOutput );
+}
+
+
+CSpreadsheetWorkBook::CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
+  SpreadsheetFileFormat fileFormat = guessFileFormat( fileName );
+
+  openWorkbook( fileFormat, fileName, displayVerboseOutput );
+}
+
+
+void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput ) {
   _srcFileName = fileName;
   _fileFormat = fileFormat;
   _displayVerboseOutput = displayVerboseOutput;
@@ -584,10 +634,46 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
       _ok = openXlsxWorkbook();
       break;
     default:
-      Q_UNREACHABLE();
+      _errMsg = "Spreadsheet file format cannot be determined.";
       _ok = false;
       break;
   }
+}
+
+
+CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat( const QString& fileName ) {
+  SpreadsheetFileFormat fileFormat = FormatUnknown;
+  bool error;
+  QString fileType = magicFileTypeInfo( fileName, &error );
+  if( error ) {
+    _errMsg = "File type cannot be determined: there is a problem with the filemagic library.";
+    _ok = false;
+  }
+
+  // Excel (*.xls) files look like this to FileMagic
+  else if(
+    ( fileType.contains( "Composite Document File V2 Document" ) || fileType.contains( "CDF V2 Document" ) )
+  &&
+    fileType.contains( "Microsoft Excel" )
+  ) {
+    fileFormat = Format97_2003;
+  }
+
+  // Excel (*.xlsx) files look like this to FileMagic
+  else if(
+    ( fileType.startsWith( "Zip archive data" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+    // || ( fileType.startsWith( "Zip archive data" ) && fileName.endsWith( ".xls", Qt::CaseInsensitive ) ) // I think this was a mistake...
+    || ( 0 == fileType.compare( "Microsoft Excel 2007+" ) )
+    || ( fileType.contains( "Microsoft OOXML" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+  ) {
+    fileFormat = Format2007;
+  }
+  else {
+    _errMsg = "File type cannot be matched: the filemagic library returned an unrecognized type.";
+    _ok = false;
+  }
+
+  return fileFormat;
 }
 
 

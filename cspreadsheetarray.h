@@ -67,6 +67,12 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     ~CSpreadsheet();
 
+    QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
+    QVariant cellValue( const QString& cellLabel ) const;
+
+    bool compareCell( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+    bool compareCell( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber );
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
@@ -85,7 +91,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     void assign( const CSpreadsheet& other );
 
-    static QVariant processCellXls( xls::xlsCell* cell, QString& msg, CSpreadsheetWorkBook* wb );
+    static QVariant processCellXls( xls::xlsCell* cellValue, QString& msg, CSpreadsheetWorkBook* wb );
 
     // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
     static QDate xlsDate( const int val, const bool is1904DateSystem );
@@ -103,6 +109,7 @@ class CSpreadsheetWorkBook {
     };
 
     CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput = false );
+    CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput = false );
     ~CSpreadsheetWorkBook();
 
     bool readSheet( const int sheetIdx );
@@ -113,8 +120,9 @@ class CSpreadsheetWorkBook {
     QVariantList rowFromSheet( const int rowIdx, const int sheetIdx );
 
     bool error() const { return !_ok; }
-    QString erroMessage() const { return _errMsg; }
+    QString errorMessage() const { return _errMsg; }
 
+    int sheetCount() const { return _sheets.count(); }
     bool hasSheet( const int idx );
     bool hasSheet( const QString& sheetName );
     int sheetIndex( const QString& sheetName );
@@ -128,6 +136,9 @@ class CSpreadsheetWorkBook {
     bool isXlsDateTime( const int xf, const double d );
 
   protected:
+    void openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput );
+    SpreadsheetFileFormat guessFileFormat( const QString& fileName );
+
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
 
