@@ -476,13 +476,19 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
     for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
+
       xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
 
-      if( !cell || cell->isHidden ) {
-        qDebug() << "Hidden cell";
+      if( !cell ) {
+        //qDebug() << cellRow << cellCol << "Cell not read";
+        continue;
+      }
+      else if( cell->isHidden ) {
+        //qDebug() << cellRow << cellCol << "Hidden cell";
         continue;
       }
       else {
+        //qDebug() << "In this loop...";
         QString msg;
 
         QVariant val = processCellXls( cell, msg, _wb );
@@ -645,17 +651,16 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
   SpreadsheetFileFormat fileFormat = FormatUnknown;
   bool error;
   QString fileType = magicFileTypeInfo( fileName, &error );
+
+  qDebug() << fileType;
+
   if( error ) {
     _errMsg = "File type cannot be determined: there is a problem with the filemagic library.";
     _ok = false;
   }
 
   // Excel (*.xls) files look like this to FileMagic
-  else if(
-    ( fileType.contains( "Composite Document File V2 Document" ) || fileType.contains( "CDF V2 Document" ) )
-  &&
-    fileType.contains( "Microsoft Excel" )
-  ) {
+  else if( fileType.contains( "Composite Document File V2 Document" ) || fileType.contains( "CDF V2 Document" ) ) {
     fileFormat = Format97_2003;
   }
 
