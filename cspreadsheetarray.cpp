@@ -24,22 +24,28 @@ typedef uint16_t xlsWORD;
 
 CSpreadsheetCell::CSpreadsheetCell() {
   // _value is initialized by default
-  _colSpan = 0;
-  _rowSpan = 0;
+  _colSpan = 1;
+  _rowSpan = 1;
+  _isPartOfMergedRow = false;
+  _isPartOfMergedCol = false;
 }
 
 
 CSpreadsheetCell::CSpreadsheetCell( const QVariant val ) {
   _value = val;
-  _colSpan = 0;
-  _rowSpan = 0;
+  _colSpan = 1;
+  _rowSpan = 1;
+  _isPartOfMergedRow = false;
+  _isPartOfMergedCol = false;
 }
 
 
 CSpreadsheetCell::CSpreadsheetCell( const QVariant val, const int colSpan, const int rowSpan ) {
   _value = val;
-  _colSpan = colSpan;
-  _rowSpan = rowSpan;
+  _colSpan = qMax( colSpan, 1 );
+  _rowSpan = qMax( rowSpan, 1 );
+  _isPartOfMergedRow = ( 1 < _colSpan );
+  _isPartOfMergedCol = ( 1 < _rowSpan );
 }
 
 
@@ -64,6 +70,8 @@ void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
   _value = other._value;
   _colSpan = other._colSpan;
   _rowSpan = other._rowSpan;
+  _isPartOfMergedRow = other._isPartOfMergedRow;
+  _isPartOfMergedCol = other._isPartOfMergedCol;
 }
 
 
@@ -114,7 +122,7 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheet
 
 void CSpreadsheet::initialize() {
   _wb = NULL;
-  _hasMergedCells = false;
+  _hasSpannedCells = false;
 }
 
 
@@ -139,7 +147,7 @@ CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
 
 void CSpreadsheet::assign( const CSpreadsheet& other ) {
   _wb = other._wb;
-  _hasMergedCells = other._hasMergedCells;
+  _hasSpannedCells = other._hasSpannedCells;
 }
 
 
@@ -207,7 +215,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   //    b) Every value in the first row should be a string(?)
   //    c) For all subsequent rows, there cannot be more columns than in the header row.
 
-  if( this->_hasMergedCells ) {
+  if( this->_hasSpannedCells ) {
     result = false;
   }
   else if( containsHeaderRow ) {
@@ -458,6 +466,10 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
     }
   }
 
+  if( _hasSpannedCells ) {
+    flagMergedCells();
+  }
+
   return true;
 }
 
@@ -497,7 +509,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         this->setValue( cellCol, cellRow, ssCell );
 
         // Make a note if the cell is merged.
-        _hasMergedCells = ( _hasMergedCells || ssCell.isMerged() );
+        _hasSpannedCells = ( _hasSpannedCells || ssCell.hasSpan() );
 
         if( displayVerboseOutput ) {
           msg.replace( "CELLCOL", QString::number( cellCol ), Qt::CaseSensitive );
@@ -506,6 +518,10 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         }
       }
     }
+  }
+
+  if( _hasSpannedCells ) {
+    flagMergedCells();
   }
 
   return true;
@@ -613,6 +629,169 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
 
 
 
+void CSpreadsheet::flagMergedCells() {
+  // Cells that span multiple columns are part of a merged ROW.
+  // Cells that span multiple rows are part of a merged COLUMN.
+
+  int firstCol, lastCol, firstRow, lastRow;
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    for( int r = 0; r < this->nRows(); ++r ) {
+
+      if( this->cell(c, r).hasSpan() ) {
+        firstCol = c;
+        lastCol = firstCol + this->cell( c, r ).colSpan();
+        firstRow = r;
+        lastRow = firstRow + this->cell( c, r ).rowSpan();
+
+        for( int cc = firstCol; cc < lastCol; ++cc ) {
+          for( int rr = firstRow; rr < lastRow; ++rr ) {
+            if( this->cell(c, r).hasColSpan() ) {
+              this->at( cc, rr )._isPartOfMergedRow = true;
+            }
+
+            if( this->cell(c, r).hasRowSpan() ) {
+              this->at( cc, rr )._isPartOfMergedCol = true;
+            }
+          }
+        }
+
+      }
+
+    }
+  }
+}
+
+
+void CSpreadsheet::debugMerges() {
+  for( int c = 0; c < this->nCols(); ++c ) {
+    for( int r = 0; r < this->nRows(); ++r ) {
+      qDebug() << "C" << c << "R" << r
+               << "MergeC" << this->at( c, r ).isPartOfMergedCol() << "MergeR" << this->at( c, r ).isPartOfMergedRow()
+               << "ColSpan" << this->at( c, r ).colSpan() << "RowSpan" << this->at( c, r ).rowSpan()
+               << "Value" << this->at( c, r ).value().toString(); // << "OrigC" << this->at( c, r )._originCol << "OrigR" << this->at( c, r )._originRow;
+    }
+  }
+}
+
+
+void CSpreadsheet::unmergeRows() {
+//  // Look for cells that are SPAN MULTIPLE COLUMNS, and duplicate their values across all rows.
+//  for( int c = 0; c < this->nCols(); ++c ) {
+//    for( int r = 0; r < this->nRows(); ++r ) {
+
+//      if( this->cell(c, r).hasColSpan() ) {
+//        int firstCol = c;
+//        int lastCol = firstCol + this->cell( c, r ).colSpan();
+//        for( int cc = firstCol; cc < lastCol; ++cc ) {
+//          this->at( cc, r )._value = this->at( c, r ).value();
+//          this->at( cc, r )._colSpan = 1;
+//          this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // This should be unchanged here!
+//          this->at( cc, r )._isPartOfMergedRow = false;
+//        }
+//      }
+
+//    }
+//  }
+
+  int firstCol, lastCol, firstRow, lastRow;
+
+  // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
+  for( int c = 0; c < this->nCols(); ++c ) {
+    for( int r = 0; r < this->nRows(); ++r ) {
+
+      if( this->cell(c, r).hasSpan() ) {
+        firstCol = c;
+        lastCol = firstCol + this->cell( c, r ).colSpan();
+        firstRow = r;
+        lastRow = firstRow + this->cell( c, r ).rowSpan();
+
+        if( this->cell(c, r).hasColSpan() ) {
+          for( int cc = firstCol; cc < lastCol; ++cc ) {
+            for( int rr = firstRow; rr < lastRow; ++rr ) {
+              this->at( cc, r )._value = this->at( c, r ).value();
+              this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // Should be same rowspan as parent row
+              this->at( cc, rr )._colSpan = 1;
+              this->at( cc, rr )._isPartOfMergedRow = false;
+            }
+          }
+        }
+      }
+
+    }
+  }
+}
+
+
+
+void CSpreadsheet::unmergeColumns() {
+  int firstCol, lastCol, firstRow, lastRow;
+
+  // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
+  for( int c = 0; c < this->nCols(); ++c ) {
+    for( int r = 0; r < this->nRows(); ++r ) {
+
+      if( this->cell(c, r).hasSpan() ) {
+        firstCol = c;
+        lastCol = firstCol + this->cell( c, r ).colSpan();
+        firstRow = r;
+        lastRow = firstRow + this->cell( c, r ).rowSpan();
+
+        if( this->cell(c, r).hasRowSpan() ) {
+          for( int cc = firstCol; cc < lastCol; ++cc ) {
+            for( int rr = firstRow; rr < lastRow; ++rr ) {
+              this->at( c, rr )._value = this->at( c, r ).value();
+              this->at( c, rr )._colSpan = this->at( c, r ).colSpan(); // Should be same colspan as parent row
+              this->at( cc, rr )._rowSpan = 1;
+              this->at( cc, rr )._isPartOfMergedCol = false;
+            }
+          }
+        }
+      }
+
+    }
+  }
+}
+
+
+void CSpreadsheet::unmergeColumnsAndRows() {
+  unmergeRows();
+  unmergeColumns();
+}
+
+
+void CSpreadsheet::unmergeCell( const int c, const int r ) {
+  int originC = c;
+  int originR = r;
+
+  if( this->cell( c, r ).isPartOfMergedRange() ) {
+    qDebug() << "Is merged range.";
+
+    // What is the first cell column in the range?
+    if( this->cell( originC, originR ).isPartOfMergedRow() ) {
+      qDebug() << originC << originR << "Is merged row.";
+      while( !this->cell( originC, originR ).hasColSpan() ) {
+        --originC;
+      }
+    }
+
+    // What is the first cell row in the range?
+    if( this->cell( originC, originR ).isPartOfMergedCol() ) {
+      qDebug() << originC << originR << "Is merged col.";
+      while( !this->cell( originC, originR ).hasRowSpan() ) {
+        --originR;
+      }
+    }
+  }
+  else {
+    qDebug() << "Not part of merged range.";
+  }
+
+  qDebug() << originR << originC;
+  qDebug() << "Cell at row" << r << "column " << c << "had origin value of:" << this->cellValue( originC, originR ).toString();
+}
+
+
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
   openWorkbook( fileFormat, fileName, displayVerboseOutput );
 }
@@ -652,7 +831,7 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
   bool error;
   QString fileType = magicFileTypeInfo( fileName, &error );
 
-  qDebug() << fileType;
+  //qDebug() << fileType;
 
   if( error ) {
     _errMsg = "File type cannot be determined: there is a problem with the filemagic library.";

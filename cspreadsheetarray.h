@@ -29,6 +29,7 @@ class CSpreadsheetWorkBook;
 
 
 class CSpreadsheetCell {
+  friend class CSpreadsheet;
   public:
     CSpreadsheetCell();
     CSpreadsheetCell( const QVariant val );
@@ -37,10 +38,25 @@ class CSpreadsheetCell {
     CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
     ~CSpreadsheetCell();
 
+    bool isNull() const { return this->value().isNull(); }
+
     void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
-    bool hasSpan() const { return ( (0 != _colSpan) || (0 != _rowSpan) ); }
-    bool isMerged() const { return hasSpan(); }
+
+    // Only the first cell in a merged range will have a span.
+    // Other cells in the range will know that they are merged, but only the first cell knows the extent of the range.
+    bool hasRowSpan() const { return (1 < _rowSpan); }
+    bool hasColSpan() const { return (1 < _colSpan); }
+    bool hasSpan() const { return ( hasColSpan() || hasRowSpan() ); }
+
+    // Cells that span multiple rows are part of a merged COLUMN.
+    // Cells that span multiple columns are part of a merged ROW.
+    bool isPartOfMergedRow() { return _isPartOfMergedRow; }
+    bool isPartOfMergedCol() { return _isPartOfMergedCol; }
+    bool isPartOfMergedRange() { return ( isPartOfMergedCol() || isPartOfMergedRow() ); }
+
     const QXlsx::CellRange mergedRange( const int col, const int row ) const;
+    int colSpan() const { return _colSpan; }
+    int rowSpan() const { return _rowSpan; }
 
     void setValue( QVariant value ) { _value = value; }
     const QVariant value() const { return _value; }
@@ -51,6 +67,12 @@ class CSpreadsheetCell {
     QVariant _value;
     int _colSpan;
     int _rowSpan;
+
+    // When cells are merged, all but the first cell in the range will appear to be empty.
+    // Other cells have no knowledge that they are actually merged, unless these flags are set.
+    // When these flags are set, then it's possible to work backward to the first cell in the range.
+    bool _isPartOfMergedRow;
+    bool _isPartOfMergedCol;
 };
 
 
@@ -67,6 +89,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     ~CSpreadsheet();
 
+    CSpreadsheetCell cell( const int c, const int r ) const { return this->value( c, r ); }
     QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
     QVariant cellValue( const QString& cellLabel ) const;
 
@@ -81,13 +104,20 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
+    void unmergeColumns();
+    void unmergeRows();
+    void unmergeColumnsAndRows();
+    void unmergeCell( const int c, const int r );
+
     void debug( const int padding = 10 ) const;
+    void debugMerges();
 
   protected:
     void initialize();
+    void flagMergedCells();
 
     CSpreadsheetWorkBook* _wb;
-    bool _hasMergedCells;
+    bool _hasSpannedCells;
 
     void assign( const CSpreadsheet& other );
 
