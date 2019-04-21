@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 */
 //-----------------------------------------------------------------------------
 
-#include <qhash.h>
+#include <qmap.h>
 
 template <class K, class T>
 class CLookup {
@@ -60,64 +60,64 @@ class CLookup {
       }
 
       inline void insert( const K& key, const T& value ) {
-        _forwardHash.insert( key, value );
-        _reverseHash.insert( value, key );
+        _forwardMap.insert( key, value );
+        _reverseMap.insert( value, key );
       }
 
       inline T retrieveValue( const K& key ) const {
-        return _forwardHash.find( key ).value();
+        return _forwardMap.find( key ).value();
       }
 
       inline K retrieveKey( const T& value ) {
-        return _reverseHash.find( value ).value();
+        return _reverseMap.find( value ).value();
       }
 
       inline bool containsValue( const T& value ) const {
-        return _reverseHash.contains( value );
+        return _reverseMap.contains( value );
       }
 
       inline bool containsKey( const K& key ) const {
-        return _forwardHash.contains( key );
+        return _forwardMap.contains( key );
       }
 
       inline T valueAtIndex( const int i ) const {
-        return _forwardHash.values().at(i);
+        return _forwardMap.values().at(i);
       }
 
       inline K keyAtIndex( const int i ) const {
-        return _forwardHash.keys().at(i);
+        return _forwardMap.keys().at(i);
       }
 
       void clear( void ) {
-        _forwardHash.clear();
-        _reverseHash.clear();
+        _forwardMap.clear();
+        _reverseMap.clear();
       }
 
       int count( void ) const {
-        return _forwardHash.count();
+        return _forwardMap.count();
       }
 
-      QList<K> keys() const { return _forwardHash.keys(); }
-      QList<T> values() const { return _forwardHash.values(); }
+      QList<K> keys() const { return _forwardMap.keys(); }
+      QList<T> values() const { return _forwardMap.values(); }
 
       void debug() {
         int i;
         qDebug() << QString( "Forward:" );
-        for( i = 0; i < _forwardHash.count(); ++i )
-          qDebug() << "  " << _forwardHash.keys().at(i) << _forwardHash.values().at(i);
+        for( i = 0; i < _forwardMap.count(); ++i )
+          qDebug() << "  " << _forwardMap.keys().at(i) << _forwardMap.values().at(i);
         qDebug() << "Backward:";
-        for( i = 0; i < _reverseHash.count(); ++i )
-          qDebug() << "  " << _reverseHash.keys().at(i) << _reverseHash.values().at(i);
+        for( i = 0; i < _reverseMap.count(); ++i )
+          qDebug() << "  " << _reverseMap.keys().at(i) << _reverseMap.values().at(i);
       }
 
     protected:
       void assign( const CLookup& other ) {
-        _forwardHash = other._forwardHash;
-        _reverseHash = other._reverseHash;
+        _forwardMap = other._forwardMap;
+        _reverseMap = other._reverseMap;
       }
 
-      QHash<K, T> _forwardHash;
-      QHash<T, K> _reverseHash;
+      QMap<K, T> _forwardMap;
+      QMap<T, K> _reverseMap;
 };
 
 #endif // CLOOKUP_H
