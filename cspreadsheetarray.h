@@ -39,8 +39,10 @@ class CSpreadsheetCell {
     ~CSpreadsheetCell();
 
     bool isNull() const { return this->value().isNull(); }
+    bool isEmpty() const { return ( this->isNull() || ( (QVariant::String == this->value().type()) && ( this->value().toString().isEmpty() ) ) ); }
 
-    void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
+    // FIXME: Move this functionality to CSpreadsheet, so that _originCell can be set.
+    //void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
 
     // Only the first cell in a merged range will have a span.
     // Other cells in the range will know that they are merged, but only the first cell knows the extent of the range.
@@ -61,6 +63,8 @@ class CSpreadsheetCell {
     void setValue( QVariant value ) { _value = value; }
     const QVariant value() const { return _value; }
 
+    void debug();
+
   protected:
     void assign( const CSpreadsheetCell& other );
 
@@ -73,6 +77,13 @@ class CSpreadsheetCell {
     // When these flags are set, then it's possible to work backward to the first cell in the range.
     bool _isPartOfMergedRow;
     bool _isPartOfMergedCol;
+
+    // The "origin" cell knows which other cells are merged with it, but it's not easy to get from a merged cell back to its "origin".
+    // That's what this pointer is for.
+    // It will be set by CSpreadsheet.flagMergedCells() and changed as needed by other CSpreadsheet merge/unmerge functions.
+    CSpreadsheetCell* _originCell;
+
+    QSet<CSpreadsheetCell*> _linkedCells;
 };
 
 
@@ -89,12 +100,14 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     ~CSpreadsheet();
 
-    CSpreadsheetCell cell( const int c, const int r ) const { return this->value( c, r ); }
+    CSpreadsheetCell& cell( const int c, const int r ) { return this->value( c, r ); }
+    const CSpreadsheetCell& cell( const int c, const int r ) const { return this->value( c, r ); }
+
     QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
     QVariant cellValue( const QString& cellLabel ) const;
 
-    bool compareCell( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
-    bool compareCell( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+    bool compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+    bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
 
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber );
@@ -104,10 +117,21 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
-    void unmergeColumns();
-    void unmergeRows();
-    void unmergeColumnsAndRows();
-    void unmergeCell( const int c, const int r );
+    void unmergeColumns( const bool duplicateValues );
+    void unmergeRows( const bool duplicateValues );
+    void unmergeColumnsAndRows( const bool duplicateValues );
+    void unmergeCell( const int c, const int r, const bool duplicateValues );
+    void unmergeCellsInRow( const int r, const bool duplicateValues );
+
+    bool columnIsEmpty( const int c, const bool excludeHeaderRow = false );
+    bool rowIsEmpty( const int r );
+    bool hasEmptyColumns( const bool excludeHeaderRow = false );
+    bool hasEmptyRows();
+    void removeEmptyColumns( const bool excludeHeaderRow = false );
+    void removeEmptyRows();
+
+    void appendRow( const QVariantList& values );
+    void appendRow( const QStringList& values );
 
     void debug( const int padding = 10 ) const;
     void debugMerges();

@@ -28,6 +28,7 @@ CSpreadsheetCell::CSpreadsheetCell() {
   _rowSpan = 1;
   _isPartOfMergedRow = false;
   _isPartOfMergedCol = false;
+  _originCell = NULL;
 }
 
 
@@ -37,6 +38,7 @@ CSpreadsheetCell::CSpreadsheetCell( const QVariant val ) {
   _rowSpan = 1;
   _isPartOfMergedRow = false;
   _isPartOfMergedCol = false;
+  _originCell = NULL;
 }
 
 
@@ -46,6 +48,7 @@ CSpreadsheetCell::CSpreadsheetCell( const QVariant val, const int colSpan, const
   _rowSpan = qMax( rowSpan, 1 );
   _isPartOfMergedRow = ( 1 < _colSpan );
   _isPartOfMergedCol = ( 1 < _rowSpan );
+  _originCell = NULL;
 }
 
 
@@ -72,6 +75,10 @@ void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
   _rowSpan = other._rowSpan;
   _isPartOfMergedRow = other._isPartOfMergedRow;
   _isPartOfMergedCol = other._isPartOfMergedCol;
+  _originCell = other._originCell;
+
+  // FIXME: Is this right?
+  _linkedCells = other._linkedCells;
 }
 
 
@@ -85,6 +92,21 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
   result.setLastRow( row + _rowSpan );
 
   return result;
+}
+
+void CSpreadsheetCell::debug() {
+  QString originStr;
+
+  if( NULL != this->_originCell ) {
+    originStr = this->_originCell->value().toString();
+  }
+
+  qDebug() /*<< "C" << c << "R" << r*/ << QString::number( qlonglong( this ), 16 )
+           << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
+           << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
+           << "Value" << this->value().toString()
+           << "nLinked" << this->_linkedCells.count()
+           << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
 }
 
 
@@ -196,11 +218,11 @@ QVariant CSpreadsheet::cellValue(const QString& cellLabel ) const {
 }
 
 
-bool CSpreadsheet::compareCell( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
+bool CSpreadsheet::compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
   return( 0 == this->cellValue( c, r ).toString().trimmed().compare( str, caseSens ) );
 }
 
-bool CSpreadsheet::compareCell( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
+bool CSpreadsheet::compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
   return( 0 == this->cellValue( cellLabel ).toString().trimmed().compare( str, caseSens ) );
 }
 
@@ -532,7 +554,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   QVariant val;
 
   // Display the value of the cell (either numeric or string)
-  //========================================================
+  //=========================================================
 
   // Deal with numbers
   //------------------
@@ -648,14 +670,28 @@ void CSpreadsheet::flagMergedCells() {
           for( int rr = firstRow; rr < lastRow; ++rr ) {
             if( this->cell(c, r).hasColSpan() ) {
               this->at( cc, rr )._isPartOfMergedRow = true;
+              this->at( cc, rr )._originCell = &(this->at( c, r ));
+
+              // Add this cell to _originCell's collection
+              this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
             }
 
             if( this->cell(c, r).hasRowSpan() ) {
               this->at( cc, rr )._isPartOfMergedCol = true;
+              this->at( cc, rr )._originCell = &(this->at( c, r ));
+
+              // Add this cell to _originCell's collection
+              this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
             }
           }
         }
 
+      }
+
+      if( this->at( c, r )._originCell == &(this->at( c, r ) ) ) {
+        // Remove this cell from _originCell's collection
+        this->at( c, r )._originCell->_linkedCells.remove( &(this->at( c, r ) ) );
+        this->at( c, r )._originCell = NULL;
       }
 
     }
@@ -666,34 +702,24 @@ void CSpreadsheet::flagMergedCells() {
 void CSpreadsheet::debugMerges() {
   for( int c = 0; c < this->nCols(); ++c ) {
     for( int r = 0; r < this->nRows(); ++r ) {
-      qDebug() << "C" << c << "R" << r
+      QString originStr;
+
+      if( NULL != this->at( c, r )._originCell ) {
+        originStr = this->at( c, r )._originCell->value().toString();
+      }
+
+      qDebug() << "C" << c << "R" << r << QString::number( qlonglong( &(this->at( c, r ) ) ), 16 )
                << "MergeC" << this->at( c, r ).isPartOfMergedCol() << "MergeR" << this->at( c, r ).isPartOfMergedRow()
                << "ColSpan" << this->at( c, r ).colSpan() << "RowSpan" << this->at( c, r ).rowSpan()
-               << "Value" << this->at( c, r ).value().toString(); // << "OrigC" << this->at( c, r )._originCol << "OrigR" << this->at( c, r )._originRow;
+               << "Value" << this->at( c, r ).value().toString()
+               << "nLinked" << this->at( c, r )._linkedCells.count()
+               << "OrigC" << QString::number( qlonglong( this->at( c, r )._originCell ), 16 ) << "OrigCVal" << originStr;
     }
   }
 }
 
 
-void CSpreadsheet::unmergeRows() {
-//  // Look for cells that are SPAN MULTIPLE COLUMNS, and duplicate their values across all rows.
-//  for( int c = 0; c < this->nCols(); ++c ) {
-//    for( int r = 0; r < this->nRows(); ++r ) {
-
-//      if( this->cell(c, r).hasColSpan() ) {
-//        int firstCol = c;
-//        int lastCol = firstCol + this->cell( c, r ).colSpan();
-//        for( int cc = firstCol; cc < lastCol; ++cc ) {
-//          this->at( cc, r )._value = this->at( c, r ).value();
-//          this->at( cc, r )._colSpan = 1;
-//          this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // This should be unchanged here!
-//          this->at( cc, r )._isPartOfMergedRow = false;
-//        }
-//      }
-
-//    }
-//  }
-
+void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
   int firstCol, lastCol, firstRow, lastRow;
 
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
@@ -707,12 +733,36 @@ void CSpreadsheet::unmergeRows() {
         lastRow = firstRow + this->cell( c, r ).rowSpan();
 
         if( this->cell(c, r).hasColSpan() ) {
+          //qDebug() << "Unmerging row at" << c << r;
+          //this->at( c, r ).debug();
+
           for( int cc = firstCol; cc < lastCol; ++cc ) {
             for( int rr = firstRow; rr < lastRow; ++rr ) {
-              this->at( cc, r )._value = this->at( c, r ).value();
+              //qDebug() << "cc rr" << cc << rr;
+
+              if( c != cc ) {
+                if( duplicateValues )
+                  this->at( cc, r )._value = this->at( c, r ).value();
+                else
+                  this->at( cc, r )._value = QVariant();
+              }
+
               this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // Should be same rowspan as parent row
               this->at( cc, rr )._colSpan = 1;
               this->at( cc, rr )._isPartOfMergedRow = false;
+
+              if( rr == firstRow ) {
+                // Remove this cell from _originCell's collection
+                if( NULL != this->at( cc, rr )._originCell ) {
+                  this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
+                  this->at( cc, rr )._originCell = NULL;
+                }
+              }
+              else {
+                this->at( cc, rr )._originCell = &(this->at( cc, r ));
+                // Add this cell to _originCell's collection
+                this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr )) );
+              }
             }
           }
         }
@@ -724,7 +774,7 @@ void CSpreadsheet::unmergeRows() {
 
 
 
-void CSpreadsheet::unmergeColumns() {
+void CSpreadsheet::unmergeColumns( const bool duplicateValues ) {
   int firstCol, lastCol, firstRow, lastRow;
 
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
@@ -740,10 +790,31 @@ void CSpreadsheet::unmergeColumns() {
         if( this->cell(c, r).hasRowSpan() ) {
           for( int cc = firstCol; cc < lastCol; ++cc ) {
             for( int rr = firstRow; rr < lastRow; ++rr ) {
-              this->at( c, rr )._value = this->at( c, r ).value();
+
+              if( rr != r ) {
+                if( duplicateValues )
+                  this->at( c, rr )._value = this->at( c, r ).value();
+                else
+                  this->at( c, rr )._value = QVariant();
+              }
+
               this->at( c, rr )._colSpan = this->at( c, r ).colSpan(); // Should be same colspan as parent row
               this->at( cc, rr )._rowSpan = 1;
               this->at( cc, rr )._isPartOfMergedCol = false;
+
+              if( cc == firstCol ) {
+                // Remove this cell from _originCell's collection
+                if( NULL != this->at( cc, rr )._originCell ) {
+                  this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
+                  this->at( cc, rr )._originCell = NULL;
+                }
+              }
+              else {
+                // Add this cell to _originCell's collection
+                this->at( cc, rr )._originCell = &(this->at( c, rr ));
+                this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr )) );
+              }
+
             }
           }
         }
@@ -754,41 +825,163 @@ void CSpreadsheet::unmergeColumns() {
 }
 
 
-void CSpreadsheet::unmergeColumnsAndRows() {
-  unmergeRows();
-  unmergeColumns();
+void CSpreadsheet::unmergeColumnsAndRows( const bool duplicateValues ) {
+  unmergeRows( duplicateValues );
+  unmergeColumns( duplicateValues );
 }
 
 
-void CSpreadsheet::unmergeCell( const int c, const int r ) {
-  int originC = c;
-  int originR = r;
+void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateValues ) {
+  // This should unmerge every linked cell.
+  CSpreadsheetCell* parentCell;
 
-  if( this->cell( c, r ).isPartOfMergedRange() ) {
-    qDebug() << "Is merged range.";
+  if( NULL == this->at( c, r )._originCell )
+    parentCell = &( this->at( c, r ) );
+  else
+    parentCell = this->at( c, r )._originCell;
 
-    // What is the first cell column in the range?
-    if( this->cell( originC, originR ).isPartOfMergedRow() ) {
-      qDebug() << originC << originR << "Is merged row.";
-      while( !this->cell( originC, originR ).hasColSpan() ) {
-        --originC;
-      }
+  foreach( CSpreadsheetCell* cell, parentCell->_linkedCells ) {
+    if( cell != parentCell ) {
+      if( duplicateValues )
+        cell->_value = parentCell->value();
+      else
+        cell->_value = QVariant();
     }
 
-    // What is the first cell row in the range?
-    if( this->cell( originC, originR ).isPartOfMergedCol() ) {
-      qDebug() << originC << originR << "Is merged col.";
-      while( !this->cell( originC, originR ).hasRowSpan() ) {
-        --originR;
-      }
-    }
-  }
-  else {
-    qDebug() << "Not part of merged range.";
+    cell->_isPartOfMergedCol = false;
+    cell->_isPartOfMergedRow = false;
+    cell->_colSpan = 1;
+    cell->_rowSpan = 1;
+    cell->_originCell = NULL;
   }
 
-  qDebug() << originR << originC;
-  qDebug() << "Cell at row" << r << "column " << c << "had origin value of:" << this->cellValue( originC, originR ).toString();
+  parentCell->_isPartOfMergedCol = false;
+  parentCell->_isPartOfMergedRow = false;
+  parentCell->_colSpan = 1;
+  parentCell->_rowSpan = 1;
+  parentCell->_linkedCells.clear();
+}
+
+
+void CSpreadsheet::unmergeCellsInRow( const int r, const bool duplicateValues ) {
+  for( int c = 0; c < this->nCols(); ++c ) {
+    this->unmergeCell( c, r, duplicateValues );
+  }
+}
+
+
+bool CSpreadsheet::columnIsEmpty(const int c , const bool excludeHeaderRow /* = false */) {
+  bool result = true; // Until shown otherwise.
+
+  int firstRow;
+  if( excludeHeaderRow )
+    firstRow = 1;
+  else
+    firstRow = 0;
+
+  for( int r = firstRow; r < this->nRows(); ++r ) {
+    QVariant v = this->cellValue( c, r );
+    if( !v.isNull() || ( (QVariant::String == v.type()) && !(v.toString().isEmpty()) ) ) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::rowIsEmpty( const int r ) {
+  bool result = true; // Until shown otherwise.
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    QVariant v = this->cellValue( c, r );
+    if( !v.isNull() || ( (QVariant::String == v.type()) && !(v.toString().isEmpty()) ) ) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::hasEmptyColumns(const bool excludeHeaderRow /* = false */ ) {
+  bool result = false; // Until shown otherwise.
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    if( this->columnIsEmpty( c, excludeHeaderRow ) ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::hasEmptyRows() {
+  bool result = false; // Until shown otherwise.
+
+  for( int r = 0; r < this->nRows(); ++r ) {
+    if( this->rowIsEmpty( r ) ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+void CSpreadsheet::removeEmptyColumns(const bool excludeHeaderRow /* = false */ ) {
+  QList<int> emptyCols;
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    if( this->columnIsEmpty( c, excludeHeaderRow ) ) {
+      emptyCols.prepend( c );
+    }
+  }
+
+  for( int i = 0; i < emptyCols.count(); ++i ) {
+    this->removeColumn( emptyCols.at(i) );
+  }
+}
+
+
+void CSpreadsheet::removeEmptyRows() {
+  QList<int> emptyRows;
+
+  for( int r = 0; r < this->nCols(); ++r ) {
+    if( this->rowIsEmpty( r ) ) {
+      emptyRows.prepend( r );
+    }
+  }
+
+  for( int i = 0; i < emptyRows.count(); ++i ) {
+    this->removeColumn( emptyRows.at(i) );
+  }
+}
+
+void CSpreadsheet::appendRow(const QVariantList& values ) {
+  QVector<CSpreadsheetCell> cells( values.count() );
+
+  for( int i = 0; i < values.count(); ++i ) {
+    cells[i] = CSpreadsheetCell( values.at(i) );
+  }
+
+  CTwoDArray::appendRow( cells );
+}
+
+
+void CSpreadsheet::appendRow( const QStringList& values ) {
+  QVector<CSpreadsheetCell> cells( values.count() );
+
+  for( int i = 0; i < values.count(); ++i ) {
+    cells[i] = CSpreadsheetCell( values.at(i) );
+  }
+
+  CTwoDArray::appendRow( cells );
 }
 
 
