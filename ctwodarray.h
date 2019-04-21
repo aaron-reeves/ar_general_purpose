@@ -34,10 +34,23 @@ class CTwoDArray {
     void setSize( const int nCols, const int nRows, const T defaultVal ); // This currently assumes that the object is empty.
     void fill( const T val ); // Will overwrite existing data
     void fillRow( const int rowIdx, const T val ); // Will overwrite existing data
+
     void appendRow();
     void appendRow( const T defaultVal );
     void appendRow( const QString& rowName );
     void appendRow(  const QString& rowName, const T defaultVal );
+
+    void appendRow(const QVector<T>& values );
+    void appendRow( const QString& rowName, const QVector<T>& values );
+    void appendRow(const QList<T>& values );
+    void appendRow( const QString& rowName, const QList<T>& values );
+
+
+    void removeRow( const int rowIdx );
+    void removeRow( const QString& rowName );
+
+    void removeColumn( const int colIdx );
+    void removeColumn( const QString& colName );
 
     // Basic setter and getters
     //-------------------------

@@ -205,6 +205,120 @@ void CTwoDArray<T>::appendRow(  const QString& rowName, const T defaultVal ) {
   _defaultVal = defaultVal;
   appendRow( rowName );
 }
+
+
+template <class T>
+void CTwoDArray<T>::appendRow(const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.append( values );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QString( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    _rowNames.append( newRowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendRow( const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.append( values.toVector() );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QString( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    _rowNames.append( newRowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendRow( const QString& rowName, const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+
+  if( rowName.isEmpty() ) {
+    appendRow( values );
+  }
+  else {
+    _data.append( values );
+    ++_nRows;
+    _rowNames.append( rowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendRow( const QString& rowName, const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+
+  if( rowName.isEmpty() ) {
+    appendRow( values );
+  }
+  else {
+    _data.append( values.toVector() );
+    ++_nRows;
+    _rowNames.append( rowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::removeRow( const int rowIdx ) {
+  Q_ASSERT( (rowIdx >= 0) && (rowIdx < _nRows) );
+  _data.removeAt( rowIdx );
+  if( this->hasRowNames() ) {
+    _rowNames.removeAt( rowIdx );
+  }
+  --_nRows;
+}
+
+
+template <class T>
+void CTwoDArray<T>::removeRow( const QString& rowName ) {
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+  int rowIdx = _rowNames.indexOf( rowName );
+  this->removeRow( rowIdx );
+}
+
+template <class T>
+void CTwoDArray<T>::removeColumn( const int colIdx ) {
+  Q_ASSERT( (colIdx >= 0) && (colIdx < _nCols) );
+
+  for( int r = 0; r < _nRows; ++r ) {
+    _data[r].removeAt( colIdx );
+  }
+
+  if( this->hasColNames() ) {
+    _colNames.removeAt( colIdx );
+  }
+  --_nCols;
+}
+
+
+template <class T>
+void CTwoDArray<T>::removeColumn( const QString& colName ) {
+  Q_ASSERT( !_colNames.contains( colName ) );
+  int colIdx = _colNames.indexOf( colName );
+  this->removeRow( colIdx );
+}
+
 //----------------------------------------------------------------------------------------------
 
 
