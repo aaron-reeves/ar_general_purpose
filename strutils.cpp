@@ -183,7 +183,7 @@ QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* =
 
   //Q_ASSERT( str.length() <= places );
 
-  if( toPad.length() >= places ) {
+  if( toPad.length() > places ) {
     toPad = toPad.left( places - 1 );
   }
 
