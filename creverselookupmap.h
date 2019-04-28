@@ -64,6 +64,18 @@ class CReverseLookupMap {
         reverseMap.insert( value, key );
       }
 
+      inline void remove( const K& key ) {
+        T value = forwardMap.value( key );
+        forwardMap.remove( key );
+        reverseMap.remove(value );
+      }
+
+      inline void remove( const T& value ) {
+        K key = reverseMap.value( value );
+        forwardMap.remove( key );
+        reverseMap.remove( value );
+      }
+
       inline T retrieveValue( const K& key ) const {
         return forwardMap.find( key ).value();
       }
