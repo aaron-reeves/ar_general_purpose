@@ -28,7 +28,7 @@ CSpreadsheetCell::CSpreadsheetCell() {
   _rowSpan = 1;
   _isPartOfMergedRow = false;
   _isPartOfMergedCol = false;
-  _originCell = NULL;
+  _originCell = nullptr;
 }
 
 
@@ -38,7 +38,7 @@ CSpreadsheetCell::CSpreadsheetCell( const QVariant val ) {
   _rowSpan = 1;
   _isPartOfMergedRow = false;
   _isPartOfMergedCol = false;
-  _originCell = NULL;
+  _originCell = nullptr;
 }
 
 
@@ -48,7 +48,7 @@ CSpreadsheetCell::CSpreadsheetCell( const QVariant val, const int colSpan, const
   _rowSpan = qMax( rowSpan, 1 );
   _isPartOfMergedRow = ( 1 < _colSpan );
   _isPartOfMergedCol = ( 1 < _rowSpan );
-  _originCell = NULL;
+  _originCell = nullptr;
 }
 
 
@@ -97,7 +97,7 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
 void CSpreadsheetCell::debug() {
   QString originStr;
 
-  if( NULL != this->_originCell ) {
+  if( nullptr != this->_originCell ) {
     originStr = this->_originCell->value().toString();
   }
 
@@ -143,7 +143,7 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheet
 
 
 void CSpreadsheet::initialize() {
-  _wb = NULL;
+  _wb = nullptr;
   _hasSpannedCells = false;
 }
 
@@ -428,7 +428,7 @@ QTime CSpreadsheet::xlsTime( const double d ) {
 
   double s =  d * 24.0 * 60.0 * 60.0;
 
-  result = result.addSecs( s );
+  result = result.addSecs( int( s ) );
 
   int seconds = result.second();
   if( seconds < 30 )
@@ -633,7 +633,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
 
   // Deal with strings
   //------------------
-  else if( NULL != cell->str ) {
+  else if( nullptr != cell->str ) {
      val = QString( "%1" ).arg( (char*)cell->str );
      msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
   }
@@ -691,7 +691,7 @@ void CSpreadsheet::flagMergedCells() {
       if( this->at( c, r )._originCell == &(this->at( c, r ) ) ) {
         // Remove this cell from _originCell's collection
         this->at( c, r )._originCell->_linkedCells.remove( &(this->at( c, r ) ) );
-        this->at( c, r )._originCell = NULL;
+        this->at( c, r )._originCell = nullptr;
       }
 
     }
@@ -704,7 +704,7 @@ void CSpreadsheet::debugMerges() {
     for( int r = 0; r < this->nRows(); ++r ) {
       QString originStr;
 
-      if( NULL != this->at( c, r )._originCell ) {
+      if( nullptr != this->at( c, r )._originCell ) {
         originStr = this->at( c, r )._originCell->value().toString();
       }
 
@@ -753,9 +753,9 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
 
               if( rr == firstRow ) {
                 // Remove this cell from _originCell's collection
-                if( NULL != this->at( cc, rr )._originCell ) {
+                if( nullptr != this->at( cc, rr )._originCell ) {
                   this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
-                  this->at( cc, rr )._originCell = NULL;
+                  this->at( cc, rr )._originCell = nullptr;
                 }
               }
               else {
@@ -804,9 +804,9 @@ void CSpreadsheet::unmergeColumns( const bool duplicateValues ) {
 
               if( cc == firstCol ) {
                 // Remove this cell from _originCell's collection
-                if( NULL != this->at( cc, rr )._originCell ) {
+                if( nullptr != this->at( cc, rr )._originCell ) {
                   this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
-                  this->at( cc, rr )._originCell = NULL;
+                  this->at( cc, rr )._originCell = nullptr;
                 }
               }
               else {
@@ -835,7 +835,7 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
   // This should unmerge every linked cell.
   CSpreadsheetCell* parentCell;
 
-  if( NULL == this->at( c, r )._originCell )
+  if( nullptr == this->at( c, r )._originCell )
     parentCell = &( this->at( c, r ) );
   else
     parentCell = this->at( c, r )._originCell;
@@ -852,7 +852,7 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
     cell->_isPartOfMergedRow = false;
     cell->_colSpan = 1;
     cell->_rowSpan = 1;
-    cell->_originCell = NULL;
+    cell->_originCell = nullptr;
   }
 
   parentCell->_isPartOfMergedCol = false;
@@ -1001,8 +1001,8 @@ void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat,
   _srcFileName = fileName;
   _fileFormat = fileFormat;
   _displayVerboseOutput = displayVerboseOutput;
-  _pWB = NULL;
-  _xlsx = NULL;
+  _pWB = nullptr;
+  _xlsx = nullptr;
 
   switch( fileFormat ) {
     case  Format97_2003:
@@ -1073,7 +1073,7 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
   QString encoding = "UTF-8"; // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
   _pWB = xls::xls_open( _srcFileName.toLatin1().data(), encoding.toLatin1().data() );
 
-  if( NULL == _pWB ) {
+  if( nullptr == _pWB ) {
     _errMsg = "Specified file could not be opened.  Wrong format?";
     return false;
   }
@@ -1119,10 +1119,10 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
 
 
 CSpreadsheetWorkBook::~CSpreadsheetWorkBook() {
-  if( NULL != _pWB )
+  if( nullptr != _pWB )
     xls::xls_close( _pWB );
 
-  if( NULL != _xlsx )
+  if( nullptr != _xlsx )
     delete _xlsx;
 }
 
@@ -1447,4 +1447,174 @@ bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
   }
 
   return result;
+}
+
+
+bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ ) {
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can only be added to Format2007 files";
+  }
+  else if( !sheetName.isEmpty() && this->hasSheet( sheetName ) ) {
+    _ok = false;
+    _errMsg = QString( "Duplicate sheet name: '%1'" ).arg( sheetName );
+  }
+  else {
+    _ok = _xlsx->addSheet( sheetName );
+    if( !_ok ) {
+      _errMsg = QString( "Could not insert sheet with name '%1'" ).arg( sheetName );
+    }
+    else {
+      _sheetNames.insert( this->sheetCount() - 1, sheetName );
+    }
+  }
+
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
+  if( !_sheetNames.containsKey( sheetIdx ) ) {
+    _ok = false;
+    _errMsg = QString( "Sheet does not exist: %1" ).arg( sheetIdx );
+  }
+  else {
+    _ok = this->deleteSheet( _sheetNames.retrieveValue( sheetIdx ) );
+  }
+
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can only be deleted from Format2007 files";
+  }
+  else if( !this->hasSheet( sheetName ) ) {
+    _ok = false;
+    _errMsg = QString( "Sheet does not exist: '%1'" ).arg( sheetName );
+  }
+  else {
+    _ok = _xlsx->deleteSheet( sheetName );
+    if( !_ok ) {
+      _errMsg = QString( "Could not delete sheet '%1'" ).arg( sheetName );
+    }
+    else {
+      _sheetNames.remove( sheetName );
+    }
+  }
+
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data ) {
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can only be written to Format2007 files";
+  }
+  else if( !_sheetNames.containsKey( sheetIdx ) ) {
+    _ok = false;
+    _errMsg = QString( "Sheet does not exist: %1" ).arg( sheetIdx );
+  }
+  else {
+    _ok = this->writeSheet( _sheetNames.retrieveValue( sheetIdx ), data );
+  }
+
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data ) {
+  qDebug() << "Writing spreadsheet...";
+
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can written to Format2007 files";
+  }
+  if( !_sheetNames.containsValue( sheetName ) ) {
+    _ok = this->addSheet( sheetName );
+  }
+
+  if( _ok ) {
+    if( !_xlsx->selectSheet( sheetName ) ) {
+      _ok = false;
+      _errMsg = QString( "Could not select sheet %1" ).arg( sheetName );
+    }
+    else {
+      _ok = true;
+
+      int rowOffset = 1;
+      int colOffset = 1;
+
+      if( data.hasRowNames() ) {
+        ++colOffset;
+      }
+
+      if( data.hasColNames() ) {
+        for( int c = 0; c < data.nCols(); ++c ) {
+          _ok = _xlsx->write( rowOffset, c + colOffset, data.colNames().at(c) );
+        }
+        ++rowOffset;
+      }
+
+      if( data.hasRowNames() ) {
+        for( int r = 0; r < data.nRows(); ++r ) {
+          _ok = _xlsx->write( r + rowOffset, 1, data.rowNames().at(r) );
+        }
+      }
+
+      for( int row = 0; row < data.nRows(); ++row ) {
+        for( int col = 0; col < data.nCols(); ++col ) {
+          _ok = _xlsx->write( row + rowOffset, col + colOffset, data.at( col, row ) );
+          if( !_ok ) {
+            break;
+          }
+        }
+        if( !_ok ) {
+          break;
+        }
+      }
+    }
+
+    if( !_ok ) {
+      _errMsg = QString( "Could not write data to sheet %1" ).arg( sheetName );
+    }
+  }
+
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::save() {
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can written to Format2007 files";
+  }
+  else {
+    _ok = _xlsx->save();
+    if( !_ok ) {
+      _errMsg = "File could not be written.";
+    }
+  }
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
+  if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can written to Format2007 files";
+  }
+  else {
+    _ok = _xlsx->saveAs( filename );
+    if( !_ok ) {
+      _errMsg = "File could not be written.";
+    }
+    else {
+      _srcFileName = filename;
+    }
+  }
+  return _ok;
 }

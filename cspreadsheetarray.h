@@ -189,6 +189,25 @@ class CSpreadsheetWorkBook {
     bool isXlsTime( const int xf, const double d );
     bool isXlsDateTime( const int xf, const double d );
 
+
+    // Functions for manipulating and writing workbooks
+    //-------------------------------------------------
+    bool addSheet( const QString& sheetName = QString() );
+    bool deleteSheet( const int sheetIdx );
+    bool deleteSheet( const QString& sheetName );
+
+    bool writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data );
+    bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data );
+
+    // Consider writing these functions some day...
+    //bool writeSheet( const int sheetIdx, QCsv* data );
+    //bool writeSheet( const QString& sheetName, QCsv* data );
+    //bool writeSheet( const int sheetIdx, CSpreadsheet data );
+    //bool writeSheet( const QString& sheetName, CSpreadsheet data );
+
+    bool save();
+    bool saveAs( const QString& filename );
+
   protected:
     void openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput );
     SpreadsheetFileFormat guessFileFormat( const QString& fileName );
