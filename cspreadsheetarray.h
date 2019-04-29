@@ -205,6 +205,9 @@ class CSpreadsheetWorkBook {
     //bool writeSheet( const int sheetIdx, CSpreadsheet data );
     //bool writeSheet( const QString& sheetName, CSpreadsheet data );
 
+    bool selectSheet( const int sheetIdx );
+    bool selectSheet( const QString& name );
+
     bool save();
     bool saveAs( const QString& filename );
 

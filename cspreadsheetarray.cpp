@@ -1451,7 +1451,10 @@ bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
 
 
 bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ ) {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to add sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can only be added to Format2007 files";
   }
@@ -1474,7 +1477,10 @@ bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ 
 
 
 bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
-  if( !_sheetNames.containsKey( sheetIdx ) ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to delete sheet.";
+  }
+  else if( !_sheetNames.containsKey( sheetIdx ) ) {
     _ok = false;
     _errMsg = QString( "Sheet does not exist: %1" ).arg( sheetIdx );
   }
@@ -1487,7 +1493,10 @@ bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
 
 
 bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to delete sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can only be deleted from Format2007 files";
   }
@@ -1510,7 +1519,10 @@ bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
 
 
 bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data ) {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to write sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can only be written to Format2007 files";
   }
@@ -1527,7 +1539,10 @@ bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVar
 
 
 bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data ) {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to write sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can written to Format2007 files";
   }
@@ -1585,8 +1600,55 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
 }
 
 
+bool CSpreadsheetWorkBook::selectSheet( const int sheetIdx ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to select sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can written to Format2007 files";
+  }
+  else {
+    QString name = sheetName( sheetIdx );
+    if( name.isEmpty() ) {
+      _ok = false;
+      _errMsg = QString( "No sheet with index %1 to select" ).arg( sheetIdx );
+    }
+    else {
+      _ok = this->selectSheet( name );
+    }
+  }
+  return _ok;
+}
+
+
+bool CSpreadsheetWorkBook::selectSheet( const QString& name ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to select sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
+    _ok = false;
+    _errMsg = "Sheets can written to Format2007 files";
+  }
+  else if( !_sheetNames.containsValue( name ) ) {
+    _ok = false;
+    _errMsg = QString( "No sheet with name '%1' to select" ).arg( name );
+  }
+  else if( !_xlsx->selectSheet( name ) ) {
+    _ok = false;
+    _errMsg = QString( "Could not select sheet with name '%1'" ).arg( name );
+  }
+
+  return _ok;
+}
+
+
+
 bool CSpreadsheetWorkBook::save() {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to save sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can written to Format2007 files";
   }
@@ -1601,7 +1663,10 @@ bool CSpreadsheetWorkBook::save() {
 
 
 bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
-  if( Format2007 != _fileFormat  ) {
+  if( !_ok ) {
+    _errMsg = "Correct existing errors before attempting to save sheet.";
+  }
+  else if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can written to Format2007 files";
   }
