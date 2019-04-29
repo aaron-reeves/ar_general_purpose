@@ -1468,7 +1468,7 @@ bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ 
       _errMsg = QString( "Could not insert sheet with name '%1'" ).arg( sheetName );
     }
     else {
-      _sheetNames.insert( this->sheetCount() - 1, sheetName );
+      _sheetNames.insert( this->sheetCount(), sheetName );
     }
   }
 
