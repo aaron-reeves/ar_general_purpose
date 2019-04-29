@@ -1527,8 +1527,6 @@ bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVar
 
 
 bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data ) {
-  qDebug() << "Writing spreadsheet...";
-
   if( Format2007 != _fileFormat  ) {
     _ok = false;
     _errMsg = "Sheets can written to Format2007 files";
