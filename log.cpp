@@ -71,9 +71,9 @@ void CAppLog::initialize() {
   _logFileName = "";
   _logPath = "";
 
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
+  _logFile = nullptr;
+  _logTextStream = nullptr;
+  _pending = nullptr;
 
   _logLineCount = 0;
 
@@ -91,10 +91,10 @@ void CAppLog::initialize() {
 CAppLog::~CAppLog( void ) {
   closeLog();
   
-  if( NULL != _pending ) {
+  if( nullptr != _pending ) {
     qDeleteAll( _pending->begin(), _pending->end() );
     delete _pending;
-    _pending = NULL;
+    _pending = nullptr;
   }  
 }
 
@@ -135,7 +135,7 @@ void CAppLog::setLogLevel( const int logLevel ) {
     if( _logOpen ) {
       closeLog();
     }
-    if( NULL == _pending ) {
+    if( nullptr == _pending ) {
       _pending = new TLogMessageList();
     }
   }
@@ -146,10 +146,10 @@ void CAppLog::setLogLevel( const int logLevel ) {
     if( _logOpen ) {
       closeLog();
     }
-    if( NULL != _pending ) {
+    if( nullptr != _pending ) {
       qDeleteAll( _pending->begin(), _pending->end() );
       delete _pending;
-      _pending = NULL;  
+      _pending = nullptr;
     }  
   }
   
@@ -188,23 +188,23 @@ bool CAppLog::openLog( void ) {
     else {
       //qDebug() << "Log file did not open!";
       delete _logFile;
-      _logFile = NULL;
-      _logTextStream = NULL;
+      _logFile = nullptr;
+      _logTextStream = nullptr;
       return false;
     }
 }
 
 
 void CAppLog::closeLog( void ) {
-  if( NULL != _logFile ) {
+  if( nullptr != _logFile ) {
     _logFile->close();
     delete _logFile;
-    _logFile = NULL;    
+    _logFile = nullptr;
   }
   
-  if( NULL != _logTextStream ) {
+  if( nullptr != _logTextStream ) {
     delete _logTextStream;
-    _logTextStream = NULL;
+    _logTextStream = nullptr;
   }
   
   _logOpen = false;
@@ -330,7 +330,7 @@ CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
 void CAppLog::processPendingMessages( void ) {
   CLogMessage* msg;
 
-  if( NULL != _pending ) {
+  if( nullptr != _pending ) {
     while( !( _pending->isEmpty() ) ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
@@ -346,7 +346,7 @@ void CAppLog::processPendingMessages( void ) {
     } 
     
     delete _pending;
-    _pending = NULL; 
+    _pending = nullptr;
   }
 }
 

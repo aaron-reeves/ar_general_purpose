@@ -21,9 +21,9 @@ QString setMagicPath( bool* error, QString* errorMessage ) {
   else if( QFile::exists( "/etc/magic" ) )
     magicFile = "/etc/magic";
   else {
-    if( NULL != error )
+    if( nullptr != error )
       *error = true;
-    if( NULL != errorMessage )
+    if( nullptr != errorMessage )
       *errorMessage = "Could not find magic file.";
   }
 
@@ -31,7 +31,7 @@ QString setMagicPath( bool* error, QString* errorMessage ) {
 }
 
 
-QString magicFileTypeInfo( const QString& fileName, bool* error /* = NULL */, QString* errorMessage /* = NULL */ ) {
+QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile = setMagicPath( error, errorMessage );
@@ -42,15 +42,15 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = NULL */, QS
 
   // Set up magic
   //-------------
-  struct magic_set* magic = NULL;
+  struct magic_set* magic = nullptr;
   int flags = 0;
   QString errMsg;
 
   magic = magicLoadMagic( magicFile, flags, errMsg );
-  if( NULL == magic ) {
-    if( NULL != error )
+  if( nullptr == magic ) {
+    if( nullptr != error )
       *error = true;
-    if( NULL != errorMessage )
+    if( nullptr != errorMessage )
       *errorMessage = QString( "magicLoadMagic failed: %1" ).arg( errMsg );
 
     return "";
@@ -63,15 +63,15 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = NULL */, QS
   bool magicOK = magicProcess( magic, fileName, fileTypeInfo, errMsg );
 
   if( magicOK ) {
-    if( NULL != error )
+    if( nullptr != error )
       *error = false;
 
     result = fileTypeInfo;
   }
   else {
-    if( NULL != error )
+    if( nullptr != error )
       *error = true;
-    if( NULL != errorMessage )
+    if( nullptr != errorMessage )
       *errorMessage = QString( "magicProcess failed: %1" ).arg( errMsg );
 
     result = "";
@@ -83,7 +83,7 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = NULL */, QS
 }
 
 
-bool _magicIsType( const int type, const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool _magicIsType( const int type, const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   // Determine which magic file to use
   //----------------------------------
   QString magicFile = setMagicPath( error, errorMessage );
@@ -94,16 +94,16 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = NUL
 
   // Set up magic
   //-------------
-  struct magic_set* magic = NULL;
+  struct magic_set* magic = nullptr;
   int flags = 0;
   QString errMsg;
 
   magic = magicLoadMagic( magicFile, flags, errMsg );
 
-  if( NULL == magic ) {
-    if( NULL != error )
+  if( nullptr == magic ) {
+    if( nullptr != error )
       *error = true;    
-    if( NULL != errorMessage )
+    if( nullptr != errorMessage )
       *errorMessage = QString( "magicLoadMagic failed: %1" ).arg( errMsg );
 
     return false;
@@ -116,11 +116,11 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = NUL
 
   bool magicOK = magicProcess( magic, fileName, fileTypeInfo, errMsg );
 
-  if( NULL != returnTypeInfo )
+  if( nullptr != returnTypeInfo )
     *returnTypeInfo = fileTypeInfo;
 
   if( magicOK ) {
-    if( NULL != error )
+    if( nullptr != error )
       *error = false;
 
     switch( type ) {
@@ -146,9 +146,9 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = NUL
 
   }
   else {
-    if( NULL != error )
+    if( nullptr != error )
       *error = true;
-    if( NULL != errorMessage )
+    if( nullptr != errorMessage )
       *errorMessage = QString( "magicProcess failed: %1" ).arg( errMsg );
 
     result = false;
@@ -160,12 +160,12 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = NUL
 }
 
 
-bool magicIsAsciiTextFile( const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool magicIsAsciiTextFile( const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   return _magicIsType( CHECKTEXT, fileName, error, returnTypeInfo, errorMessage );
 }
 
 
-bool magicIsXlsxFile( const QString& fileName, bool* error /* = NULL */, QString* returnTypeInfo /* = NULL */, QString* errorMessage /* = NULL */ ) {
+bool magicIsXlsxFile( const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   return _magicIsType( CHECKXLSX, fileName, error, returnTypeInfo, errorMessage );
 }
 
@@ -196,15 +196,15 @@ bool looksLikeTextFile( const QString& fileName ) {
 magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg ) {
   struct magic_set* magic = magic_open( flags );
 
-  if( NULL == magic ) {
+  if( nullptr == magic ) {
     errMsg = "Could not open magic.";
-    return NULL;
+    return nullptr;
   }
   else {
     if( -1 == magic_load( magic,  magicFile.toLatin1().data() ) ) {
       errMsg = "Could not load magic.";
       magic_close( magic );
-      return NULL;
+      return nullptr;
     }
     else {
       return magic;
@@ -216,7 +216,7 @@ magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg 
 bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileTypeInfo, QString& errMsg ) {
   const char* type = magic_file( ms, fileName.toLatin1().data() );
 
-  if( NULL == type ) {
+  if( nullptr == type ) {
     errMsg = QString( "%1" ).arg( magic_error( ms ) );
     fileTypeInfo = "";
     return false;

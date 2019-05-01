@@ -401,7 +401,7 @@ void QCsv::setFieldNames( const QStringList& fieldNames ) {
 
 void QCsv::initialize() {
   _srcFilename = "";
-  _srcFile = NULL;
+  _srcFile = nullptr;
   _isOpen = false;
 
   clearError();
@@ -435,7 +435,7 @@ QCsv& QCsv::operator=( const QCsv& other ) {
 
 void QCsv::assign( const QCsv& other ) {
   _srcFilename = other._srcFilename;
-  _srcFile = NULL;
+  _srcFile = nullptr;
   _isOpen = other._isOpen;
 
   _currentLine = other._currentLine;
@@ -467,10 +467,10 @@ void QCsv::assign( const QCsv& other ) {
 QCsv::~QCsv() {
   this->close();
 
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 }
 
@@ -510,13 +510,10 @@ QString QCsv::currentRow() {
   switch( _mode ) {
     case LineByLine:
       return _currentLine;
-      break;
     case EntireFile:
       return CSV::writeLine( _data.at( _currentRowNumber ) );
-      break;
     default:
       return "";
-      break;
   }
 }
 
@@ -1118,11 +1115,11 @@ bool QCsv::setLinesToSkip( const int val ) {
 
 void QCsv::setFilename( QString filename ){
   clearError();
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     _isOpen = false;
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 
   _srcFilename = filename;
@@ -1167,7 +1164,7 @@ bool QCsv::open() {
 bool QCsv::openFileAndReadHeader() {
   clearError();
 
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     delete _srcFile;
   }
 
@@ -1179,7 +1176,7 @@ bool QCsv::openFileAndReadHeader() {
     _error = ERROR_OPEN;
     _errorMsg = "Can not open the source file";
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
   else if( _containsFieldList ) {
     readHeader();
@@ -1190,10 +1187,10 @@ bool QCsv::openFileAndReadHeader() {
 
 
 void QCsv::finishWithFile() {
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 }
 
