@@ -211,9 +211,11 @@ class CSpreadsheetWorkBook {
     bool save();
     bool saveAs( const QString& filename );
 
+    static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, bool* ok = nullptr );
+
   protected:
     void openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput );
-    SpreadsheetFileFormat guessFileFormat( const QString& fileName );
+    SpreadsheetFileFormat guessFileFormat();
 
     bool openXlsWorkbook();
     bool openXlsxWorkbook();

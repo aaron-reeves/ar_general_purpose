@@ -991,7 +991,9 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
-  SpreadsheetFileFormat fileFormat = guessFileFormat( fileName );
+  _srcFileName = fileName;
+
+  SpreadsheetFileFormat fileFormat = guessFileFormat();
 
   openWorkbook( fileFormat, fileName, displayVerboseOutput );
 }
@@ -1019,7 +1021,13 @@ void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat,
 }
 
 
-CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat( const QString& fileName ) {
+CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat() {
+  return guessFileFormat( _srcFileName, &_errMsg, &_ok );
+}
+
+
+
+CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat( const QString& fileName, QString* errMsg /* = nullptr */, bool* ok /* = nullptr */ ) {
   SpreadsheetFileFormat fileFormat = FormatUnknown;
   bool error;
   QString fileType = magicFileTypeInfo( fileName, &error );
@@ -1027,8 +1035,11 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
   //qDebug() << fileType;
 
   if( error ) {
-    _errMsg = "File type cannot be determined: there is a problem with the filemagic library.";
-    _ok = false;
+    if( nullptr != errMsg )
+      *errMsg = "File type cannot be determined: there is a problem with the filemagic library.";
+
+    if( nullptr != ok )
+      *ok = false;
   }
 
   // Excel (*.xls) files look like this to FileMagic
@@ -1046,8 +1057,11 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
     fileFormat = Format2007;
   }
   else {
-    _errMsg = "File type cannot be matched: the filemagic library returned an unrecognized type.";
-    _ok = false;
+    if( nullptr != errMsg )
+      *errMsg = "File type cannot be matched: the filemagic library returned an unrecognized type.";
+
+    if( nullptr != ok )
+      *ok = false;
   }
 
   return fileFormat;
