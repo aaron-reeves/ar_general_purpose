@@ -1058,7 +1058,7 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
   }
   else {
     if( nullptr != errMsg )
-      *errMsg = "File type cannot be matched: the filemagic library returned an unrecognized type.";
+      *errMsg = QString( "File type cannot be matched. The filemagic library returned an unrecognized type: %1" ).arg( fileType );
 
     if( nullptr != ok )
       *ok = false;
