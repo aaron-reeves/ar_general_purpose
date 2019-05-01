@@ -92,6 +92,36 @@ T& CTwoDArray<T>::value( const int c, const int r ) {
 
   return _data[r][c];
 }
+
+template <class T>
+QVector<T> CTwoDArray<T>::row( const int rowIdx ) const {
+  Q_ASSERT( ( rowIdx >= 0 ) && ( rowIdx < _nRows ) );
+  return _data.at( rowIdx );
+}
+
+template <class T>
+QVector<T> CTwoDArray<T>::row( const QString& rowName ) const {
+  Q_ASSERT( _rowNames.contains( rowName ) );
+  return row( _rowNames.indexOf( rowName ) );
+}
+
+template <class T>
+QVector<T> CTwoDArray<T>::column( const int colIdx ) const {
+  Q_ASSERT( ( colIdx >= 0 ) && ( colIdx < _nCols ) );
+
+  QVector<T> result( this->nRows() );
+  for( int r = 0; r < this->nRows(); ++r ) {
+    result[r] = this->value( colIdx, r );
+  }
+
+  return result;
+}
+
+template <class T>
+QVector<T> CTwoDArray<T>::column( const QString& colName ) const {
+  Q_ASSERT( _rowNames.contains( colName ) );
+  return column( _colNames.indexOf( colName ) );
+}
 //----------------------------------------------------------------------------------------------
 
 
