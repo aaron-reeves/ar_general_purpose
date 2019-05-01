@@ -460,6 +460,27 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
   return result;
 }
 
+QStringList stringsFromVariants( const QList<QVariant>& variants ) {
+  QStringList result;
+
+  for( int i = 0; i < variants.count(); ++i ) {
+    result.append( variants.at(i).toString() );
+  }
+
+  return result;
+}
+
+
+QStringList stringsFromVariants( const QVector<QVariant>& variants ) {
+  QStringList result;
+
+  for( int i = 0; i < variants.length(); ++i ) {
+    result.append( variants.at(i).toString() );
+  }
+
+  return result;
+}
+
 
 bool isComment( const QString st ) {
   bool result;

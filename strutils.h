@@ -50,6 +50,9 @@ QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = tr
 QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 
+QStringList stringsFromVariants( const QList<QVariant>& variants );
+QStringList stringsFromVariants( const QVector<QVariant>& variants );
+
 bool isComment( const QString st );
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader );
