@@ -11,7 +11,6 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
-#include "cspreadsheetarray.h"
 
 #include <ar_general_purpose/qcout.h>
 
@@ -28,7 +27,7 @@ CXlCsv::CXlCsv() : QCsv() {
 
 
 CXlCsv::CXlCsv(
-  const CXlCsvFileFormat format,
+  const CSpreadsheetWorkBook::SpreadsheetFileFormat format,
   const QString& filename,
   const bool containsFieldList,
   const int nLinesToSkip /* = 0 */,
@@ -55,7 +54,7 @@ void CXlCsv::initialize() {
 
   _errorOnOpen = false;
 
-  _fileFormat = FormatUnknown;
+  _fileFormat = CSpreadsheetWorkBook::FormatUnknown;
 
   setMode( QCsv::EntireFile );
 
@@ -147,7 +146,7 @@ bool CXlCsv::open() {
     return false;
   }
 
-  if( FormatUnknown == _fileFormat ) {
+  if( CSpreadsheetWorkBook::FormatUnknown == _fileFormat ) {
     setError( QCsv::ERROR_OTHER, "Spreadsheet file format must be specified." );
     _errorOnOpen = true;
     return false;
@@ -176,10 +175,10 @@ bool CXlCsv::open() {
   clearError();
 
   switch ( _fileFormat ) {
-    case Format97_2003:
+    case CSpreadsheetWorkBook::Format97_2003:
       result = openXls();
       break;
-    case Format2007:
+    case CSpreadsheetWorkBook::Format2007:
       result = openXlsx();
       break;
     default:
@@ -388,53 +387,49 @@ bool CXlCsv::setFieldFormatXl( const int fieldIdx, const ColumnFormat fmt ) {
 
     QDate date;
 
-    switch( fmt ) {
-      case DateFormat:
-        for( int row = 0; row < this->rowCount(); ++row ) {
-          QString str = _data.at(row).at(fieldIdx);
-          bool isInt;
-          int val = str.toInt( &isInt );
+    if( DateFormat == fmt ) {
+      for( int row = 0; row < this->rowCount(); ++row ) {
+        QString str = _data.at(row).at(fieldIdx);
+        bool isInt;
+        int val = str.toInt( &isInt );
 
-          if( str.isEmpty() ) {
-            // Do nothing: leave the empty value.
+        if( str.isEmpty() ) {
+          // Do nothing: leave the empty value.
+        }
+        else if( isInt ) {
+          if( _is1904DateSystem ) { // Treat the date with the 1904 date system.
+            date = QDate( 1904, 1, 1 ).addDays( val );
           }
-          else if( isInt ) {
-            if( _is1904DateSystem ) { // Treat the date with the 1904 date system.
-              date = QDate( 1904, 1, 1 ).addDays( val );
-            }
-            else { // Use the 1900 date system, with the leap year bug.
-              date = QDate( 1899, 12, 31 );
+          else { // Use the 1900 date system, with the leap year bug.
+            date = QDate( 1899, 12, 31 );
 
-              // There is an intentional leap-year bug in Excel. It thinks that 1900 was a leap year.
-              // It wasn't, but the bug was introduced to maintain compatibility with Lotus 1-2-3.
-              // Any date beyond Feb 28 1900 will be off by a day, if we just add the number of days.
-              if( val < 60 )
-                date = date.addDays( val );
-              else
-                date = date.addDays( val - 1 );
-            }
-
-            if( date.isValid() ) {
-              _data[row][fieldIdx] = date.toString( "yyyy-MM-dd" );
-            }
-            else {
-              setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
-              result = false;
-            }
+            // There is an intentional leap-year bug in Excel. It thinks that 1900 was a leap year.
+            // It wasn't, but the bug was introduced to maintain compatibility with Lotus 1-2-3.
+            // Any date beyond Feb 28 1900 will be off by a day, if we just add the number of days.
+            if( val < 60 )
+              date = date.addDays( val );
+            else
+              date = date.addDays( val - 1 );
           }
-          else { // There is nothing more that can be done here.  Maybe try QCsv::setFieldFormat()
+
+          if( date.isValid() ) {
+            _data[row][fieldIdx] = date.toString( "yyyy-MM-dd" );
+          }
+          else {
             setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
             result = false;
           }
         }
-
-        break;
-      case TimeFormat: // Fall through, for now.
-      case DateTimeFormat: // Fall through, for now.
-      default:
-        setError( QCsv::ERROR_OTHER, "Field format not yet supported." );
-        result = false;
-        break;
+        else { // There is nothing more that can be done here.  Maybe try QCsv::setFieldFormat()
+          setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
+          result = false;
+        }
+      }
+    }
+    else {
+      // FIXME: TimeFormat and DateTimeFormat are not yet handled.
+      setError( QCsv::ERROR_OTHER, "Field format not yet supported." );
+      result = false;
     }
   }
 
