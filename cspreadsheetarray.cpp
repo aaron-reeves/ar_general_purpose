@@ -227,6 +227,43 @@ bool CSpreadsheet::compareCellValue( const QString& cellLabel, const QString& st
 }
 
 
+CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
+  CTwoDArray<QVariant> result;
+
+  if(!this->isTidy( containsHeaderRow ) ) {
+    qDebug() << "Tidy check failed.";
+  }
+  else {
+    int nCols = this->nCols();
+    int nRows = this->nRows();
+    int rowOffset = 0;
+
+    if( containsHeaderRow ) {
+      --nRows;
+      ++rowOffset;
+    }
+
+    result.setSize( nCols, nRows );
+
+    if( containsHeaderRow ) {
+      QStringList colNames;
+      for( int c = 0; c < this->nCols(); ++c ) {
+        colNames.append( this->cellValue( c, 0 ).toString() );
+      }
+      result.setColNames( colNames );
+    }
+
+    for( int c = 0; c < this->nCols(); ++c ) {
+      for( int r = 0; r < this->nRows(); ++r ) {
+        result.setValue( c, r, this->cellValue( c, r + rowOffset ) );
+      }
+    }
+  }
+
+  return result;
+}
+
+
 bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   bool result = true;
 
@@ -479,6 +516,7 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
 
       QVariant val = xlsx->read( row, col );
+
       if( val.type() == QVariant::String ) {
         val = val.toString().replace( "_x000D_\n", "\n" );
       }
@@ -1593,6 +1631,8 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
       }
 
       for( int row = 0; row < data.nRows(); ++row ) {
+        //qDebug() << "Row" << row << data.row( row );
+
         for( int col = 0; col < data.nCols(); ++col ) {
           _ok = _xlsx->write( row + rowOffset, col + colOffset, data.at( col, row ) );
           if( !_ok ) {

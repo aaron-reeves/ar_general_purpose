@@ -136,6 +136,10 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     void debug( const int padding = 10 ) const;
     void debugMerges();
 
+    CTwoDArray<QVariant> data( const bool containsHeaderRow );
+
+    static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
+
   protected:
     void initialize();
     void flagMergedCells();
@@ -173,6 +177,7 @@ class CSpreadsheetWorkBook {
     QVariantList firstRowFromSheet( const int sheetIdx );
     QVariantList rowFromSheet( const int rowIdx, const int sheetIdx );
 
+    bool ok() const { return _ok; }
     bool error() const { return !_ok; }
     QString errorMessage() const { return _errMsg; }
 
