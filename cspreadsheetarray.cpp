@@ -390,7 +390,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
     }
 
     // Trim off trailing empty rows
-    while( isEmptyStringList( data.last() ) ) {
+    while( !data.isEmpty() && isEmptyStringList( data.last() ) ) {
       data.removeLast();
     }
 
