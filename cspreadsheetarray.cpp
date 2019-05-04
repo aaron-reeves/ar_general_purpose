@@ -247,14 +247,14 @@ CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
 
     if( containsHeaderRow ) {
       QStringList colNames;
-      for( int c = 0; c < this->nCols(); ++c ) {
+      for( int c = 0; c < nCols; ++c ) {
         colNames.append( this->cellValue( c, 0 ).toString() );
       }
       result.setColNames( colNames );
     }
 
-    for( int c = 0; c < this->nCols(); ++c ) {
-      for( int r = 0; r < this->nRows(); ++r ) {
+    for( int c = 0; c < nCols; ++c ) {
+      for( int r = 0; r < nRows; ++r ) {
         result.setValue( c, r, this->cellValue( c, r + rowOffset ) );
       }
     }
