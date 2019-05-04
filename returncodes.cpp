@@ -37,6 +37,7 @@ QString ReturnCode::codeList() {
    "  APPLICATION_ERROR        :  65536\n"
    "  UNRECOGNIZED_FIELD       : 131072\n"
    "  CHECKSUM_PROBLEM         : 262144\n"
+   "  UNKNOWN_RESULT           : 524288\n"
  );
 }
 
@@ -84,6 +85,8 @@ QString ReturnCode::codeDescr( const int val ) {
       result.append( "UNRECOGNIZED_FIELD: A database field specified in the applicatoin does not exist.  Please check with the developers.\n" );
     if( val & CHECKSUM_PROBLEM )
       result.append( "CHECKSUM_PROBLEM: There is a mismatch between actual and expected file contents.  Please check with the developers.\n" );
+    if( val & UNKNOWN_RESULT )
+      result.append( "UNKNOWN_RESULT: The outcome is not yet known.  Has the process run?" );
 
     return result.trimmed();
   }
