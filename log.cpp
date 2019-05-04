@@ -556,8 +556,8 @@ void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
 
   QString keyStr;
   for( int i = 0; i < _entries.count(); ++i ) {
-    keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
-    *stream << keyStr << _entryCounts.at(i) << ": '" << _entries.at(i) << endl;
+    keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
+    *stream << keyStr << ": '" << _entries.at(i) << endl;
   }
 }
 
