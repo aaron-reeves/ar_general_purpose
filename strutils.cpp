@@ -145,7 +145,7 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
     || "1" == val
     || "-1" == val
   ) {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = true;
     return true;
   } else if (
@@ -155,12 +155,12 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
     || "false" == val
     || "0" == val
   ) {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = true;
     return false;
   }
   else {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = false;
     return false;
   }
@@ -188,51 +188,61 @@ QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ 
 
 
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
-  int i;
-  int origStrLen;
-
-  //Q_ASSERT( str.length() <= places );
-
-  if( toPad.length() > places ) {
-    toPad = toPad.left( places - 1 );
+  if( places == toPad.length() ) {
+    return toPad;
   }
+  else {
+    int i;
+    int origStrLen;
 
-  //qDebug() << places << str.length() << (places - str.length());
+    //Q_ASSERT( str.length() <= places );
 
-  origStrLen = toPad.length();
-
-  if( origStrLen < places ) {
-    for( i = 0; i < places - origStrLen; ++i ) {
-      toPad.prepend( padChar );
-      //qDebug() << i << toPad;
+    if( toPad.length() > places ) {
+      toPad = toPad.left( places - 1 );
     }
-  }
 
-  return toPad;
+    //qDebug() << places << str.length() << (places - str.length());
+
+    origStrLen = toPad.length();
+
+    if( origStrLen < places ) {
+      for( i = 0; i < places - origStrLen; ++i ) {
+        toPad.prepend( padChar );
+        //qDebug() << i << toPad;
+      }
+    }
+
+    return toPad;
+  }
 }
 
 
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
-  int i;
-  int origStrLen;
-
-  if( toPad.length() > places )
-    qDebug() << toPad << places << toPad.length() << (places - toPad.length());
-
-  //Q_ASSERT( toPad.length() <= places );
-
-  if( toPad.length() >= places ) {
-    toPad = toPad.left( places - 1 );
+  if( places == toPad.length() ) {
+    return toPad;
   }
+  else {
+    int i;
+    int origStrLen;
 
-  origStrLen = toPad.length();
+    if( toPad.length() > places )
+      qDebug() << toPad << places << toPad.length() << (places - toPad.length());
 
-  if( origStrLen < places ) {
-    for( i = 0; i < places - origStrLen; ++i )
-      toPad.append( padChar );
+    //Q_ASSERT( toPad.length() <= places );
+
+    if( toPad.length() >= places ) {
+      toPad = toPad.left( places - 1 );
+    }
+
+    origStrLen = toPad.length();
+
+    if( origStrLen < places ) {
+      for( i = 0; i < places - origStrLen; ++i )
+        toPad.append( padChar );
+    }
+
+    return toPad;
   }
-
-  return toPad;
 }
 
 
@@ -900,7 +910,7 @@ QString stringListListTableRow( QString label, int len ) {
 
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader ) {
-  if(( NULL == stream) ) {
+  if(( nullptr == stream) ) {
     //qDebug() << "No stream in printTableFormat()";
     return;
   }
