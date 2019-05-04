@@ -13,16 +13,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "log.h"
 
-#include <QDateTime>
-#include <QFile>
-#include <QString>
-#include <QTextStream>
-#include <QStringList>
+#include <QtCore>
 #include <QDebug>
-#include <QDir>
-#include <QFileInfo>
 
-#include <ar_general_purpose/qcout.h>
+#include <ar_general_purpose/arcommon.h>
 
 CAppLog appLog;
 CLockFile lockFile;
@@ -428,8 +422,144 @@ bool CLockFile::remove() {
 }
 
 
+QString CLogFileContents::trimMatch( QString line, const QRegExp& exp ) {
+  // Trim off the indicated bits that might appear at the beginning of the line
+  //---------------------------------------------------------------------------
+  exp.exactMatch( line );
+  int matchLen1 = exp.matchedLength();
+  line = line.right( line.length() - matchLen1 );
+
+  return line.trimmed();
+}
 
 
+void CLogFileContents::processLine( QString line, const bool includeQueryDetails ) {
+  if( line.trimmed().isEmpty() )
+    return;
+
+  QString msg;
+
+  // My log files sometimes indicate multi-line messages
+  // with ">>>" at the beginning of a block and "<<< (End)" at the end.
+  // This will format such text blocks appropriately.
+  //-------------------------------------------------------------------
+  if( line.contains( ">>>" ) ) {
+    QStringList list = line.split( '\n' );
+
+    if( includeQueryDetails && ( 2 < list.count() ) ) {
+      msg = QString( "%1 | %2" ).arg( list.at(1).trimmed() ).arg( list.at(2).trimmed() );
+    }
+    else {
+      msg = list.at(1).trimmed();
+    }
+
+    msg = trimMatch( msg, QRegExp( "^ERROR[:]" ) );
+  }
+
+  // Otherwise, my log files begin with "Line xxx:" or "Lines xxx, yyy:".
+  // This statement strips this bit of noise away.
+  //---------------------------------------------------------------------
+  else if( line.startsWith( "Lines" ) ) {
+    msg = trimMatch( line, QRegExp( "^Lines\\s[0-9]+\\s?[,]\\s?[0-9]+[:]" ) );
+  }
+  else if( line.startsWith( "Line" ) ) {
+    msg = trimMatch( line, QRegExp( "^Line\\s[0-9]+[:]" ) );
+  }
+  else {
+    msg = line;
+  }
+
+  msg.replace( QRegExp( "line\\s[0-9]+" ), "line x" );
+
+  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), "(detail: x)" );
+
+  if( _hash.contains( msg ) )
+    _hash[msg] = _hash.value( msg ) + 1;
+  else
+    _hash.insert( msg, 1 );
+}
+
+
+void CLogFileContents::generateSummary() {
+  QMultiHash<int, QString> countHash;
+  QList<int> counts;
+  _maxCount = 0;
+
+  QHashIterator<QString, int> it( _hash );
+  while( it.hasNext() ) {
+    it.next();
+    countHash.insert( it.value(), it.key() );
+    _maxCount = std::max( _maxCount,  it.value() );
+    if( !counts.contains( it.value() ) )
+      counts.append( it.value() );
+  }
+
+  std::sort( counts.begin(), counts.end() );
+
+  for( int i = counts.count() - 1; i > -1; --i ) {
+    int key = counts.at( i );
+    QList<QString> items = countHash.values( key );
+    std::sort( items.begin(), items.end() );
+    for( int j = 0; j < items.count(); ++j ) {
+      _entryCounts.append( key );
+      _entries.append( items.at(j) );
+    }
+  }
+
+  _hash.clear();
+}
+
+
+CLogFileContents::CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails ) {
+  _result = ReturnCode::SUCCESS;
+
+  QFile f( filename );
+  if( ! f.open( QFile::ReadOnly ) ) {
+    _result = ReturnCode::INPUT_FILE_PROBLEM;
+    return;
+  }
+
+  QTextStream stream( &f );
+  QString line, line2;
+  do {
+    QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
+
+    line = trimMatch( stream.readLine(), timeStamp );
+
+    if( "(No errors encountered)" == line )
+      continue;
+
+    // My log files sometimes indicate multi-line messages
+    // with ">>>" at the beginning of a block and "<<< (End)" at the end.
+    // This will format such text blocks appropriately.
+    //--------------------------------------------------------------------
+    if( line.contains( ">>>" ) ) {
+      do {
+        line2 = trimMatch( stream.readLine(), timeStamp );
+        line.append( "\n" );
+        line.append( line2 );
+      } while( !line2.contains( "<<<" ) );
+    }
+
+    if( saveFullContents )
+      _fullContents.append( line );
+
+    processLine( line, includeQueryDetails );
+  } while( !line.isNull() );
+
+  generateSummary();
+}
+
+
+void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
+  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+
+  QString keyStr;
+  for( int i = 0; i < _entries.count(); ++i ) {
+    keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
+    *stream << keyStr << _entryCounts.at(i) << ": '" << _entries.at(i) << endl;
+  }
+}
 
 
 

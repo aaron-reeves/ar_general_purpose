@@ -134,4 +134,31 @@ class CLockFile {
     QString _path;
 };
 
+
+class CLogFileContents {
+  public:
+    CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails );
+    void summarize( const bool includeQueryDetails );
+
+    int result() const { return _result; }
+    QStringList logContents() const { return _fullContents; }
+    QStringList summary() const;
+    void writeSummaryToStream( QTextStream* stream );
+
+  protected:
+    void processLine( QString line, const bool includeQueryDetails );
+    QString trimMatch( QString line, const QRegExp& exp );
+    void generateSummary();
+
+    int _result;
+    QStringList _fullContents;
+
+    QList<int> _entryCounts;
+    QStringList _entries;
+    int _maxCount;
+
+    QHash<QString, int> _hash;
+};
+
+
 #endif // LOG_H
