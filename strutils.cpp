@@ -18,6 +18,16 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qdebug.h>
 
 
+QString abbreviatePath( const QString& path ) {
+  QStringList list = path.split( '/' );
+
+  if( 6 >= list.count() )
+    return path;
+  else
+    return QString( "%1/%2/%3/.../%4/%5" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at(2) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+}
+
+
 QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
   bool ok;
   QString res;

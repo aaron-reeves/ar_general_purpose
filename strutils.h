@@ -19,6 +19,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+QString abbreviatePath( const QString& path );
+
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
 QString camelCase( const QString& str );
 QString postgresCase( const QString& str );
