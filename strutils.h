@@ -37,7 +37,7 @@ QString rightTrimmed( QString str );
 QString boolToStr( const bool val ); // returns "-1" or "0"
 QString boolToText( const bool val ); // returns "true" or "false"
 QString boolToYesNo( const bool val ); // returns "Yes" or "No"
-bool strToBool( QString val, bool* ok = NULL );
+bool strToBool( QString val, bool* ok = nullptr );
 QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", "true", or "false"
 
 int strToInt( QString str, const int defaultVal );
