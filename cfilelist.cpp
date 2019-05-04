@@ -12,12 +12,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "cfilelist.h"
 
-#include <qdebug.h>
-#include <qdir.h>
-#include <qfile.h>
-#include <qfileinfo.h>
-#include <qregexp.h>
-#include <qstring.h>
+#include <QtCore>
+#include <QtDebug>
+
+#include <ar_general_purpose/arcommon.h>
 
 // Set to true to enable debugging messages for this file
 #define DEBUG true
@@ -116,7 +114,7 @@ QString CPathString::removeRoot( QString oldRoot ) {
 QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
   QString result;
 
-  if( DEBUG ) qDebug() << "--- CQPathString::replaceRoot";
+  if( DEBUG ) qDb() << "--- CQPathString::replaceRoot";
 
   oldRoot = oldRoot.trimmed();
   oldRoot = oldRoot.replace( '\\', '/' );
@@ -126,19 +124,19 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
     newRoot.truncate( newRoot.length() - 1 );
   }
 
-  if( DEBUG ) qDebug() << "oldRoot is" << oldRoot;
-  if( DEBUG ) qDebug() << "newRoot is" << newRoot;
+  if( DEBUG ) qDb() << "oldRoot is" << oldRoot;
+  if( DEBUG ) qDb() << "newRoot is" << newRoot;
 
   if( 0 == longFileName().indexOf( oldRoot ) ) {
-    if( DEBUG ) qDebug() << "oldRoot found and will be replaced.";
+    if( DEBUG ) qDb() << "oldRoot found and will be replaced.";
     result = removeRoot( oldRoot );
     result.prepend( "/" );
     result.prepend( newRoot );
-    if( DEBUG ) qDebug() << "replaceRoot will return" << result;
+    if( DEBUG ) qDb() << "replaceRoot will return" << result;
     return result;
   }
   else {
-    if( DEBUG ) qDebug() << "oldRoot not found.";
+    if( DEBUG ) qDb() << "oldRoot not found.";
     return longFileName();
   }
 }
@@ -182,7 +180,6 @@ CFileList::~CFileList() {
 
 void CFileList::getFileNames( const QString& dirName, const QString& filter, const bool recurse ) {
   QFileInfo finfo;
-  int i;
   QString completePath;
   QString str;
   CPathString listItem;
@@ -200,16 +197,16 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
 	QDir dir( dirName );
 	dir.setFilter( QDir::Files | QDir::Dirs | QDir::Hidden );
 
-	for( i = 0; i < dir.count(); ++i ) {
-    //qDebug() << dir[i];
+  for( int i = 0; i < dir.entryList().count(); ++i ) {
+    //qDb() << dir[i];
 
 		// Skip the directories "." and ".."
-		if( ( ".." == dir[i] ) || ( "." == dir[i] ) ) {
+    if( ( ".." == dir[i] ) || ( "." == dir[i] ) ) {
 			continue;
 		}
 		else {
 			completePath = dir.absolutePath() + "/" + dir[i];
-      //qDebug() << QString( "Complete path is %1" ).arg( completePath );
+      //qDb() << QString( "Complete path is %1" ).arg( completePath );
       finfo = QFileInfo( completePath );
 
       if( finfo.isDir() ) {
@@ -248,18 +245,18 @@ void CFileList::debugList() {
 	int i;
 	int count = this->count();
 
-	qDebug() << "Starting debug....";
-	qDebug() << "Items in list:" << count;
+  qDb() << "Starting debug....";
+  qDb() << "Items in list:" << count;
 
 	if( 0 < count ) {
     for( i = 0; i < count; ++i ) {
       strp = this->at(i);
-			qDebug() << strp.longFileName();
-      //qDebug() << "Short file name:" << strp.shortFileName();
+      qDb() << strp.longFileName();
+      //qDb() << "Short file name:" << strp.shortFileName();
 		}
 	}
 
-  qDebug() << "Done debugging!" << endl;
+  qDb() << "Done debugging!" << endl;
 }
 
 
@@ -325,27 +322,27 @@ CFileList CFileList::files() const {
 
 
 void testFileList( const QString& directoryName, const QString& filter ) {
-  qDebug() << "--- No recursion:";
+  qDb() << "--- No recursion:";
   CFileList listA( directoryName, filter, false );
   listA.debug();
 
-  qDebug() << endl << "--- With recursion:";
+  qDb() << endl << "--- With recursion:";
   CFileList listB = CFileList( directoryName, filter, true );
   listB.debug();
 
-  qDebug() << endl << "--- Directories only (from recursive list):";
+  qDb() << endl << "--- Directories only (from recursive list):";
   CFileList listC = listB.directories();
   listC.debug();
 
-  qDebug() << endl << "--- Files only (from recursive list):";
+  qDb() << endl << "--- Files only (from recursive list):";
   CFileList listD = listB.files();
   listD.debug();
 
-   qDebug() << endl << "--- Copy constructor (original list without recursion):";
+   qDb() << endl << "--- Copy constructor (original list without recursion):";
   CFileList listE( listA );
   listE.debug();
 
-    qDebug() << endl << "--- Assignment operator (directories only from recursive list):";
+    qDb() << endl << "--- Assignment operator (directories only from recursive list):";
   CFileList listF = listC;
   listF.debug();
 }

@@ -201,7 +201,6 @@ bool CXlCsv::openXls() {
   if( _useSheetname ) {
     if( !wb.hasSheet( _sheetname ) ) {
       setError( ERROR_OTHER, QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetname ) );
-      //qDebug() << _errorMsg;
       return false;
     }
     else {
@@ -211,13 +210,11 @@ bool CXlCsv::openXls() {
 
   if( !wb.hasSheet( _sheetIdx ) ) {
     setError( ERROR_OTHER, QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetIdx ) );
-    //qDebug() << _errorMsg;
     return false;
   }
 
   if( !wb.readSheet( _sheetIdx ) ) {
     setError( ERROR_OTHER, "Specified worksheet could not be read." );
-    //qDebug() << _errorMsg;
     return false;
   }
 
@@ -225,7 +222,6 @@ bool CXlCsv::openXls() {
 
   if( !sheet.isTidy( this->containsFieldList() ) ) {
     setError( ERROR_OTHER, "Specified worksheet does not have a tidy CSV format." );
-    //qDebug() << _errorMsg;
     return false;
   }
 
