@@ -27,18 +27,18 @@ Public License as published by the Free Software Foundation; either version 2 of
 CAppLog appLog;
 CLockFile lockFile;
 
-void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+void logMsg( QString msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessage( msg, logLevel );
 }
 
-void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
+void logMsg( QStringList msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
   for( int i = 0; i < msgs.count(); ++i ) {
     logMsg( msgs.at(i), logLevel );
   }
 }
 
 
-void logVerbose( const QString& msg ) {
+void logVerbose( QString msg ) {
   logMsg( msg, LoggingVerbose );
 }
 
@@ -84,6 +84,8 @@ void CAppLog::initialize() {
 
   _consoleEcho = false;
 
+  _windowsFriendly = false;
+
   setLogLevel( LoggingPending );
 }
 
@@ -118,7 +120,7 @@ void CAppLog::setFileName( QString fileName ) {
 
     // For now, fall through for all other options.
     case OneFile:
-    default:
+      // Nothing to do here//
       break;
   }
 
@@ -181,7 +183,10 @@ bool CAppLog::openLog( void ) {
   
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      *_logTextStream << ::endl << ::flush;
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << ::flush;
+      else
+        *_logTextStream << ::endl << ::flush;
       //qDebug() << "Log file is open.";
       return true;
     }
@@ -255,7 +260,16 @@ void CAppLog::truncateLogFile( void ) {
 }
 
 
-void CAppLog::logMessage( const QString& message, const int logLevel ) {
+
+QString CAppLog::makeWindowsFriendly( QString message ) {
+  message.remove( '\r' );
+  message.replace( '\n', "\r\n" );
+
+  return message;
+}
+
+
+void CAppLog::logMessage( QString message, const int logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
   QString str;
@@ -268,8 +282,12 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
     cout << message << endl << ::flush;
   }
   
+  if( _windowsFriendly ) {
+    message = makeWindowsFriendly( message );
+  }
+
   if( LoggingPending == _logLevel ) {
-    if( !message.isEmpty() ) {
+    if( !message.isEmpty() ) {      
       str = QString( "%1: %2" ).arg( dt ).arg( message );
     }
     else {
@@ -280,10 +298,18 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
     _pending->append( msg );    
   }
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
-    if( !message.isEmpty() )
-      *_logTextStream << ::endl << dt << ": " << message << ::flush;
-    else
-      *_logTextStream << ::endl << message << ::flush;
+    if( !message.isEmpty() ) {
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << dt << ": " << message << ::flush;
+      else
+        *_logTextStream << ::endl << dt << ": " << message << ::flush;
+    }
+    else {
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << message << ::flush;
+      else
+        *_logTextStream << ::endl << message << ::flush;
+    }
 
     ++_logLineCount;
     if( _autoTruncate && (10000 < _logLineCount) ) {
@@ -335,7 +361,13 @@ void CAppLog::processPendingMessages( void ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
         if( msg->_level >= _logLevel ) {
-          *_logTextStream << ::endl << msg->_msg << ::flush;
+          if( _windowsFriendly ) {
+            *_logTextStream << "\r\n" << msg->_msg << ::flush;
+          }
+          else {
+            *_logTextStream << ::endl << msg->_msg << ::flush;
+          }
+
           ++_logLineCount;
           if( _autoTruncate && (10000 < _logLineCount) ) {
             truncateLogFile();

@@ -35,10 +35,10 @@ enum LogLevel {
 };
 
 
-void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
-void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
-void logVerbose( const QString& msg );
-void logBlank( const LogLevel logLevel = LoggingTypical );
+void logMsg( QString msg, const LogLevel logLevel = LoggingTypical );
+void logMsg( QStringList msgs, const LogLevel logLevel = LoggingTypical );
+void logVerbose( QString msg );
+void logBlank(  LogLevel logLevel = LoggingTypical );
 
 
 class CLogMessage {
@@ -66,6 +66,7 @@ class CAppLog {
     CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
     
     bool openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
+    void closeLog( void );
     
     virtual ~CAppLog( void );
     
@@ -75,13 +76,16 @@ class CAppLog {
     void setUseStderr( const bool& val ) { _useStderr = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
+    void setWindowsFriendly( const bool& val ) { _windowsFriendly = val; }
     
-    void logMessage( const QString& message, const int logLevel ); 
-    void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
-    void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
+    void logMessage( QString message, const int logLevel );
+    void typical( QString message ) { logMessage( message, LoggingTypical ); }
+    void verbose( QString message ) { logMessage( message, LoggingVerbose ); }
     
-    const QString fileName() { return _logFileName; }
-    const QString path() { return _logPath; }
+    const QString fileName() const { return _logFileName; }
+    const QString path() const { return _logPath; }
+
+    bool isOpen() const { return _logOpen; }
 
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
@@ -92,9 +96,9 @@ class CAppLog {
     void initialize();
 
     bool openLog( void );
-    void closeLog( void ); 
     void truncateLogFile( void );
     void processPendingMessages( void );
+    QString makeWindowsFriendly( QString message );
     
     QFile* _logFile;
     QTextStream* _logTextStream;
@@ -109,6 +113,7 @@ class CAppLog {
     bool _autoTruncate;
     FileFrequency _freq;
     bool _consoleEcho;
+    bool _windowsFriendly;
     QString _msgInProgress;
 };
 
