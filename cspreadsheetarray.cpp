@@ -101,7 +101,7 @@ void CSpreadsheetCell::debug() {
     originStr = this->_originCell->value().toString();
   }
 
-  qDebug() /*<< "C" << c << "R" << r*/ << QString::number( qlonglong( this ), 16 )
+  qDb() /*<< "C" << c << "R" << r*/ << QString::number( qlonglong( this ), 16 )
            << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
            << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
            << "Value" << this->value().toString()
@@ -174,7 +174,7 @@ void CSpreadsheet::assign( const CSpreadsheet& other ) {
 
 
 void CSpreadsheet::debug( const int padding /* = 10 */) const {
-  qDebug() << QString( "Matrix %1 cols x %2 rows:" ).arg( nCols() ).arg( nRows() );
+  qDb() << QString( "Matrix %1 cols x %2 rows:" ).arg( nCols() ).arg( nRows() );
 
   for( int r = 0; r < this->nRows(); ++r ) {
     QString str = QString( "  Row %1: " ).arg( r );
@@ -183,10 +183,10 @@ void CSpreadsheet::debug( const int padding /* = 10 */) const {
       str.append( rightPaddedStr( QString( "%1" ).arg( this->at( c, r ).value().toString() ), padding ) );
     }
 
-    qDebug() << str;
+    qDb() << str;
   }
 
-  qDebug();
+  qDb();
 }
 
 
@@ -552,15 +552,12 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
 
       if( !cell ) {
-        //qDebug() << cellRow << cellCol << "Cell not read";
         continue;
       }
       else if( cell->isHidden ) {
-        //qDebug() << cellRow << cellCol << "Hidden cell";
         continue;
       }
       else {
-        //qDebug() << "In this loop...";
         QString msg;
 
         QVariant val = processCellXls( cell, msg, _wb );
@@ -746,7 +743,7 @@ void CSpreadsheet::debugMerges() {
         originStr = this->at( c, r )._originCell->value().toString();
       }
 
-      qDebug() << "C" << c << "R" << r << QString::number( qlonglong( &(this->at( c, r ) ) ), 16 )
+      qDb() << "C" << c << "R" << r << QString::number( qlonglong( &(this->at( c, r ) ) ), 16 )
                << "MergeC" << this->at( c, r ).isPartOfMergedCol() << "MergeR" << this->at( c, r ).isPartOfMergedRow()
                << "ColSpan" << this->at( c, r ).colSpan() << "RowSpan" << this->at( c, r ).rowSpan()
                << "Value" << this->at( c, r ).value().toString()
@@ -771,13 +768,8 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
         lastRow = firstRow + this->cell( c, r ).rowSpan();
 
         if( this->cell(c, r).hasColSpan() ) {
-          //qDebug() << "Unmerging row at" << c << r;
-          //this->at( c, r ).debug();
-
           for( int cc = firstCol; cc < lastCol; ++cc ) {
             for( int rr = firstRow; rr < lastRow; ++rr ) {
-              //qDebug() << "cc rr" << cc << rr;
-
               if( c != cc ) {
                 if( duplicateValues )
                   this->at( cc, r )._value = this->at( c, r ).value();
@@ -1069,8 +1061,6 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
   SpreadsheetFileFormat fileFormat = FormatUnknown;
   bool error;
   QString fileType = magicFileTypeInfo( fileName, &error );
-
-  //qDebug() << fileType;
 
   if( error ) {
     if( nullptr != errMsg )
@@ -1598,6 +1588,8 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
     _ok = false;
     _errMsg = "Sheets can written to Format2007 files";
   }
+  _errMsg = QString();
+
   if( !_sheetNames.containsValue( sheetName ) ) {
     _ok = this->addSheet( sheetName );
   }
@@ -1631,8 +1623,6 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
       }
 
       for( int row = 0; row < data.nRows(); ++row ) {
-        //qDebug() << "Row" << row << data.row( row );
-
         for( int col = 0; col < data.nCols(); ++col ) {
           _ok = _xlsx->write( row + rowOffset, col + colOffset, data.at( col, row ) );
           if( !_ok ) {
