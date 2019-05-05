@@ -27,7 +27,7 @@ Public License as published by the Free Software Foundation; either version 2 of
   int main() {
     QString filename = "sampleResults.xlsx";
 
-    CXlCsv csv( filename );
+    CXlCsv csv( CSpreadsheetWorkBook::Format2007, filename, true );
 
     csv.debug();
 
