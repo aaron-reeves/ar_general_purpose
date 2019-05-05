@@ -138,10 +138,9 @@ class CLockFile {
 class CLogFileContents {
   public:
     CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails );
-    void summarize( const bool includeQueryDetails );
 
     int result() const { return _result; }
-    QStringList logContents() const { return _fullContents; }
+    const QStringList& logContents() const { return _fullContents; }
     QStringList summary() const;
     void writeSummaryToStream( QTextStream* stream );
 

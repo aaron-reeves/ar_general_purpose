@@ -562,7 +562,19 @@ void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
 }
 
 
+QStringList CLogFileContents::summary() const {
+  QStringList result;
 
+  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+
+  QString keyStr;
+  for( int i = 0; i < _entries.count(); ++i ) {
+    keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
+    result.append( QString( "%1: %2").arg( keyStr ).arg( _entries.at(i) )  );
+  }
+
+  return result;
+}
 
 
 
