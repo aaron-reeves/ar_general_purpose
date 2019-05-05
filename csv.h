@@ -160,16 +160,17 @@ class QCsv {
     bool toFront(); // Resets to the top of the file, so that moveNext() will return the first row of data.
     int moveNext();  // Moves to the next row of data.  Returns the number of fields encountered, or -1 if the row is empty or does not exist.
 
-    int fieldCount(); // The number of fields/columns in the CSV object
+    int fieldCount() const; // The number of fields/columns in the CSV object
     int rowCount(); // The number of rows in the CSV object.  Not available in line-by-line mode.
+    int rowCount() const;
 
     // The index of the current row.  Line 0 is the first row of data.  A current row number of
     // -1 is used internally to indicate that no data has yet been read from a file.
     int currentRowNumber() const;
 
     // Field/column names are case-insensitive.
-    QString fieldName( const int index ); // Returns the field/column name of field/column index.
-    QStringList fieldNames() {return _fieldNames; } // Returns a list of all field/column names.
+    QString fieldName( const int index ) const; // Returns the field/column name of field/column index.
+    QStringList fieldNames() const {return _fieldNames; } // Returns a list of all field/column names.
     int fieldIndexOf( const QString& fieldName ); // Returns the field/column number of the specified field name.
     bool renameFields( const QStringList& newFieldNames ); // Rename all fields/columns with the names in the list.  The number of new names provided must match the number of existing names.
     bool renameField( QString oldName, QString newName ); // Change the name of field 'oldName' to 'newName'.
@@ -189,6 +190,7 @@ class QCsv {
     QString currentRow(); // Returns the current line of the object as a CSV-formatted string
     QStringList rowData(); // Returns all of the data from the current line of the object as a QStringList
     QStringList rowData( const int idx ); // Returns all of the data from line idx of the object as a QStringList (only for entire-file mode)
+    QStringList rowData( const int idx ) const;
 
     // Returns all of the values in the column/field specified by 'index' or 'fieldName'.
     // Optionally: return only the unique values in this field (if 'unique' is true).
@@ -226,6 +228,8 @@ class QCsv {
     bool removeField( const QString& fieldName ); // Remove the field/column 'fieldName' (as well as all data in the column!)
     bool removeField( const int index ); // Remove the field/column at 'index' (as well as all data in the column)
     bool appendRow( const QStringList& values ); // Add a new row to the end of the CSV structure.
+    bool append(const QCsv& other ); // Add the contents of other to this.
+    bool merge( const QCsv& other ); // Add items from other that do not already appear in structure to this structure.
 
     QString asTable(); // Renders the CSV object as a formatted table with fixed-width columns.
     void debug( int nLines = 0 ); // Prints contents of the object to the debugging console.
@@ -289,8 +293,8 @@ class QCsv {
     void setEolDelimiter( const QString& val ) { _eolDelimiter = val; }
     QString eolDelimiter() const { return _eolDelimiter; }
 
-    // Replaces single quotes " with double quotes "" and wraps s in double quotes.
-    static QString csvQuote( QString s );
+    // Replaces single quotes " with double quotes "", and if the string contains a delimiter or a space, wraps s in double quotes.
+    static QString csvQuote( QString s, const QChar delimiter = ',' );
     static QString csvQuote( QStringList s, const QChar delimiter = ',' );
 
   protected:
@@ -301,6 +305,8 @@ class QCsv {
     bool openFileAndReadHeader();
     int readHeader();
     QString readLine();
+
+    bool identicalFieldNames( const QStringList& otherNames ) const;
 
     void clearError();
     QStringList writeLine( const QStringList& line );
