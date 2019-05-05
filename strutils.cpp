@@ -18,13 +18,40 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qdebug.h>
 
 
-QString abbreviatePath( const QString& path ) {
+QString abbreviatePath( const QString& path, const int targetLength ) {
   QStringList list = path.split( '/' );
+  QString result;
+
 
   if( 6 >= list.count() )
-    return path;
+    result = path;
   else
-    return QString( "%1/%2/%3/.../%4/%5" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at(2) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+    result = QString( "%1/%2/%3/.../%4/%5" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at(2) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+
+  if( 0 == targetLength )
+    return result;
+  else if( targetLength > result.length() )
+    return result;
+  else if( 5 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/%2/.../%3/%4" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+
+  if( targetLength > result.length() )
+    return result;
+  else if( 4 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/%2/.../%3" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 1) );
+
+  if( targetLength > result.length() )
+    return result;
+  else if( 3 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/.../%2" ).arg( list.at(0) ).arg( list.at( list.count() - 1) );
+
+  return result;
 }
 
 
