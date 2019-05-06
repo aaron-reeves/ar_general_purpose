@@ -181,7 +181,7 @@ class CSpreadsheetWorkBook {
     bool error() const { return !_ok; }
     QString errorMessage() const { return _errMsg; }
 
-    int sheetCount() const { return _sheets.count(); }
+    int sheetCount() const { return _sheetNames.count(); }
     bool hasSheet( const int idx );
     bool hasSheet( const QString& sheetName );
     int sheetIndex( const QString& sheetName );
