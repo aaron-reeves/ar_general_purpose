@@ -53,7 +53,7 @@ CAppLog::CAppLog( void ) {
 }
 
 
-CAppLog::CAppLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+CAppLog::CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
   initialize();
 
   openLog( fileName, logLevel, freq );
@@ -95,21 +95,27 @@ CAppLog::~CAppLog( void ) {
 }
 
 
-bool CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
-  setFileFrequency( freq );
-  setFileName( fileName );
-  setLogLevel( logLevel );
+bool CAppLog::openLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+  if( this->isOpen() && ( fileName == _logFileName ) && ( logLevel == _logLevel ) && ( freq == _freq ) ) {
+    return _logOpen;
+  }
+  else {
+    setFileFrequency( freq );
+    setFileName( fileName );
+    setLogLevel( logLevel );
 
-  return _logOpen;
+    return _logOpen;
+  }
 }
 
 
-void CAppLog::setFileName( QString fileName ) {
-  QFileInfo fi( fileName );
+void CAppLog::setFileName( const QString& fileName ) {
+  QString fn = fileName;
+  QFileInfo fi( fn );
 
   switch ( _freq ) {
     case DailyFiles:
-      fileName = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      fn = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
       break;
 
     // For now, fall through for all other options.
@@ -118,7 +124,7 @@ void CAppLog::setFileName( QString fileName ) {
       break;
   }
 
-  _logFileName = fileName;
+  _logFileName = fn;
   _logPath = fi.absolutePath();
 }
 
