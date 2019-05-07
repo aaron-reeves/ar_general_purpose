@@ -14,10 +14,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #ifndef LOG_H
 #define LOG_H
 
-#include <qfile.h>
-#include <qstring.h>
-#include <qtextstream.h>
-#include <qlist.h>
+#include <QtCore>
 
 class CLockFile;
 
@@ -51,9 +48,10 @@ class CLogMessage {
 
 typedef QList<CLogMessage*> TLogMessageList;
 
-class CAppLog {
-  public:
-    
+class CAppLog : public QObject {
+  Q_OBJECT
+
+  public:   
     enum FileFrequency {
       OneFile,
       DailyFiles
@@ -91,6 +89,9 @@ class CAppLog {
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
+
+  signals:
+    void messageLogged( QString msg );
 
   protected:
     void initialize();

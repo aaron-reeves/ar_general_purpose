@@ -48,12 +48,12 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 }
 
 
-CAppLog::CAppLog( void ) {
+CAppLog::CAppLog( void ) : QObject() {
   initialize();
 }
 
 
-CAppLog::CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+CAppLog::CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
   initialize();
 
   openLog( fileName, logLevel, freq );
@@ -316,6 +316,8 @@ void CAppLog::logMessage( QString message, const int logLevel ) {
       truncateLogFile();
     } 
   }
+
+  emit messageLogged( message );
 }
 
 
