@@ -34,6 +34,7 @@ enum LogLevel {
 
 void logMsg( QString msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( QStringList msgs, const LogLevel logLevel = LoggingTypical );
+void logMsgUnique( QString msg, const LogLevel logLevel = LoggingTypical );
 void logVerbose( QString msg );
 void logBlank(  LogLevel logLevel = LoggingTypical );
 
@@ -61,14 +62,14 @@ class CAppLog : public QObject {
     CAppLog( void );
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq = OneFile );
+    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     
-    bool openLog( const QString& fileName, const int logLevel, const FileFrequency freq = OneFile );
+    bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     void closeLog( void );
     
     virtual ~CAppLog( void );
     
-    void setLogLevel( const int logLevel );
+    void setLogLevel(const LogLevel logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
     void setFileName( const QString& fileName );
     void setUseStderr( const bool& val ) { _useStderr = val; }
@@ -76,7 +77,8 @@ class CAppLog : public QObject {
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
     void setWindowsFriendly( const bool& val ) { _windowsFriendly = val; }
     
-    void logMessage( QString message, const int logLevel );
+    void logMessageUnique( QString message, const LogLevel logLevel );
+    void logMessage( QString message, const LogLevel logLevel );
     void typical( QString message ) { logMessage( message, LoggingTypical ); }
     void verbose( QString message ) { logMessage( message, LoggingVerbose ); }
     
@@ -104,7 +106,7 @@ class CAppLog : public QObject {
     QFile* _logFile;
     QTextStream* _logTextStream;
     
-    int _logLevel;
+    LogLevel _logLevel;
     bool _logOpen;
     int _logLineCount;
     QString _logFileName; 
@@ -116,6 +118,9 @@ class CAppLog : public QObject {
     bool _consoleEcho;
     bool _windowsFriendly;
     QString _msgInProgress;
+
+    QSet<QString> _messagesUniqueTypical;
+    QSet<QString> _messagesUniqueVerbose;
 };
 
 

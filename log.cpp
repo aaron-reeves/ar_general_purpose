@@ -25,6 +25,10 @@ void logMsg( QString msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessage( msg, logLevel );
 }
 
+void logMsgUnique( QString msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  appLog.logMessageUnique( msg, logLevel );
+}
+
 void logMsg( QStringList msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
   for( int i = 0; i < msgs.count(); ++i ) {
     logMsg( msgs.at(i), logLevel );
@@ -53,7 +57,7 @@ CAppLog::CAppLog( void ) : QObject() {
 }
 
 
-CAppLog::CAppLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
+CAppLog::CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
   initialize();
 
   openLog( fileName, logLevel, freq );
@@ -95,7 +99,7 @@ CAppLog::~CAppLog( void ) {
 }
 
 
-bool CAppLog::openLog( const QString& fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) {
   if( this->isOpen() && ( fileName == _logFileName ) && ( logLevel == _logLevel ) && ( freq == _freq ) ) {
     return _logOpen;
   }
@@ -128,7 +132,7 @@ void CAppLog::setFileName( const QString& fileName ) {
   _logPath = fi.absolutePath();
 }
 
-void CAppLog::setLogLevel( const int logLevel ) {
+void CAppLog::setLogLevel( const LogLevel logLevel ) {
   _logLevel = logLevel;
   
   // If logging is set to "pending", set up the message list
@@ -268,8 +272,31 @@ QString CAppLog::makeWindowsFriendly( QString message ) {
   return message;
 }
 
+void CAppLog::logMessageUnique( QString message, const LogLevel logLevel ) {
+  switch( logLevel ) {
+    case LoggingTypical:
+      if( !_messagesUniqueTypical.contains( message ) ) {
+        _messagesUniqueTypical.insert( message );
+        logMessage( message, logLevel );
+      }
+      break;
+    case LoggingVerbose:
+      if( !_messagesUniqueVerbose.contains( message ) ) {
+        _messagesUniqueVerbose.insert( message );
+        logMessage( message, logLevel );
+      }
+      break;
+    case LoggingPending:
+      logMessage( message, logLevel );
+      break;
+    case LoggingNone:
+      // Do nothing: Discard the message.
+      break;
+  }
+}
 
-void CAppLog::logMessage( QString message, const int logLevel ) {
+
+void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
   QString str;
