@@ -754,7 +754,7 @@ void CSpreadsheet::debugMerges() {
 }
 
 
-void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
+void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells /* = nullptr */) {
   int firstCol, lastCol, firstRow, lastRow;
 
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
@@ -768,6 +768,10 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
         lastRow = firstRow + this->cell( c, r ).rowSpan();
 
         if( this->cell(c, r).hasColSpan() ) {
+          if( nullptr != rowsWithMergedCells ) {
+            rowsWithMergedCells->insert( r );
+          }
+
           for( int cc = firstCol; cc < lastCol; ++cc ) {
             for( int rr = firstRow; rr < lastRow; ++rr ) {
               if( c != cc ) {
@@ -804,7 +808,7 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues ) {
 
 
 
-void CSpreadsheet::unmergeColumns( const bool duplicateValues ) {
+void CSpreadsheet::unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells /* = nullptr */ ) {
   int firstCol, lastCol, firstRow, lastRow;
 
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
@@ -818,6 +822,10 @@ void CSpreadsheet::unmergeColumns( const bool duplicateValues ) {
         lastRow = firstRow + this->cell( c, r ).rowSpan();
 
         if( this->cell(c, r).hasRowSpan() ) {
+          if( nullptr != colsWithMergedCells ) {
+            colsWithMergedCells->insert( c );
+          }
+
           for( int cc = firstCol; cc < lastCol; ++cc ) {
             for( int rr = firstRow; rr < lastRow; ++rr ) {
 
@@ -855,9 +863,13 @@ void CSpreadsheet::unmergeColumns( const bool duplicateValues ) {
 }
 
 
-void CSpreadsheet::unmergeColumnsAndRows( const bool duplicateValues ) {
-  unmergeRows( duplicateValues );
-  unmergeColumns( duplicateValues );
+void CSpreadsheet::unmergeColumnsAndRows(
+  const bool duplicateValues,
+  QSet<int>* colsWithMergedCells /* = nullptr */,
+  QSet<int>* rowsWithMergedCells /* = nullptr */
+) {
+  unmergeRows( duplicateValues, rowsWithMergedCells );
+  unmergeColumns( duplicateValues, colsWithMergedCells );
 }
 
 

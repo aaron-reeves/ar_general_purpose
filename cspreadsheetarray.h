@@ -117,9 +117,9 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
-    void unmergeColumns( const bool duplicateValues );
-    void unmergeRows( const bool duplicateValues );
-    void unmergeColumnsAndRows( const bool duplicateValues );
+    void unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
+    void unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
+    void unmergeColumnsAndRows( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
     void unmergeCell( const int c, const int r, const bool duplicateValues );
     void unmergeCellsInRow( const int r, const bool duplicateValues );
 
@@ -215,6 +215,7 @@ class CSpreadsheetWorkBook {
 
     bool save();
     bool saveAs( const QString& filename );
+    QString sourceFileName() const { return _srcFileName; }
 
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, bool* ok = nullptr );
 
