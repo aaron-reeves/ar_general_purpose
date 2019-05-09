@@ -351,6 +351,10 @@ QString removeWhiteSpace( QString str1 ) {
   return str1;
 }
 
+QString removeWhiteSpace( const char* str1 ) {
+  return removeWhiteSpace( QString( str1 ) );
+}
+
 
 QString trimPunct( QString str ) {
   str = str.trimmed();

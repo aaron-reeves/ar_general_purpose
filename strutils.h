@@ -32,6 +32,7 @@ QString findAndReplace( QString str3, QString str2, QString str1 );
 QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
 QString removeWhiteSpace( QString str1 );
+QString removeWhiteSpace( const char* str1 );
 QString trimPunct( QString str );
 QString leftTrimmed( QString str );
 QString rightTrimmed( QString str );
