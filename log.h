@@ -59,15 +59,15 @@ class CAppLog : public QObject {
     };
 
     // Creates a log that won't actually record anything.
-    CAppLog( void );
+    CAppLog();
     
     // Creates a log with the indicated file name, that will eventually be written to.
     CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     
     bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
-    void closeLog( void );
+    void closeLog();
     
-    virtual ~CAppLog( void );
+    virtual ~CAppLog();
     
     void setLogLevel(const LogLevel logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
@@ -98,9 +98,9 @@ class CAppLog : public QObject {
   protected:
     void initialize();
 
-    bool openLog( void );
-    void truncateLogFile( void );
-    void processPendingMessages( void );
+    bool openLog();
+    void truncateLogFile();
+    void processPendingMessages();
     QString makeWindowsFriendly( QString message );
     
     QFile* _logFile;
@@ -126,7 +126,7 @@ class CAppLog : public QObject {
 
 class CLockFile {
   public:
-    CLockFile( void );
+    CLockFile();
 
     bool setFileName( const QString& fileName );
     bool useLockFile();

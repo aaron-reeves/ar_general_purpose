@@ -36,7 +36,7 @@ class CPathString: public QString {
         /**
         Creates an empty CPathString
         */
-        CPathString( void );
+        CPathString();
 
         /**
         Creates a new CPathString from a standard QString.
@@ -58,7 +58,7 @@ class CPathString: public QString {
 
         @return QString containing the file name.
         */
-        QString shortFileName( void ) const;
+        QString shortFileName() const;
         QString fileName() const { return shortFileName(); }
 
         /**
@@ -67,7 +67,7 @@ class CPathString: public QString {
 
         @return QString containing the file name. without the extension/type.
         */
-        QString baseName( void ) const;
+        QString baseName() const;
 
         QString completeBaseName() const;
         
@@ -77,7 +77,7 @@ class CPathString: public QString {
 
         @return QString containing the file name extension/type.
         */
-        QString fileType( void ) const;
+        QString fileType() const;
 
         /**
         Returns the complete path.  For example, if the path string is '/home/foo/bar.txt',
@@ -86,7 +86,7 @@ class CPathString: public QString {
 
         @return QString containing the complete path name.
         */
-        QString longFileName( void ) const;
+        QString longFileName() const;
         QString filePath() const { return longFileName(); }
         /**
         Returns just the directory path associated with a file.  For example, if the path string
@@ -170,7 +170,7 @@ class CFileList : public QList<CPathString> {
         Eventually, it might be nice to parameterize the destructor, so that the list may
         be emptied and all elements deleted as well, but it hasn't been an issue yet.
         */
-        virtual ~CFileList( void );
+        virtual ~CFileList();
 
         /**
         Returns a list of all of the directories that contain the files in 'this' list.  For example, if

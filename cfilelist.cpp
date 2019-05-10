@@ -20,7 +20,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 // Set to true to enable debugging messages for this file
 #define DEBUG true
 
-CPathString::CPathString( void ) : QString( ) {
+CPathString::CPathString() : QString( ) {
   // Nothing to do here.
 }
 

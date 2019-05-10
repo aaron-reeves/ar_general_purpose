@@ -88,12 +88,12 @@ class CLookup {
         return _forwardMap.keys().at(i);
       }
 
-      void clear( void ) {
+      void clear() {
         _forwardMap.clear();
         _reverseMap.clear();
       }
 
-      int count( void ) const {
+      int count() const {
         return _forwardMap.count();
       }
 

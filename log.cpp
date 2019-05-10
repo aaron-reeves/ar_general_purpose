@@ -52,7 +52,7 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 }
 
 
-CAppLog::CAppLog( void ) : QObject() {
+CAppLog::CAppLog() : QObject() {
   initialize();
 }
 
@@ -88,7 +88,7 @@ void CAppLog::initialize() {
 }
 
 
-CAppLog::~CAppLog( void ) {
+CAppLog::~CAppLog() {
   closeLog();
   
   if( nullptr != _pending ) {
@@ -179,7 +179,7 @@ void CAppLog::setLogLevel( const LogLevel logLevel ) {
 }
 
 
-bool CAppLog::openLog( void ) {
+bool CAppLog::openLog() {
     _logFile = new QFile( _logFileName );
   
     if( _autoTruncate )
@@ -204,7 +204,7 @@ bool CAppLog::openLog( void ) {
 }
 
 
-void CAppLog::closeLog( void ) {
+void CAppLog::closeLog() {
   if( nullptr != _logFile ) {
     _logFile->close();
     delete _logFile;
@@ -221,7 +221,7 @@ void CAppLog::closeLog( void ) {
 
 
 // Keep the last 3000 lines of the file, and eliminate the rest.
-void CAppLog::truncateLogFile( void ) {
+void CAppLog::truncateLogFile() {
   QStringList list;
   QString readln;
   int i;
@@ -382,7 +382,7 @@ CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
 }
 
 
-void CAppLog::processPendingMessages( void ) {
+void CAppLog::processPendingMessages() {
   CLogMessage* msg;
 
   if( nullptr != _pending ) {
@@ -412,7 +412,7 @@ void CAppLog::processPendingMessages( void ) {
 }
 
 
-CLockFile::CLockFile( void ) {
+CLockFile::CLockFile() {
   _useLockFile = false;
   _fileName = "";
   _path = "";
