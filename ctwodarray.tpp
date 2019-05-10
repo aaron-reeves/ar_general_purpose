@@ -310,6 +310,14 @@ void CTwoDArray<T>::appendRow( const QString& rowName, const QList<T>& values ) 
 
 
 template <class T>
+void CTwoDArray<T>::append( const CTwoDArray<T> array ) {
+  for( int r = 0; r < array.nRows(); ++r ) {
+    this->appendRow( array.row( r ) );
+  }
+}
+
+
+template <class T>
 void CTwoDArray<T>::removeRow( const int rowIdx ) {
   Q_ASSERT( (rowIdx >= 0) && (rowIdx < _nRows) );
   _data.removeAt( rowIdx );

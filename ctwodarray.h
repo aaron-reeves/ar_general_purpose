@@ -45,6 +45,7 @@ class CTwoDArray {
     void appendRow(const QList<T>& values );
     void appendRow( const QString& rowName, const QList<T>& values );
 
+    void append( const CTwoDArray<T> array );
 
     void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
