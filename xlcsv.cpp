@@ -232,7 +232,7 @@ bool CXlCsv::openXls() {
   }
 
   for( int i = starti; i < sheet.nRows(); ++i ) {
-    this->appendRow( sheet.rowAsStringList( i ) );
+    this->append( sheet.rowAsStringList( i ) );
   }
 
   _isOpen = true;
@@ -294,7 +294,7 @@ bool CXlCsv::openXlsx() {
     setFieldNames( list );
   }
   else {
-    this->appendRow( list );
+    this->append( list );
   }
 
   // Subsequent rows definitely contain data.
@@ -318,7 +318,7 @@ bool CXlCsv::openXlsx() {
     }
 
     if( nullsFound < nCols ) {
-      this->appendRow( list );
+      this->append( list );
     }
     else {
       break;
