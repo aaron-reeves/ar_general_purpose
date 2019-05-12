@@ -222,6 +222,13 @@ class CFileList : public QList<CPathString> {
         */
         void getFileNames(const QString& path, const QString& filter, const bool recurse );
 
+
+        /**
+         * @brief asStringList Produces a version of this list as a QStringList
+         * @return a QStringList representation of this list.
+         */
+        QStringList asStringList() const;
+
     private:
         CFileList( bool createDirList );
 

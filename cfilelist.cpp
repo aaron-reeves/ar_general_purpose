@@ -321,6 +321,16 @@ CFileList CFileList::files() const {
 }
 
 
+QStringList CFileList::asStringList() const {
+  QStringList result;
+
+  foreach( CPathString str, *this )
+    result.append( str );
+
+  return result;
+}
+
+
 void testFileList( const QString& directoryName, const QString& filter ) {
   qDb() << "--- No recursion:";
   CFileList listA( directoryName, filter, false );
