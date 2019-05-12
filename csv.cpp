@@ -308,7 +308,7 @@ QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
   setFieldNames( fieldNames );
 
   for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
+    append( data.at(i) );
   }
 
   _isOpen = true;
@@ -319,7 +319,7 @@ QCsv::QCsv( const QStringList& fieldNames, const QStringList& data ) {
   initialize();
   setFieldNames( fieldNames );
 
-  appendRow( data );
+  append( data );
 
   _isOpen = true;
 }
@@ -331,7 +331,7 @@ QCsv::QCsv( const QList<QStringList>& data ) {
   _containsFieldList = false;
 
   for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
+    append( data.at(i) );
   }
 
   _isOpen = true;
@@ -892,7 +892,7 @@ bool QCsv::removeField( const int index ) {
 }
 
 
-bool QCsv::appendRow( const QStringList& values ) {
+bool QCsv::append( const QStringList& values ) {
   // This function only works for qCSV_EntireFile.
   Q_ASSERT( EntireFile == _mode );
   clearError();
@@ -924,7 +924,8 @@ bool QCsv::identicalFieldNames( const QStringList& otherNames ) const {
   if( result ) {
     for( int i = 0; i < this->fieldCount(); ++i ) {
       if( this->fieldName( i ) != otherNames.at(i) ) {
-        return false;
+        result = false;
+        break;
       }
     }
   }
@@ -967,19 +968,22 @@ bool QCsv::merge( const QCsv& other ) {
     return false;
   }
 
+
   if( !this->identicalFieldNames( other.fieldNames() ) ) {
     setError( ERROR_INVALID_FIELD_NAME, "Field names do not match." );
     return false;
   }
 
-  QSet<QString> entries;
+  QSet<QString> haystack;
   foreach( QStringList myData, _data ) {
-    entries.insert( myData.join( '|' ) );
+    QString data = myData.join( '|' ) ;
+    haystack.insert( data );
   }
 
   bool result = true;
   for( int i = 0; i < other.rowCount(); ++i ) {
-    if( !entries.contains( other.rowData(i).join( '|' ) ) ) {
+    QString needle =  other.rowData(i).join( '|' );
+    if( !haystack.contains( needle ) ) {
       result = ( result && this->append( other.rowData( i ) ) );
     }
   }
@@ -1057,7 +1061,7 @@ QCsv QCsv::filter( const int index, const QString& value, const Qt::CaseSensitiv
 
     for( int i = 0; i < _data.count(); ++i ) {
       if( 0 == value.compare( this->field( index, i ), cs ) ) {
-        result.appendRow( _data.at(i) );
+        result.append( _data.at(i) );
       }
     }
   }

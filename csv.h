@@ -227,7 +227,7 @@ class QCsv {
     bool appendField( const QString& fieldName ); // Add a new field/column with the name 'fieldName'.  The field will be empty, but can be added to with setField.
     bool removeField( const QString& fieldName ); // Remove the field/column 'fieldName' (as well as all data in the column!)
     bool removeField( const int index ); // Remove the field/column at 'index' (as well as all data in the column)
-    bool appendRow( const QStringList& values ); // Add a new row to the end of the CSV structure.
+    bool append( const QStringList& values ); // Add a new row to the end of the CSV structure.
     bool append(const QCsv& other ); // Add the contents of other to this.
     bool merge( const QCsv& other ); // Add items from other that do not already appear in structure to this structure.
 
