@@ -19,6 +19,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+QStringList regularExpressionMatches( const QString& pattern, const QString& subject );
+
 QString abbreviatePath( const QString& path , const int targetLength = 0 ); // if targetLength > 0, aim for that.  Otherwise, just do what you can.
 
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
