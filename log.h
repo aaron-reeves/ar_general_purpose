@@ -32,11 +32,11 @@ enum LogLevel {
 };
 
 
-void logMsg( QString msg, const LogLevel logLevel = LoggingTypical );
-void logMsg( QStringList msgs, const LogLevel logLevel = LoggingTypical );
-void logMsgUnique( QString msg, const LogLevel logLevel = LoggingTypical );
-void logVerbose( QString msg );
-void logBlank(  LogLevel logLevel = LoggingTypical );
+void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
+void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
+void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical );
+void logVerbose( const QString& msg );
+void logBlank( const LogLevel logLevel = LoggingTypical );
 
 
 class CLogMessage {
@@ -76,11 +76,11 @@ class CAppLog : public QObject {
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
     void setWindowsFriendly( const bool& val ) { _windowsFriendly = val; }
-    
-    void logMessageUnique( QString message, const LogLevel logLevel );
+
+    void logMessageUnique( const QString& message, const LogLevel logLevel );
     void logMessage( QString message, const LogLevel logLevel );
-    void typical( QString message ) { logMessage( message, LoggingTypical ); }
-    void verbose( QString message ) { logMessage( message, LoggingVerbose ); }
+    void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
+    void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
     const QString fileName() const { return _logFileName; }
     const QString path() const { return _logPath; }
@@ -91,6 +91,8 @@ class CAppLog : public QObject {
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
+
+    void cout();
 
   signals:
     void messageLogged( QString msg );
