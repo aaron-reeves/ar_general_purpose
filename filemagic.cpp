@@ -6,8 +6,12 @@
 #include <qdebug.h>
 #include <qfile.h>
 
-const int CHECKTEXT = 1;
-const int CHECKXLSX = 2;
+enum CheckFileTypes {
+  CHECKTEXT,
+  CHECKXLSX,
+  CHECKXLS
+};
+
 
 QString setMagicPath( bool* error, QString* errorMessage ) {
   QString magicFile;
@@ -139,8 +143,15 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
             || ( fileTypeInfo.contains( "Microsoft OOXML" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
           );
         break;
+      case CHECKXLS:
+        result = (
+          fileTypeInfo.contains( "Composite Document File V2 Document" )
+          || fileTypeInfo.contains( "CDF V2 Document" )
+        );
+        break;
       default:
           Q_ASSERT( false );
+          result = false;
         break;
     }
 
@@ -157,6 +168,10 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
   magicCloseMagic( magic );
 
   return result;
+}
+
+bool magicIsXlsFile( const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
+  return _magicIsType( CHECKXLS, fileName, error, returnTypeInfo, errorMessage );
 }
 
 

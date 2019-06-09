@@ -13,6 +13,7 @@
  */
 bool magicIsAsciiTextFile( const QString& fileName, bool* error = nullptr, QString* returnTypeInfo = nullptr, QString* errorMessage = nullptr );
 bool magicIsXlsxFile( const QString& fileName, bool* error = nullptr, QString* returnTypeInfo = nullptr, QString* errorMessage = nullptr );
+bool magicIsXlsFile( const QString& fileName, bool* error = nullptr, QString* returnTypeInfo = nullptr, QString* errorMessage = nullptr );
 QString magicFileTypeInfo( const QString& fileName, bool* error = nullptr, QString* errorMessage = nullptr );
 bool looksLikeTextFile( const QString& fileName );
 
