@@ -17,6 +17,23 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstringlist.h>
 #include <qdebug.h>
 
+QStringList regularExpressionMatches( const QString& pattern, const QString& subject ) {
+  QStringList matches;
+
+  QRegularExpression rex( pattern );
+  QRegularExpressionMatchIterator rexIt;
+
+  if( rex.isValid() ) {
+    rexIt = rex.globalMatch( subject );
+    while( rexIt.hasNext() ) {
+      QRegularExpressionMatch match = rexIt.next();
+      matches.append( match.captured() );
+    }
+  }
+
+  return matches;
+}
+
 
 QString abbreviatePath( const QString& path, const int targetLength ) {
   QStringList list = path.split( '/' );

@@ -21,15 +21,15 @@ Public License as published by the Free Software Foundation; either version 2 of
 CAppLog appLog;
 CLockFile lockFile;
 
-void logMsg( QString msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessage( msg, logLevel );
 }
 
-void logMsgUnique( QString msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+void logMsgUnique( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessageUnique( msg, logLevel );
 }
 
-void logMsg( QStringList msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
+void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
   for( int i = 0; i < msgs.count(); ++i ) {
     logMsg( msgs.at(i), logLevel );
   }
@@ -220,6 +220,13 @@ void CAppLog::closeLog() {
 }
 
 
+void CAppLog::cout() {
+  for( int i = 0; i < this->_pending->count(); ++i ) {
+    ::cout << _pending->at(i)->_msg << endl << ::flush;
+  }
+}
+
+
 // Keep the last 3000 lines of the file, and eliminate the rest.
 void CAppLog::truncateLogFile() {
   QStringList list;
@@ -272,7 +279,7 @@ QString CAppLog::makeWindowsFriendly( QString message ) {
   return message;
 }
 
-void CAppLog::logMessageUnique( QString message, const LogLevel logLevel ) {
+void CAppLog::logMessageUnique( const QString& message, const LogLevel logLevel ) {
   switch( logLevel ) {
     case LoggingTypical:
       if( !_messagesUniqueTypical.contains( message ) ) {
@@ -306,7 +313,7 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   }
 
   if( _consoleEcho ) {
-    cout << message << endl << ::flush;
+    ::cout << message << endl << ::flush;
   }
   
   if( _windowsFriendly ) {
