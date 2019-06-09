@@ -17,7 +17,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtCore>
 #include <QtXlsx>
 
-#include "csv.h"
+#include <ar_general_purpose/cspreadsheetarray.h>
+#include <ar_general_purpose/csv.h>
 
 /* SAMPLE CODE
    ===========
@@ -26,7 +27,7 @@ Public License as published by the Free Software Foundation; either version 2 of
   int main() {
     QString filename = "sampleResults.xlsx";
 
-    CXlCsv csv( filename );
+    CXlCsv csv( CSpreadsheetWorkBook::Format2007, filename, true );
 
     csv.debug();
 
@@ -43,17 +44,11 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CXlCsv : public QCsv {
   public:
-    enum CXlCsvFileFormat {
-      FormatUnknown,
-      Format2007,   // *.xlsx format, Excel 2007 onward
-      Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
-    };
-
     CXlCsv(); // Constructs an object, the key properties of which must be set separately before the file can be opened.
 
     // Constructs AND OPENS the object.
     CXlCsv(
-      const CXlCsvFileFormat fileFormat,
+      const CSpreadsheetWorkBook::SpreadsheetFileFormat fileFormat,
       const QString& filename,
       const bool containsFieldList,
       const int nLinesToSkip = 0,
@@ -66,8 +61,8 @@ class CXlCsv : public QCsv {
     virtual bool open();
 
     // The file format
-    void setFileFormat( const CXlCsvFileFormat val ) { _fileFormat = val; }
-    CXlCsvFileFormat fileFormat() const { return _fileFormat; }
+    void setFileFormat( const CSpreadsheetWorkBook::SpreadsheetFileFormat val ) { _fileFormat = val; }
+    CSpreadsheetWorkBook::SpreadsheetFileFormat fileFormat() const { return _fileFormat; }
 
     // The number (0-indexed) of the worksheet to process
     void setSheetIdx( const int val );
@@ -95,7 +90,7 @@ class CXlCsv : public QCsv {
 
     bool _errorOnOpen;
 
-    CXlCsvFileFormat _fileFormat;
+    CSpreadsheetWorkBook::SpreadsheetFileFormat _fileFormat;
     QStringList _sheetNames;
     bool _useSheetname;
     int _sheetIdx;

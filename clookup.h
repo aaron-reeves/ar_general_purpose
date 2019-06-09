@@ -12,8 +12,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 */
 
 
-#ifndef CREVERSELOOKUPMAP_H
-#define CREVERSELOOKUPMAP_H
+#ifndef CLOOKUP_H
+#define CLOOKUP_H
 
 #include <QDebug>
 
@@ -40,96 +40,84 @@ int main(int argc, char** argv) {
 #include <qmap.h>
 
 template <class K, class T>
-class CReverseLookupMap {
+class CLookup {
     public:
-      CReverseLookupMap() {
+      CLookup() {
         /* nothing to do here */
       }
 
-      CReverseLookupMap( const CReverseLookupMap& other ) {
+      CLookup( const CLookup& other ) {
         assign( other );
       }
 
-      CReverseLookupMap& operator=( const CReverseLookupMap& other ) {
+      CLookup& operator=( const CLookup& other ) {
         assign( other );
         return *this;
       }
 
-      ~CReverseLookupMap() {
+      ~CLookup() {
         /* nothing to do here */
       }
 
       inline void insert( const K& key, const T& value ) {
-        forwardMap.insert( key, value );
-        reverseMap.insert( value, key );
-      }
-
-      inline void removeKey( const K& key ) {
-        T value = forwardMap.value( key );
-        forwardMap.remove( key );
-        reverseMap.remove(value );
-      }
-
-      inline void removeValue( const T& value ) {
-        K key = reverseMap.value( value );
-        forwardMap.remove( key );
-        reverseMap.remove( value );
+        _forwardMap.insert( key, value );
+        _reverseMap.insert( value, key );
       }
 
       inline T retrieveValue( const K& key ) const {
-        return forwardMap.find( key ).value();
+        return _forwardMap.find( key ).value();
       }
 
       inline K retrieveKey( const T& value ) {
-        return reverseMap.find( value ).value();
+        return _reverseMap.find( value ).value();
       }
 
       inline bool containsValue( const T& value ) const {
-        return reverseMap.contains( value );
+        return _reverseMap.contains( value );
       }
 
       inline bool containsKey( const K& key ) const {
-        return forwardMap.contains( key );
+        return _forwardMap.contains( key );
       }
 
       inline T valueAtIndex( const int i ) const {
-        return forwardMap.values().at(i);
+        return _forwardMap.values().at(i);
       }
 
       inline K keyAtIndex( const int i ) const {
-        return forwardMap.keys().at(i);
+        return _forwardMap.keys().at(i);
       }
 
-      void clear( void ) {
-        forwardMap.clear();
-        reverseMap.clear();
+      void clear() {
+        _forwardMap.clear();
+        _reverseMap.clear();
       }
 
-      int count( void ) const {
-        return forwardMap.count();
+      int count() const {
+        return _forwardMap.count();
       }
 
-      QList<K> keys() const { return forwardMap.keys(); }
-      QList<T> values() const { return forwardMap.values(); }
+      QList<K> keys() const { return _forwardMap.keys(); }
+      QList<T> values() const { return _forwardMap.values(); }
 
       void debug() {
         int i;
         qDebug() << QString( "Forward:" );
-        for( i = 0; i < forwardMap.count(); ++i )
-          qDebug() << "  " << forwardMap.keys().at(i) << forwardMap.values().at(i);
+        for( i = 0; i < _forwardMap.count(); ++i )
+          qDebug() << "  " << _forwardMap.keys().at(i) << _forwardMap.values().at(i);
         qDebug() << "Backward:";
-        for( i = 0; i < reverseMap.count(); ++i )
-          qDebug() << "  " << reverseMap.keys().at(i) << reverseMap.values().at(i);
+        for( i = 0; i < _reverseMap.count(); ++i )
+          qDebug() << "  " << _reverseMap.keys().at(i) << _reverseMap.values().at(i);
       }
 
     protected:
-      void assign( const CReverseLookupMap& other ) {
-        forwardMap = other.forwardMap;
-        reverseMap = other.reverseMap;
+      void assign( const CLookup& other ) {
+        _forwardMap = other._forwardMap;
+        _reverseMap = other._reverseMap;
       }
 
-      QMap<K, T> forwardMap;
-      QMap<T, K> reverseMap;
+      QMap<K, T> _forwardMap;
+      QMap<T, K> _reverseMap;
 };
 
-#endif // CREVERSELOOKUPMAP_H
+#endif // CLOOKUP_H

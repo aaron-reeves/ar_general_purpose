@@ -11,9 +11,9 @@
  * High-level, user-friendly functions
  * -----------------------------------
  */
-bool magicIsAsciiTextFile( const QString& fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
-bool magicIsXlsxFile( const QString& fileName, bool* error = NULL, QString* returnTypeInfo = NULL, QString* errorMessage = NULL );
-QString magicFileTypeInfo( const QString& fileName, bool* error = NULL, QString* errorMessage = NULL );
+bool magicIsAsciiTextFile( const QString& fileName, bool* error = nullptr, QString* returnTypeInfo = nullptr, QString* errorMessage = nullptr );
+bool magicIsXlsxFile( const QString& fileName, bool* error = nullptr, QString* returnTypeInfo = nullptr, QString* errorMessage = nullptr );
+QString magicFileTypeInfo( const QString& fileName, bool* error = nullptr, QString* errorMessage = nullptr );
 bool looksLikeTextFile( const QString& fileName );
 
 

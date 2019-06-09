@@ -1,4 +1,4 @@
-// http://qt-project.org/wiki/Browser_for_QDebug_output
+// https://wiki.qt.io/Browser_for_QDebug_output
 
 #include <ar_general_purpose/logbrowser.h>
  

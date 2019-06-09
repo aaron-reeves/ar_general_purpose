@@ -1,4 +1,4 @@
-// See http://qt-project.org/wiki/Browser_for_QDebug_output
+// See https://wiki.qt.io/Browser_for_QDebug_output
 
 #ifndef LOGBROWSER_H
 #define LOGBROWSER_H

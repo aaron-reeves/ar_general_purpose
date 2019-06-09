@@ -14,10 +14,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #ifndef LOG_H
 #define LOG_H
 
-#include <qfile.h>
-#include <qstring.h>
-#include <qtextstream.h>
-#include <qlist.h>
+#include <QtCore>
 
 class CLockFile;
 
@@ -37,6 +34,7 @@ enum LogLevel {
 
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
+void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logVerbose( const QString& msg );
 void logBlank( const LogLevel logLevel = LoggingTypical );
 
@@ -51,57 +49,66 @@ class CLogMessage {
 
 typedef QList<CLogMessage*> TLogMessageList;
 
-class CAppLog {
-  public:
-    
+class CAppLog : public QObject {
+  Q_OBJECT
+
+  public:   
     enum FileFrequency {
       OneFile,
       DailyFiles
     };
 
     // Creates a log that won't actually record anything.
-    CAppLog( void );
+    CAppLog();
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
+    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     
-    bool openLog( QString fileName, const int logLevel, const FileFrequency freq = OneFile );
+    bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
+    void closeLog();
     
-    virtual ~CAppLog( void );
+    virtual ~CAppLog();
     
-    void setLogLevel( const int logLevel );
+    void setLogLevel(const LogLevel logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
-    void setFileName( QString fileName );
+    void setFileName( const QString& fileName );
     void setUseStderr( const bool& val ) { _useStderr = val; }
     void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
+    void setWindowsFriendly( const bool& val ) { _windowsFriendly = val; }
 
-    void cout();
-    
-    void logMessage( const QString& message, const int logLevel ); 
+    void logMessageUnique( const QString& message, const LogLevel logLevel );
+    void logMessage( QString message, const LogLevel logLevel );
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
-    const QString fileName() { return _logFileName; }
-    const QString path() { return _logPath; }
+    const QString fileName() const { return _logFileName; }
+    const QString path() const { return _logPath; }
+
+    bool isOpen() const { return _logOpen; }
 
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
 
+    void cout();
+
+  signals:
+    void messageLogged( QString msg );
+
   protected:
     void initialize();
 
-    bool openLog( void );
-    void closeLog( void ); 
-    void truncateLogFile( void );
-    void processPendingMessages( void );
+    bool openLog();
+    void truncateLogFile();
+    void processPendingMessages();
+    QString makeWindowsFriendly( QString message );
     
     QFile* _logFile;
     QTextStream* _logTextStream;
     
-    int _logLevel;
+    LogLevel _logLevel;
     bool _logOpen;
     int _logLineCount;
     QString _logFileName; 
@@ -111,13 +118,17 @@ class CAppLog {
     bool _autoTruncate;
     FileFrequency _freq;
     bool _consoleEcho;
+    bool _windowsFriendly;
     QString _msgInProgress;
+
+    QSet<QString> _messagesUniqueTypical;
+    QSet<QString> _messagesUniqueVerbose;
 };
 
 
 class CLockFile {
   public:
-    CLockFile( void );
+    CLockFile();
 
     bool setFileName( const QString& fileName );
     bool useLockFile();
@@ -130,5 +141,31 @@ class CLockFile {
     QString _fileName;
     QString _path;
 };
+
+
+class CLogFileContents {
+  public:
+    CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails );
+
+    int result() const { return _result; }
+    const QStringList& logContents() const { return _fullContents; }
+    QStringList summary() const;
+    void writeSummaryToStream( QTextStream* stream );
+
+  protected:
+    void processLine( QString line, const bool includeQueryDetails );
+    QString trimMatch( QString line, const QRegExp& exp );
+    void generateSummary();
+
+    int _result;
+    QStringList _fullContents;
+
+    QList<int> _entryCounts;
+    QStringList _entries;
+    int _maxCount;
+
+    QHash<QString, int> _hash;
+};
+
 
 #endif // LOG_H

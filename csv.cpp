@@ -308,7 +308,7 @@ QCsv::QCsv( const QStringList& fieldNames, const QList<QStringList>& data ) {
   setFieldNames( fieldNames );
 
   for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
+    append( data.at(i) );
   }
 
   _isOpen = true;
@@ -319,7 +319,7 @@ QCsv::QCsv( const QStringList& fieldNames, const QStringList& data ) {
   initialize();
   setFieldNames( fieldNames );
 
-  appendRow( data );
+  append( data );
 
   _isOpen = true;
 }
@@ -331,7 +331,7 @@ QCsv::QCsv( const QList<QStringList>& data ) {
   _containsFieldList = false;
 
   for( int i = 0; i < data.count(); ++i ) {
-    appendRow( data.at(i) );
+    append( data.at(i) );
   }
 
   _isOpen = true;
@@ -401,7 +401,7 @@ void QCsv::setFieldNames( const QStringList& fieldNames ) {
 
 void QCsv::initialize() {
   _srcFilename = "";
-  _srcFile = NULL;
+  _srcFile = nullptr;
   _isOpen = false;
 
   clearError();
@@ -435,7 +435,7 @@ QCsv& QCsv::operator=( const QCsv& other ) {
 
 void QCsv::assign( const QCsv& other ) {
   _srcFilename = other._srcFilename;
-  _srcFile = NULL;
+  _srcFile = nullptr;
   _isOpen = other._isOpen;
 
   _currentLine = other._currentLine;
@@ -467,10 +467,10 @@ void QCsv::assign( const QCsv& other ) {
 QCsv::~QCsv() {
   this->close();
 
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 }
 
@@ -510,13 +510,10 @@ QString QCsv::currentRow() {
   switch( _mode ) {
     case LineByLine:
       return _currentLine;
-      break;
     case EntireFile:
       return CSV::writeLine( _data.at( _currentRowNumber ) );
-      break;
     default:
       return "";
-      break;
   }
 }
 
@@ -531,11 +528,23 @@ QStringList QCsv::rowData() {
 
 
 QStringList QCsv::rowData( const int idx ) {
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( ( 0 > idx ) || ( _data.count() < idx ) ) {
     _error = ERROR_INDEX_OUT_OF_RANGE;
+    return QStringList();
+  }
+  else {
+    return _data.at( idx );
+  }
+}
+
+
+QStringList QCsv::rowData( const int idx ) const {
+  Q_ASSERT( EntireFile == _mode );
+
+  if( ( 0 > idx ) || ( _data.count() < idx ) ) {
     return QStringList();
   }
   else {
@@ -685,7 +694,7 @@ bool QCsv::setField( const QString& fieldName, const QString& val ) {
 
 bool QCsv::setField( const int index, const int rowNumber, const QString& val ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
   bool result = true; // until shown otherwise.
 
@@ -709,7 +718,7 @@ bool QCsv::setField( const int index, const int rowNumber, const QString& val ) 
 
 bool QCsv::setField( const QString& fieldName, const int rowNumber, const QString& val ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
   bool result = true; // until shown otherwise.
 
@@ -732,7 +741,7 @@ bool QCsv::setField( const QString& fieldName, const int rowNumber, const QStrin
 
 QString QCsv::field( const int index, const int rowNumber ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -752,7 +761,7 @@ QString QCsv::field( const int index, const int rowNumber ) {
 
 QString QCsv::field( const QString& fieldName, const int rowNumber ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -779,7 +788,7 @@ int QCsv::currentRowNumber() const {
 }
 
 
-QString QCsv::fieldName( const int index ){
+QString QCsv::fieldName( const int index ) const {
   QString ret_val = "";
   if ( _containsFieldList ){
     ret_val = _fieldNames.at( index );
@@ -810,7 +819,7 @@ bool QCsv::containsFieldName( const QString& fieldName ) {
 
 bool QCsv::appendField( const QString& fieldName ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -832,7 +841,7 @@ bool QCsv::appendField( const QString& fieldName ) {
 
 bool QCsv::removeField( const QString& fieldName ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -853,7 +862,7 @@ bool QCsv::removeField( const QString& fieldName ) {
 
 bool QCsv::removeField( const int index ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -883,9 +892,9 @@ bool QCsv::removeField( const int index ) {
 }
 
 
-bool QCsv::appendRow( const QStringList& values ) {
+bool QCsv::append( const QStringList& values ) {
   // This function only works for qCSV_EntireFile.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -907,6 +916,81 @@ bool QCsv::appendRow( const QStringList& values ) {
     return false;
   }
 }
+
+
+bool QCsv::identicalFieldNames( const QStringList& otherNames ) const {
+  bool result = ( this->fieldCount() == otherNames.count() );
+
+  if( result ) {
+    for( int i = 0; i < this->fieldCount(); ++i ) {
+      if( this->fieldName( i ) != otherNames.at(i) ) {
+        result = false;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+// Add the contents of other to this.
+bool QCsv::append( const QCsv& other ) {
+  Q_ASSERT( EntireFile == _mode );
+  clearError();
+
+  if( EntireFile != _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    return false;
+  }
+
+  if( !this->identicalFieldNames( other.fieldNames() ) ) {
+    setError( ERROR_INVALID_FIELD_NAME, "Field names do not match." );
+    return false;
+  }
+
+  bool result = true;
+  for( int i = 0; i < other.rowCount(); ++i ) {
+    result = ( result && this->append( other.rowData( i ) ) );
+  }
+
+  return result;
+}
+
+
+// Add items from other that do not already appear in structure to this structure.
+bool QCsv::merge( const QCsv& other ) {
+  Q_ASSERT( EntireFile == _mode );
+  clearError();
+
+  if( EntireFile != _mode ) {
+    setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
+    return false;
+  }
+
+
+  if( !this->identicalFieldNames( other.fieldNames() ) ) {
+    setError( ERROR_INVALID_FIELD_NAME, "Field names do not match." );
+    return false;
+  }
+
+  QSet<QString> haystack;
+  foreach( QStringList myData, _data ) {
+    QString data = myData.join( '|' ) ;
+    haystack.insert( data );
+  }
+
+  bool result = true;
+  for( int i = 0; i < other.rowCount(); ++i ) {
+    QString needle =  other.rowData(i).join( '|' );
+    if( !haystack.contains( needle ) ) {
+      result = ( result && this->append( other.rowData( i ) ) );
+    }
+  }
+
+  return result;
+}
+
 
 
 QStringList QCsv::fieldValues( const QString& fieldName, const bool unique /* = false */ ) {
@@ -964,7 +1048,7 @@ QStringList QCsv::fieldValues( const int index, const bool unique /* = false */ 
 
 QCsv QCsv::filter( const int index, const QString& value, const Qt::CaseSensitivity cs /* = Qt::CaseSensitive */ ) {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   QCsv result;
@@ -977,7 +1061,7 @@ QCsv QCsv::filter( const int index, const QString& value, const Qt::CaseSensitiv
 
     for( int i = 0; i < _data.count(); ++i ) {
       if( 0 == value.compare( this->field( index, i ), cs ) ) {
-        result.appendRow( _data.at(i) );
+        result.append( _data.at(i) );
       }
     }
   }
@@ -991,7 +1075,7 @@ QCsv QCsv::filter( const QString& fieldName, const QString& value, const Qt::Cas
   QCsv result;
 
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -1016,7 +1100,7 @@ QCsv QCsv::filter( const QString& fieldName, const QString& value, const Qt::Cas
 }
 
 
-int QCsv::fieldCount() {
+int QCsv::fieldCount() const {
   if( _containsFieldList )
     return _fieldNames.count();
   else if( LineByLine == _mode )
@@ -1034,6 +1118,17 @@ int QCsv::rowCount() {
     setError( ERROR_WRONG_MODE, "Only EntireFile mode may be used with this function." );
     result = -1;
   }
+  else
+    result = _data.count();
+
+  return result;
+}
+
+int QCsv::rowCount() const {
+  int result;
+
+  if( LineByLine == _mode )
+    result = -1;
   else
     result = _data.count();
 
@@ -1118,11 +1213,11 @@ bool QCsv::setLinesToSkip( const int val ) {
 
 void QCsv::setFilename( QString filename ){
   clearError();
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     _isOpen = false;
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 
   _srcFilename = filename;
@@ -1167,7 +1262,7 @@ bool QCsv::open() {
 bool QCsv::openFileAndReadHeader() {
   clearError();
 
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     delete _srcFile;
   }
 
@@ -1179,7 +1274,7 @@ bool QCsv::openFileAndReadHeader() {
     _error = ERROR_OPEN;
     _errorMsg = "Can not open the source file";
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
   else if( _containsFieldList ) {
     readHeader();
@@ -1190,10 +1285,10 @@ bool QCsv::openFileAndReadHeader() {
 
 
 void QCsv::finishWithFile() {
-  if( NULL != _srcFile ) {
+  if( nullptr != _srcFile ) {
     _srcFile->close();
     delete _srcFile;
-    _srcFile = NULL;
+    _srcFile = nullptr;
   }
 }
 
@@ -1207,7 +1302,7 @@ void QCsv::close(){
 
 bool QCsv::toFront() {
   // This function will not work with qCSV_LineByLine mode.
-  Q_ASSERT( LineByLine != _mode );
+  Q_ASSERT( EntireFile == _mode );
   clearError();
 
   if( LineByLine == _mode ) {
@@ -1470,8 +1565,8 @@ bool QCsv::setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, con
         }
 
         break;
-      case TimeFormat: // Fall through, for now.
-      case DateTimeFormat: // Fall through, for now.
+      //case TimeFormat: // Fall through, for now.
+      //case DateTimeFormat: // Fall through, for now.
       default:
         setError( QCsv::ERROR_OTHER, "Specified field format not yet supported." );
         result = false;
@@ -1591,11 +1686,13 @@ QString QCsv::asTable() {
 }
 
 
-QString QCsv::csvQuote( QString s ) {
+QString QCsv::csvQuote( QString s, const QChar delimiter /* = ',' */ ) {
   if(  s.contains( '"' ) )
     s.replace( '"', "\"\"" );
 
-  s = QString( "\"%1\"" ).arg( s );
+  if( s.contains( QRegExp( "\\s" ) ) || s.contains( delimiter ) )
+    s = QString( "\"%1\"" ).arg( s );
+
   return s;
 }
 

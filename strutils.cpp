@@ -17,6 +17,60 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstringlist.h>
 #include <qdebug.h>
 
+QStringList regularExpressionMatches( const QString& pattern, const QString& subject ) {
+  QStringList matches;
+
+  QRegularExpression rex( pattern );
+  QRegularExpressionMatchIterator rexIt;
+
+  if( rex.isValid() ) {
+    rexIt = rex.globalMatch( subject );
+    while( rexIt.hasNext() ) {
+      QRegularExpressionMatch match = rexIt.next();
+      matches.append( match.captured() );
+    }
+  }
+
+  return matches;
+}
+
+
+QString abbreviatePath( const QString& path, const int targetLength ) {
+  QStringList list = path.split( '/' );
+  QString result;
+
+
+  if( 6 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/%2/%3/.../%4/%5" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at(2) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+
+  if( 0 == targetLength )
+    return result;
+  else if( targetLength > result.length() )
+    return result;
+  else if( 5 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/%2/.../%3/%4" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+
+  if( targetLength > result.length() )
+    return result;
+  else if( 4 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/%2/.../%3" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 1) );
+
+  if( targetLength > result.length() )
+    return result;
+  else if( 3 >= list.count() )
+    result = path;
+  else
+    result = QString( "%1/.../%2" ).arg( list.at(0) ).arg( list.at( list.count() - 1) );
+
+  return result;
+}
+
 
 QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
   bool ok;
@@ -135,7 +189,7 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
     || "1" == val
     || "-1" == val
   ) {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = true;
     return true;
   } else if (
@@ -145,12 +199,12 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
     || "false" == val
     || "0" == val
   ) {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = true;
     return false;
   }
   else {
-    if( NULL != ok )
+    if( nullptr != ok )
       *ok = false;
     return false;
   }
@@ -178,51 +232,61 @@ QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ 
 
 
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
-  int i;
-  int origStrLen;
-
-  //Q_ASSERT( str.length() <= places );
-
-  if( toPad.length() >= places ) {
-    toPad = toPad.left( places - 1 );
+  if( places == toPad.length() ) {
+    return toPad;
   }
+  else {
+    int i;
+    int origStrLen;
 
-  //qDebug() << places << str.length() << (places - str.length());
+    //Q_ASSERT( str.length() <= places );
 
-  origStrLen = toPad.length();
-
-  if( origStrLen < places ) {
-    for( i = 0; i < places - origStrLen; ++i ) {
-      toPad.prepend( padChar );
-      //qDebug() << i << toPad;
+    if( toPad.length() > places ) {
+      toPad = toPad.left( places - 1 );
     }
-  }
 
-  return toPad;
+    //qDebug() << places << str.length() << (places - str.length());
+
+    origStrLen = toPad.length();
+
+    if( origStrLen < places ) {
+      for( i = 0; i < places - origStrLen; ++i ) {
+        toPad.prepend( padChar );
+        //qDebug() << i << toPad;
+      }
+    }
+
+    return toPad;
+  }
 }
 
 
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* = ' ' */ ) {
-  int i;
-  int origStrLen;
-
-  if( toPad.length() > places )
-    qDebug() << toPad << places << toPad.length() << (places - toPad.length());
-
-  //Q_ASSERT( toPad.length() <= places );
-
-  if( toPad.length() >= places ) {
-    toPad = toPad.left( places - 1 );
+  if( places == toPad.length() ) {
+    return toPad;
   }
+  else {
+    int i;
+    int origStrLen;
 
-  origStrLen = toPad.length();
+    if( toPad.length() > places )
+      qDebug() << toPad << places << toPad.length() << (places - toPad.length());
 
-  if( origStrLen < places ) {
-    for( i = 0; i < places - origStrLen; ++i )
-      toPad.append( padChar );
+    //Q_ASSERT( toPad.length() <= places );
+
+    if( toPad.length() >= places ) {
+      toPad = toPad.left( places - 1 );
+    }
+
+    origStrLen = toPad.length();
+
+    if( origStrLen < places ) {
+      for( i = 0; i < places - origStrLen; ++i )
+        toPad.append( padChar );
+    }
+
+    return toPad;
   }
-
-  return toPad;
 }
 
 
@@ -302,6 +366,10 @@ QString removeWhiteSpace( QString str1 ) {
   str1.replace( QRegExp( "\\s" ), "" );
 
   return str1;
+}
+
+QString removeWhiteSpace( const char* str1 ) {
+  return removeWhiteSpace( QString( str1 ) );
 }
 
 
@@ -455,6 +523,27 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
     //result.append( padding ); // Now handled by the function above.
     result.append( destLines.at(i) );
     result.append( "\n" );
+  }
+
+  return result;
+}
+
+QStringList stringsFromVariants( const QList<QVariant>& variants ) {
+  QStringList result;
+
+  for( int i = 0; i < variants.count(); ++i ) {
+    result.append( variants.at(i).toString() );
+  }
+
+  return result;
+}
+
+
+QStringList stringsFromVariants( const QVector<QVariant>& variants ) {
+  QStringList result;
+
+  for( int i = 0; i < variants.length(); ++i ) {
+    result.append( variants.at(i).toString() );
   }
 
   return result;
@@ -869,7 +958,7 @@ QString stringListListTableRow( QString label, int len ) {
 
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader ) {
-  if(( NULL == stream) ) {
+  if(( nullptr == stream) ) {
     //qDebug() << "No stream in printTableFormat()";
     return;
   }

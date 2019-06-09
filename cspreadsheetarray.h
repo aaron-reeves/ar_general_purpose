@@ -29,6 +29,7 @@ class CSpreadsheetWorkBook;
 
 
 class CSpreadsheetCell {
+  friend class CSpreadsheet;
   public:
     CSpreadsheetCell();
     CSpreadsheetCell( const QVariant val );
@@ -37,13 +38,32 @@ class CSpreadsheetCell {
     CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
     ~CSpreadsheetCell();
 
-    void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
-    bool hasSpan() const { return ( (0 != _colSpan) || (0 != _rowSpan) ); }
-    bool isMerged() const { return hasSpan(); }
+    bool isNull() const { return this->value().isNull(); }
+    bool isEmpty() const { return ( this->isNull() || ( (QVariant::String == this->value().type()) && ( this->value().toString().isEmpty() ) ) ); }
+
+    // FIXME: Move this functionality to CSpreadsheet, so that _originCell can be set.
+    //void setSpan( const int colSpan, const int rowSpan ) { _colSpan = colSpan; _rowSpan = rowSpan; }
+
+    // Only the first cell in a merged range will have a span.
+    // Other cells in the range will know that they are merged, but only the first cell knows the extent of the range.
+    bool hasRowSpan() const { return (1 < _rowSpan); }
+    bool hasColSpan() const { return (1 < _colSpan); }
+    bool hasSpan() const { return ( hasColSpan() || hasRowSpan() ); }
+
+    // Cells that span multiple rows are part of a merged COLUMN.
+    // Cells that span multiple columns are part of a merged ROW.
+    bool isPartOfMergedRow() { return _isPartOfMergedRow; }
+    bool isPartOfMergedCol() { return _isPartOfMergedCol; }
+    bool isPartOfMergedRange() { return ( isPartOfMergedCol() || isPartOfMergedRow() ); }
+
     const QXlsx::CellRange mergedRange( const int col, const int row ) const;
+    int colSpan() const { return _colSpan; }
+    int rowSpan() const { return _rowSpan; }
 
     void setValue( QVariant value ) { _value = value; }
     const QVariant value() const { return _value; }
+
+    void debug();
 
   protected:
     void assign( const CSpreadsheetCell& other );
@@ -51,6 +71,19 @@ class CSpreadsheetCell {
     QVariant _value;
     int _colSpan;
     int _rowSpan;
+
+    // When cells are merged, all but the first cell in the range will appear to be empty.
+    // Other cells have no knowledge that they are actually merged, unless these flags are set.
+    // When these flags are set, then it's possible to work backward to the first cell in the range.
+    bool _isPartOfMergedRow;
+    bool _isPartOfMergedCol;
+
+    // The "origin" cell knows which other cells are merged with it, but it's not easy to get from a merged cell back to its "origin".
+    // That's what this pointer is for.
+    // It will be set by CSpreadsheet.flagMergedCells() and changed as needed by other CSpreadsheet merge/unmerge functions.
+    CSpreadsheetCell* _originCell;
+
+    QSet<CSpreadsheetCell*> _linkedCells;
 };
 
 
@@ -67,6 +100,15 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     ~CSpreadsheet();
 
+    CSpreadsheetCell& cell( const int c, const int r ) { return this->value( c, r ); }
+    const CSpreadsheetCell& cell( const int c, const int r ) const { return this->value( c, r ); }
+
+    QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
+    QVariant cellValue( const QString& cellLabel ) const;
+
+    bool compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+    bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber );
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
@@ -75,17 +117,39 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
+    void unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
+    void unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
+    void unmergeColumnsAndRows( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
+    void unmergeCell( const int c, const int r, const bool duplicateValues );
+    void unmergeCellsInRow( const int r, const bool duplicateValues );
+
+    bool columnIsEmpty( const int c, const bool excludeHeaderRow = false );
+    bool rowIsEmpty( const int r );
+    bool hasEmptyColumns( const bool excludeHeaderRow = false );
+    bool hasEmptyRows();
+    void removeEmptyColumns( const bool excludeHeaderRow = false );
+    void removeEmptyRows();
+
+    void appendRow( const QVariantList& values );
+    void appendRow( const QStringList& values );
+
     void debug( const int padding = 10 ) const;
+    void debugMerges();
+
+    CTwoDArray<QVariant> data( const bool containsHeaderRow );
+
+    static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
 
   protected:
     void initialize();
+    void flagMergedCells();
 
     CSpreadsheetWorkBook* _wb;
-    bool _hasMergedCells;
+    bool _hasSpannedCells;
 
     void assign( const CSpreadsheet& other );
 
-    static QVariant processCellXls( xls::xlsCell* cell, QString& msg, CSpreadsheetWorkBook* wb );
+    static QVariant processCellXls( xls::xlsCell* cellValue, QString& msg, CSpreadsheetWorkBook* wb );
 
     // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
     static QDate xlsDate( const int val, const bool is1904DateSystem );
@@ -103,6 +167,7 @@ class CSpreadsheetWorkBook {
     };
 
     CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput = false );
+    CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput = false );
     ~CSpreadsheetWorkBook();
 
     bool readSheet( const int sheetIdx );
@@ -112,9 +177,11 @@ class CSpreadsheetWorkBook {
     QVariantList firstRowFromSheet( const int sheetIdx );
     QVariantList rowFromSheet( const int rowIdx, const int sheetIdx );
 
+    bool ok() const { return _ok; }
     bool error() const { return !_ok; }
-    QString erroMessage() const { return _errMsg; }
+    QString errorMessage() const { return _errMsg; }
 
+    int sheetCount() const { return _sheetNames.count(); }
     bool hasSheet( const int idx );
     bool hasSheet( const QString& sheetName );
     int sheetIndex( const QString& sheetName );
@@ -127,7 +194,35 @@ class CSpreadsheetWorkBook {
     bool isXlsTime( const int xf, const double d );
     bool isXlsDateTime( const int xf, const double d );
 
+
+    // Functions for manipulating and writing workbooks
+    //-------------------------------------------------
+    bool addSheet( const QString& sheetName = QString() );
+    bool deleteSheet( const int sheetIdx );
+    bool deleteSheet( const QString& sheetName );
+
+    bool writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data );
+    bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data );
+
+    // Consider writing these functions some day...
+    //bool writeSheet( const int sheetIdx, QCsv* data );
+    //bool writeSheet( const QString& sheetName, QCsv* data );
+    //bool writeSheet( const int sheetIdx, CSpreadsheet data );
+    //bool writeSheet( const QString& sheetName, CSpreadsheet data );
+
+    bool selectSheet( const int sheetIdx );
+    bool selectSheet( const QString& name );
+
+    bool save();
+    bool saveAs( const QString& filename );
+    QString sourceFileName() const { return _srcFileName; }
+
+    static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, bool* ok = nullptr );
+
   protected:
+    void openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput );
+    SpreadsheetFileFormat guessFileFormat();
+
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
 

@@ -19,6 +19,10 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+QStringList regularExpressionMatches( const QString& pattern, const QString& subject );
+
+QString abbreviatePath( const QString& path , const int targetLength = 0 ); // if targetLength > 0, aim for that.  Otherwise, just do what you can.
+
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
 QString camelCase( const QString& str );
 QString postgresCase( const QString& str );
@@ -30,6 +34,7 @@ QString findAndReplace( QString str3, QString str2, QString str1 );
 QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
 QString removeWhiteSpace( QString str1 );
+QString removeWhiteSpace( const char* str1 );
 QString trimPunct( QString str );
 QString leftTrimmed( QString str );
 QString rightTrimmed( QString str );
@@ -37,7 +42,7 @@ QString rightTrimmed( QString str );
 QString boolToStr( const bool val ); // returns "-1" or "0"
 QString boolToText( const bool val ); // returns "true" or "false"
 QString boolToYesNo( const bool val ); // returns "Yes" or "No"
-bool strToBool( QString val, bool* ok = NULL );
+bool strToBool( QString val, bool* ok = nullptr );
 QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", "true", or "false"
 
 int strToInt( QString str, const int defaultVal );
@@ -49,6 +54,9 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar = '
 QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
 QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
 QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
+
+QStringList stringsFromVariants( const QList<QVariant>& variants );
+QStringList stringsFromVariants( const QVector<QVariant>& variants );
 
 bool isComment( const QString st );
 

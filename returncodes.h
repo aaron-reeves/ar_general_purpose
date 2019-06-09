@@ -38,7 +38,9 @@ namespace ReturnCode {
     BAD_DATABASE             = 0x04000, //  16384
     FATAL_ERROR              = 0x08000, //  32768
     APPLICATION_ERROR        = 0x10000, //  65536
-    UNRECOGNIZED_FIELD       = 0x20000  // 131072
+    UNRECOGNIZED_FIELD       = 0x20000, // 131072
+    CHECKSUM_PROBLEM         = 0x40000, // 262144
+    UNKNOWN_RESULT           = 0x80000  // 524288
     //NEXT_PROBLEM = ???
     //...
   };

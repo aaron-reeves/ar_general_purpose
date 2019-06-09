@@ -13,22 +13,20 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "log.h"
 
-#include <QDateTime>
-#include <QFile>
-#include <QString>
-#include <QTextStream>
-#include <QStringList>
+#include <QtCore>
 #include <QDebug>
-#include <QDir>
-#include <QFileInfo>
 
-#include <ar_general_purpose/qcout.h>
+#include <ar_general_purpose/arcommon.h>
 
 CAppLog appLog;
 CLockFile lockFile;
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   appLog.logMessage( msg, logLevel );
+}
+
+void logMsgUnique( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  appLog.logMessageUnique( msg, logLevel );
 }
 
 void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
@@ -38,7 +36,7 @@ void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypica
 }
 
 
-void logVerbose( const QString& msg ) {
+void logVerbose( QString msg ) {
   logMsg( msg, LoggingVerbose );
 }
 
@@ -54,12 +52,12 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 }
 
 
-CAppLog::CAppLog( void ) {
+CAppLog::CAppLog() : QObject() {
   initialize();
 }
 
 
-CAppLog::CAppLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
+CAppLog::CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
   initialize();
 
   openLog( fileName, logLevel, freq );
@@ -71,9 +69,9 @@ void CAppLog::initialize() {
   _logFileName = "";
   _logPath = "";
 
-  _logFile = NULL;
-  _logTextStream = NULL;
-  _pending = NULL;
+  _logFile = nullptr;
+  _logTextStream = nullptr;
+  _pending = nullptr;
 
   _logLineCount = 0;
 
@@ -84,49 +82,57 @@ void CAppLog::initialize() {
 
   _consoleEcho = false;
 
+  _windowsFriendly = false;
+
   setLogLevel( LoggingPending );
 }
 
 
-CAppLog::~CAppLog( void ) {
+CAppLog::~CAppLog() {
   closeLog();
   
-  if( NULL != _pending ) {
+  if( nullptr != _pending ) {
     qDeleteAll( _pending->begin(), _pending->end() );
     delete _pending;
-    _pending = NULL;
+    _pending = nullptr;
   }  
 }
 
 
-bool CAppLog::openLog( QString fileName, const int logLevel, const FileFrequency freq /* = OneFile */ ) {
-  setFileFrequency( freq );
-  setFileName( fileName );
-  setLogLevel( logLevel );
+bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) {
+  if( this->isOpen() && ( fileName == _logFileName ) && ( logLevel == _logLevel ) && ( freq == _freq ) ) {
+    return _logOpen;
+  }
+  else {
+    setFileFrequency( freq );
+    setFileName( fileName );
+    setLogLevel( logLevel );
 
-  return _logOpen;
+    return _logOpen;
+  }
 }
 
 
-void CAppLog::setFileName( QString fileName ) {
-  QFileInfo fi( fileName );
+void CAppLog::setFileName( const QString& fileName ) {
+  QString fn = fileName;
+  QFileInfo fi( fn );
 
   switch ( _freq ) {
     case DailyFiles:
-      fileName = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      fn = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
       break;
 
     // For now, fall through for all other options.
     case OneFile:
-    default:
+      // Nothing to do here//
       break;
   }
 
-  _logFileName = fileName;
+  _logFileName = fn;
   _logPath = fi.absolutePath();
 }
 
-void CAppLog::setLogLevel( const int logLevel ) {
+void CAppLog::setLogLevel( const LogLevel logLevel ) {
   _logLevel = logLevel;
   
   // If logging is set to "pending", set up the message list
@@ -135,7 +141,7 @@ void CAppLog::setLogLevel( const int logLevel ) {
     if( _logOpen ) {
       closeLog();
     }
-    if( NULL == _pending ) {
+    if( nullptr == _pending ) {
       _pending = new TLogMessageList();
     }
   }
@@ -146,10 +152,10 @@ void CAppLog::setLogLevel( const int logLevel ) {
     if( _logOpen ) {
       closeLog();
     }
-    if( NULL != _pending ) {
+    if( nullptr != _pending ) {
       qDeleteAll( _pending->begin(), _pending->end() );
       delete _pending;
-      _pending = NULL;  
+      _pending = nullptr;
     }  
   }
   
@@ -173,7 +179,7 @@ void CAppLog::setLogLevel( const int logLevel ) {
 }
 
 
-bool CAppLog::openLog( void ) {
+bool CAppLog::openLog() {
     _logFile = new QFile( _logFileName );
   
     if( _autoTruncate )
@@ -181,30 +187,33 @@ bool CAppLog::openLog( void ) {
   
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      *_logTextStream << ::endl << ::flush;
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << ::flush;
+      else
+        *_logTextStream << ::endl << ::flush;
       //qDebug() << "Log file is open.";
       return true;
     }
     else {
       //qDebug() << "Log file did not open!";
       delete _logFile;
-      _logFile = NULL;
-      _logTextStream = NULL;
+      _logFile = nullptr;
+      _logTextStream = nullptr;
       return false;
     }
 }
 
 
-void CAppLog::closeLog( void ) {
-  if( NULL != _logFile ) {
+void CAppLog::closeLog() {
+  if( nullptr != _logFile ) {
     _logFile->close();
     delete _logFile;
-    _logFile = NULL;    
+    _logFile = nullptr;
   }
   
-  if( NULL != _logTextStream ) {
+  if( nullptr != _logTextStream ) {
     delete _logTextStream;
-    _logTextStream = NULL;
+    _logTextStream = nullptr;
   }
   
   _logOpen = false;
@@ -219,7 +228,7 @@ void CAppLog::cout() {
 
 
 // Keep the last 3000 lines of the file, and eliminate the rest.
-void CAppLog::truncateLogFile( void ) {
+void CAppLog::truncateLogFile() {
   QStringList list;
   QString readln;
   int i;
@@ -262,7 +271,39 @@ void CAppLog::truncateLogFile( void ) {
 }
 
 
-void CAppLog::logMessage( const QString& message, const int logLevel ) {
+
+QString CAppLog::makeWindowsFriendly( QString message ) {
+  message.remove( '\r' );
+  message.replace( '\n', "\r\n" );
+
+  return message;
+}
+
+void CAppLog::logMessageUnique( const QString& message, const LogLevel logLevel ) {
+  switch( logLevel ) {
+    case LoggingTypical:
+      if( !_messagesUniqueTypical.contains( message ) ) {
+        _messagesUniqueTypical.insert( message );
+        logMessage( message, logLevel );
+      }
+      break;
+    case LoggingVerbose:
+      if( !_messagesUniqueVerbose.contains( message ) ) {
+        _messagesUniqueVerbose.insert( message );
+        logMessage( message, logLevel );
+      }
+      break;
+    case LoggingPending:
+      logMessage( message, logLevel );
+      break;
+    case LoggingNone:
+      // Do nothing: Discard the message.
+      break;
+  }
+}
+
+
+void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
   QString str;
@@ -275,8 +316,12 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
     ::cout << message << endl << ::flush;
   }
   
+  if( _windowsFriendly ) {
+    message = makeWindowsFriendly( message );
+  }
+
   if( LoggingPending == _logLevel ) {
-    if( !message.isEmpty() ) {
+    if( !message.isEmpty() ) {      
       str = QString( "%1: %2" ).arg( dt ).arg( message );
     }
     else {
@@ -287,16 +332,26 @@ void CAppLog::logMessage( const QString& message, const int logLevel ) {
     _pending->append( msg );    
   }
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
-    if( !message.isEmpty() )
-      *_logTextStream << ::endl << dt << ": " << message << ::flush;
-    else
-      *_logTextStream << ::endl << message << ::flush;
+    if( !message.isEmpty() ) {
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << dt << ": " << message << ::flush;
+      else
+        *_logTextStream << ::endl << dt << ": " << message << ::flush;
+    }
+    else {
+      if( _windowsFriendly )
+        *_logTextStream << "\r\n" << message << ::flush;
+      else
+        *_logTextStream << ::endl << message << ::flush;
+    }
 
     ++_logLineCount;
     if( _autoTruncate && (10000 < _logLineCount) ) {
       truncateLogFile();
     } 
   }
+
+  emit messageLogged( message );
 }
 
 
@@ -334,15 +389,21 @@ CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
 }
 
 
-void CAppLog::processPendingMessages( void ) {
+void CAppLog::processPendingMessages() {
   CLogMessage* msg;
 
-  if( NULL != _pending ) {
+  if( nullptr != _pending ) {
     while( !( _pending->isEmpty() ) ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
         if( msg->_level >= _logLevel ) {
-          *_logTextStream << ::endl << msg->_msg << ::flush;
+          if( _windowsFriendly ) {
+            *_logTextStream << "\r\n" << msg->_msg << ::flush;
+          }
+          else {
+            *_logTextStream << ::endl << msg->_msg << ::flush;
+          }
+
           ++_logLineCount;
           if( _autoTruncate && (10000 < _logLineCount) ) {
             truncateLogFile();
@@ -353,12 +414,12 @@ void CAppLog::processPendingMessages( void ) {
     } 
     
     delete _pending;
-    _pending = NULL; 
+    _pending = nullptr;
   }
 }
 
 
-CLockFile::CLockFile( void ) {
+CLockFile::CLockFile() {
   _useLockFile = false;
   _fileName = "";
   _path = "";
@@ -403,11 +464,159 @@ bool CLockFile::remove() {
 }
 
 
+QString CLogFileContents::trimMatch( QString line, const QRegExp& exp ) {
+  // Trim off the indicated bits that might appear at the beginning of the line
+  //---------------------------------------------------------------------------
+  exp.exactMatch( line );
+  int matchLen1 = exp.matchedLength();
+  line = line.right( line.length() - matchLen1 );
+
+  return line.trimmed();
+}
 
 
+void CLogFileContents::processLine( QString line, const bool includeQueryDetails ) {
+  if( line.trimmed().isEmpty() )
+    return;
+
+  QString msg;
+
+  // My log files sometimes indicate multi-line messages
+  // with ">>>" at the beginning of a block and "<<< (End)" at the end.
+  // This will format such text blocks appropriately.
+  //-------------------------------------------------------------------
+  if( line.contains( ">>>" ) ) {
+    QStringList list = line.split( '\n' );
+
+    if( includeQueryDetails && ( 2 < list.count() ) ) {
+      msg = QString( "%1 | %2" ).arg( list.at(1).trimmed() ).arg( list.at(2).trimmed() );
+    }
+    else {
+      msg = list.at(1).trimmed();
+    }
+
+    msg = trimMatch( msg, QRegExp( "^ERROR[:]" ) );
+  }
+
+  // Otherwise, my log files begin with "Line xxx:" or "Lines xxx, yyy:".
+  // This statement strips this bit of noise away.
+  //---------------------------------------------------------------------
+  else if( line.startsWith( "Lines" ) ) {
+    msg = trimMatch( line, QRegExp( "^Lines\\s[0-9]+\\s?[,]\\s?[0-9]+[:]" ) );
+  }
+  else if( line.startsWith( "Line" ) ) {
+    msg = trimMatch( line, QRegExp( "^Line\\s[0-9]+[:]" ) );
+  }
+  else {
+    msg = line;
+  }
+
+  msg.replace( QRegExp( "line\\s[0-9]+" ), "line x" );
+
+  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), "(detail: x)" );
+
+  if( _hash.contains( msg ) )
+    _hash[msg] = _hash.value( msg ) + 1;
+  else
+    _hash.insert( msg, 1 );
+}
 
 
+void CLogFileContents::generateSummary() {
+  QMultiHash<int, QString> countHash;
+  QList<int> counts;
+  _maxCount = 0;
 
+  QHashIterator<QString, int> it( _hash );
+  while( it.hasNext() ) {
+    it.next();
+    countHash.insert( it.value(), it.key() );
+    _maxCount = std::max( _maxCount,  it.value() );
+    if( !counts.contains( it.value() ) )
+      counts.append( it.value() );
+  }
+
+  std::sort( counts.begin(), counts.end() );
+
+  for( int i = counts.count() - 1; i > -1; --i ) {
+    int key = counts.at( i );
+    QList<QString> items = countHash.values( key );
+    std::sort( items.begin(), items.end() );
+    for( int j = 0; j < items.count(); ++j ) {
+      _entryCounts.append( key );
+      _entries.append( items.at(j) );
+    }
+  }
+
+  _hash.clear();
+}
+
+
+CLogFileContents::CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails ) {
+  _result = ReturnCode::SUCCESS;
+
+  QFile f( filename );
+  if( ! f.open( QFile::ReadOnly ) ) {
+    _result = ReturnCode::INPUT_FILE_PROBLEM;
+    return;
+  }
+
+  QTextStream stream( &f );
+  QString line, line2;
+  do {
+    QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
+
+    line = trimMatch( stream.readLine(), timeStamp );
+
+    if( "(No errors encountered)" == line )
+      continue;
+
+    // My log files sometimes indicate multi-line messages
+    // with ">>>" at the beginning of a block and "<<< (End)" at the end.
+    // This will format such text blocks appropriately.
+    //--------------------------------------------------------------------
+    if( line.contains( ">>>" ) ) {
+      do {
+        line2 = trimMatch( stream.readLine(), timeStamp );
+        line.append( "\n" );
+        line.append( line2 );
+      } while( !line2.contains( "<<<" ) );
+    }
+
+    if( saveFullContents )
+      _fullContents.append( line );
+
+    processLine( line, includeQueryDetails );
+  } while( !line.isNull() );
+
+  generateSummary();
+}
+
+
+void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
+  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+
+  QString keyStr;
+  for( int i = 0; i < _entries.count(); ++i ) {
+    keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
+    *stream << keyStr << ": '" << _entries.at(i) << endl;
+  }
+}
+
+
+QStringList CLogFileContents::summary() const {
+  QStringList result;
+
+  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+
+  QString keyStr;
+  for( int i = 0; i < _entries.count(); ++i ) {
+    keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
+    result.append( QString( "%1: %2").arg( keyStr ).arg( _entries.at(i) )  );
+  }
+
+  return result;
+}
 
 
 

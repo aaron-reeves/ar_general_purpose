@@ -34,10 +34,24 @@ class CTwoDArray {
     void setSize( const int nCols, const int nRows, const T defaultVal ); // This currently assumes that the object is empty.
     void fill( const T val ); // Will overwrite existing data
     void fillRow( const int rowIdx, const T val ); // Will overwrite existing data
+
     void appendRow();
     void appendRow( const T defaultVal );
     void appendRow( const QString& rowName );
     void appendRow(  const QString& rowName, const T defaultVal );
+
+    void appendRow(const QVector<T>& values );
+    void appendRow( const QString& rowName, const QVector<T>& values );
+    void appendRow(const QList<T>& values );
+    void appendRow( const QString& rowName, const QList<T>& values );
+
+    void append( const CTwoDArray<T> array );
+
+    void removeRow( const int rowIdx );
+    void removeRow( const QString& rowName );
+
+    void removeColumn( const int colIdx );
+    void removeColumn( const QString& colName );
 
     // Basic setter and getters
     //-------------------------
@@ -61,6 +75,9 @@ class CTwoDArray {
     //---------------------
     bool hasColNames() const { return !_colNames.isEmpty(); }
     bool hasRowNames() const { return !_rowNames.isEmpty(); }
+
+    bool hasRowName( const QString& rowName ) const { return _rowNames.contains( rowName ); }
+    bool hasColumnName( const QString& colName ) const { return _colNames.contains( colName ); }
 
     void setColNames( const QStringList& names );
     void setRowNames( const QStringList& names );
@@ -90,6 +107,11 @@ class CTwoDArray {
     const T& at( const QString& colName, const int r ) const { return this->value( colName, r ); }
     const T& at( const int c, const QString& rowName ) const { return this->value( c, rowName ); }
     const T& at( const QString& colName, const QString& rowName ) const { return this->value( colName, rowName ); }
+
+    QVector<T> row( const int rowIdx ) const;
+    QVector<T> row( const QString& rowName ) const;
+    QVector<T> column( const int colIdx ) const;
+    QVector<T> column( const QString& colName ) const;
 
   protected:
     void initialize();

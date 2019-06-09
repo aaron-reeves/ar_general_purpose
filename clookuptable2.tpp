@@ -239,6 +239,9 @@ void CLookupTable<KeyType, ValueType>::debug() {
   qDebug() << "indexField:" << _idField;
   qDebug() << "valueField:" << _valueField;
   qDebug() << "canGrow:" << _canGrow;
+  qDebug() << "nItems:" << _map.count();
+  qDebug() << "error:" << _error;
+  qDebug() << "errorMsg:" << _errorMessage;
 
   for( int i = 0; i < _map.count(); ++i )
     qDebug() << "  " << _map.keyAtIndex(i) << _map.valueAtIndex(i);
