@@ -142,6 +142,12 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheet
 }
 
 
+CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data ) {
+  initialize();
+  setData( data );
+}
+
+
 void CSpreadsheet::initialize() {
   _wb = nullptr;
   _hasSpannedCells = false;
@@ -224,6 +230,40 @@ bool CSpreadsheet::compareCellValue( const int c, const int r, const QString& st
 
 bool CSpreadsheet::compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
   return( 0 == this->cellValue( cellLabel ).toString().trimmed().compare( str, caseSens ) );
+}
+
+
+void CSpreadsheet::setData( const CTwoDArray<QVariant>& data ) {
+  int rowOffset = 0;
+  int colOffset = 0;
+
+  if( data.hasColNames() ) {
+    ++rowOffset;
+  }
+
+  if( data.hasRowNames() ) {
+    ++colOffset;
+  }
+
+  this->setSize( data.nCols()+colOffset, data.nRows()+rowOffset );
+
+  if( data.hasColNames() ) {
+    for( int c = 0; c < data.colNames().count(); ++c ) {
+      this->setValue( c+colOffset, 0, CSpreadsheetCell( data.colNames().at(c) ) );
+    }
+  }
+
+  if( data.hasRowNames() ) {
+    for( int r = 0; r < data.rowNames().count(); ++r ) {
+      this->setValue( 0, r+rowOffset, CSpreadsheetCell( data.rowNames().at(r) ) );
+    }
+  }
+
+  for( int c = 0; c < data.nCols(); ++c ) {
+    for( int r = 0; r < data.nRows(); ++r ) {
+      this->setValue( c+colOffset, r+rowOffset, CSpreadsheetCell( data.at( c, r ) ) );
+    }
+  }
 }
 
 
@@ -1564,7 +1604,7 @@ bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
       _errMsg = QString( "Could not delete sheet '%1'" ).arg( sheetName );
     }
     else {
-      _sheetNames.remove( sheetName );
+      _sheetNames.removeValue( sheetName );
     }
   }
 

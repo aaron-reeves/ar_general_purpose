@@ -95,6 +95,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     CSpreadsheet( const int nCols, const int nRows );
     CSpreadsheet( const int nCols, const int nRows, const QVariant defaultVal );
     CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell defaultVal );
+    CSpreadsheet( const CTwoDArray<QVariant>& data );
     CSpreadsheet( const CSpreadsheet& other );
     CSpreadsheet& operator=( const CSpreadsheet& other );
 
@@ -136,6 +137,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     void debug( const int padding = 10 ) const;
     void debugMerges();
 
+    void setData( const CTwoDArray<QVariant>& data );
     CTwoDArray<QVariant> data( const bool containsHeaderRow );
 
     static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
