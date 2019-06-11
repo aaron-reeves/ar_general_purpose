@@ -11,6 +11,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
+// FIXME: Replace the innards of this class with QElapsedTimer
+
 #include "ctotaltime.h"
 
 #include "arcommon.h"

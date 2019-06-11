@@ -16,6 +16,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+// FIXME: Replace the innards of this class with QElapsedTimer
+
 struct STimeBits {
   int hour;
   int minute;
