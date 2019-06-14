@@ -152,10 +152,13 @@ class CCmdLine {
     bool isAmbiguous( const QStringList& pSwitches );
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
-    QString safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault);
+    QString safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault );
+    QString safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault );
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
     QString argument( const QString& pSwitch, int iIdx);
+    QString argument( const QString& pSwitch, const QString& name );
+
     QString argument( const QStringList& pSwitches, int iIdx );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
@@ -173,8 +176,9 @@ class CCmdLine {
     /* Returns a list of arguments associated with a switch. */
     QStringList arguments( const QString& pSwitch );
 
-    /* Returns the original string that contained switches and arguments. */
+    /* Returns the original string that contained switches and arguments. Useful for logging. */
     QString asString();
+    QString asString( const QString& pSwitch );
 
     void debug( void );
     

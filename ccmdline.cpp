@@ -76,16 +76,16 @@ int CCmdLine::processList( QStringList list ) {
   int i;
   char** argv;
   char* arg;
-  int size;
+  unsigned int size;
 
   list.prepend( "dummy" );
   
   // Construct a char** from the string list
   argv = new char*[list.count()];
   for( i = 0; i < list.count(); ++i ) {
-    size = strlen( (char *)(list.at(i).toLatin1().data()) ) + 1;
+    size = strlen( static_cast<char*>(list.at(i).toLatin1().data()) ) + 1;
     arg = new char[ size ];
-    strcpy( arg, (char*)(list.at(i).toLatin1().data()) );
+    strcpy( arg, static_cast<char*>(list.at(i).toLatin1().data()) );
     argv[i] = arg;
   }
   
@@ -307,20 +307,40 @@ bool CCmdLine::isAmbiguous( const QStringList& pSwitches ) {
    cmdLine.GetSafeArgument("-b", 1, "zz")    zz
 ------------------------------------------------------*/
 QString CCmdLine::safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) {
-   QString sRet;
-   
-   if (!pDefault.isEmpty())
-      sRet = pDefault;
+  QString sRet;
 
-  if( hasSwitch( pSwitch ) ) {
-     try {
-        sRet = argument(pSwitch, iIdx);
-     }
-     catch (...) {
-     }
+  if( !pDefault.isEmpty() ) {
+    sRet = pDefault;
   }
 
-   return sRet;
+  if( hasSwitch( pSwitch ) ) {
+    try {
+      sRet = argument(pSwitch, iIdx);
+    }
+      catch (...) {
+    }
+  }
+
+  return sRet;
+}
+
+
+QString CCmdLine::safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault ) {
+  QString sRet;
+
+  if( !pDefault.isEmpty() ) {
+    sRet = pDefault;
+  }
+
+  if( hasSwitch( pSwitch ) ) {
+    try {
+      sRet = argument( pSwitch, name );
+    }
+      catch (...) {
+    }
+  }
+
+  return sRet;
 }
 
 
@@ -343,9 +363,25 @@ QString CCmdLine::argument( const QString& pSwitch, int iIdx ) {
   if( this->hasSwitch( pSwitch ) && ( iIdx < this->argumentCount( pSwitch ) ) )
     return _hash.value( pSwitch ).at( iIdx );
 
-   throw (int)0;
+   throw int(0);
+}
 
-   return "";
+
+QString CCmdLine::argument( const QString& pSwitch, const QString& name ) {
+  if( this->hasSwitch( pSwitch ) ) {
+    for( int i = 0; i < this->argumentCount( pSwitch ); ++i ) {
+      if( this->arguments( pSwitch ).at(i).startsWith( name, Qt::CaseInsensitive ) ) {
+        QStringList list = this->arguments( pSwitch ).at(i).split( '=' );
+        if( 2 == list.count() ) {
+          return list.at(1);
+        }
+      }
+    }
+
+    throw int(0);
+  }
+
+  throw int(0);
 }
 
 
@@ -426,6 +462,22 @@ QString CCmdLine::asString(){
 }
 
 
+QString CCmdLine::asString( const QString& pSwitch ) {
+  QString result;
+  QStringList list;
+
+  if( this->hasSwitch( pSwitch ) ) {
+    for( int i = 0; i < this->argumentCount( pSwitch ); ++i ) {
+      list.append( this->argument( pSwitch, i ) );
+    }
+
+    result = list.join( " " );
+  }
+
+  return result;
+}
+
+
 void CCmdLine::debug( void ) {
   QHashIterator<QString, QStringList> it( _hash );
 
@@ -448,4 +500,5 @@ bool CCmdLine::pair( const QString& str1, const QString& str2 ) {
     return true;
   }
 }
+
 
