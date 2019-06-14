@@ -45,7 +45,8 @@ QString boolToYesNo( const bool val ); // returns "Yes" or "No"
 bool strToBool( QString val, bool* ok = nullptr );
 QString variantBoolToText( const QVariant& val ); // Returns "invalid", "null", "true", or "false"
 
-int strToInt( QString str, const int defaultVal );
+bool strIsInt( const QString& str );
+int strToInt(const QString& str, const int defaultVal );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );

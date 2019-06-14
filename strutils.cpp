@@ -210,7 +210,15 @@ bool strToBool( QString val, bool* ok /* = NULL */ ) {
   }
 }
 
-int strToInt( QString str, const int defaultVal ) {
+
+bool strIsInt( const QString& str ) {
+  bool ok;
+  str.toInt( &ok );
+  return ok;
+}
+
+
+int strToInt( const QString& str, const int defaultVal ) {
   bool ok;
 
   int result = str.toInt( &ok );
