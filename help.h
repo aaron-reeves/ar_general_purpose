@@ -85,7 +85,7 @@ class CHelpItemList : public QList<CHelpItem> {
     void append();
 };
 
-void printHelpList( CHelpItemList list, const int extraPadding = 0 );
+void printHelpList( CHelpItemList list, const int breakAtColumn = 55, const int extraPadding = 0 );
 
 void showSampleHelpMessage();
 

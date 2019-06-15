@@ -96,7 +96,7 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 }
 
 
-void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
+void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, const int extraPadding /* = 0 */ ) {
   int i, j;
   int maxPart1Len = 0;
   int nPadding;
@@ -122,7 +122,7 @@ void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
 
       // Make bulleted lists look cool.
       if( list[i].part2().startsWith( '-' ) ) {
-        QStringList tmpLines = prettyPrintedList( list[i].part2(), 53, false, true, nPadding + 2 );
+        QStringList tmpLines = prettyPrintedList( list[i].part2(), (breakAtColumn - 2), false, true, nPadding + 2 );
         lines.clear();
         lines.append( tmpLines.at(0) );
         for( int k = 1; k < tmpLines.count(); ++k ) {
@@ -130,7 +130,7 @@ void printHelpList( CHelpItemList list, const int extraPadding /* = 0 */ ) {
         }
       }
       else {
-        lines = prettyPrintedList( list[i].part2(), 55, false, true, nPadding );
+        lines = prettyPrintedList( list[i].part2(), breakAtColumn, false, true, nPadding );
       }
 
       if( list[i].part1().length() > maxPart1Len ) {
