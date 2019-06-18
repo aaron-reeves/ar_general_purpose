@@ -178,6 +178,13 @@ QString boolToYesNo( const bool val ) {
 }
 
 
+bool strIsBool( const QString& str ) {
+  bool ok;
+  strToBool( str, &ok );
+  return ok;
+}
+
+
 bool strToBool( QString val, bool* ok /* = NULL */ ) {
   val = val.trimmed().toLower();
 
