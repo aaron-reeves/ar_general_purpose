@@ -84,6 +84,8 @@ public:
     QString value(const QString &name) const;
     QStringList values(const QString &name) const;
 
+    bool addValue( const QString& name, const QString& value );
+
     bool isSet(const QCommandLineOption &option) const;
     QString value(const QCommandLineOption &option) const;
     QStringList values(const QCommandLineOption &option) const;
@@ -99,6 +101,8 @@ public:
 
 private:
     Q_DISABLE_COPY(QARCommandLineParser)
+
+    QHash<QString, QString> addlValues;
 
     QARCommandLineParserPrivate * const d;
 };

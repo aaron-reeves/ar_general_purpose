@@ -635,6 +635,10 @@ bool QARCommandLineParserPrivate::parse(const QStringList &args)
 
 bool QARCommandLineParser::isSet(const QString &name) const
 {
+  if( addlValues.contains( name.toLower() ) ) {
+    return true;
+  }
+  else {
     d->checkParsed("isSet");
     if (d->optionNames.contains(name))
         return true;
@@ -644,6 +648,7 @@ bool QARCommandLineParser::isSet(const QString &name) const
             return true;
     }
     return false;
+  }
 }
 
 /*!
@@ -666,14 +671,41 @@ bool QARCommandLineParser::isSet(const QString &name) const
 
 QString QARCommandLineParser::value(const QString &optionName) const
 {
+  if( addlValues.contains( optionName.toLower() ) ) {
+    return addlValues.value( optionName.toLower() );
+  }
+  else {
     d->checkParsed("value");
-    const QStringList valueList = values(optionName);
+    const QStringList valueList = values( optionName );
 
-    if (!valueList.isEmpty())
+    if( !valueList.isEmpty() )
         return valueList.last();
 
     return QString();
+  }
 }
+
+
+/*!
+  Adds a new name/value pair, which can then be treated like part of the existing command line.
+  FIXME: This is not well integrated into the internals of this class, but it does the required job for now.
+ */
+bool QARCommandLineParser::addValue( const QString& name, const QString& value ) {
+  if( this->isSet( name ) ) {
+    qWarning( "Value already exists and cannot be added: \"%s\"", qPrintable(name) );
+    return false;
+  }
+  else if( addlValues.contains( name.toLower() ) ) {
+    qWarning( "Value already exists and cannot be added: \"%s\"", qPrintable(name) );
+    return false;
+  }
+  else {
+    addlValues.insert( name.toLower(), value );
+    return true;
+  }
+}
+
+
 
 /*!
     Returns a list of option values found for the given option name \a
