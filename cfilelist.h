@@ -199,17 +199,11 @@ class CFileList : public QList<CPathString> {
         void debug() { debugList(); }
 
         /**
-        Converts the list to a QStringList.  See Qt documentation for
-        more details.
-        */
-        QStringList qStringList() const;
-
-        /**
         Combines the contents of this list and the contents of subList.
         */
         void merge( CFileList subList );
 
-        void insert( const QString& file ) { insert( CPathString( file ) ); }
+        void append( const QString& file ) { QList<CPathString>::append( CPathString( file ) ); }
 
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
@@ -224,10 +218,10 @@ class CFileList : public QList<CPathString> {
 
 
         /**
-         * @brief asStringList Produces a version of this list as a QStringList
+         * @brief toStringList Produces a version of this list as a QStringList
          * @return a QStringList representation of this list.
          */
-        QStringList asStringList() const;
+        QStringList toStringList() const;
 
     private:
         CFileList( bool createDirList );

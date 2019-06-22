@@ -271,21 +271,6 @@ void CFileList::merge( CFileList subList ) {
 }
 
 
-QStringList CFileList::qStringList() const {
-  QStringList sl;
-  CPathString strp;
-  int i;
-
-  for( i = 0; i < this->count(); ++i ) {
-    strp = this->at(i);
-    strp.replace( "//", "/" );
-    strp.replace( "\\\\", "\\" );
-    sl.append( strp );
-  }
-  return sl;
-}
-
-
 CFileList CFileList::directories() const {
   CFileList result;
 
@@ -321,11 +306,15 @@ CFileList CFileList::files() const {
 }
 
 
-QStringList CFileList::asStringList() const {
+QStringList CFileList::toStringList() const {
   QStringList result;
 
-  foreach( CPathString str, *this )
-    result.append( str );
+  for( int i = 0; i < this->count(); ++i ) {
+    CPathString strp = this->at(i);
+    strp.replace( "//", "/" );
+    strp.replace( "\\\\", "\\" );
+    result.append( strp );
+  }
 
   return result;
 }
