@@ -84,6 +84,8 @@ void CAppLog::initialize() {
 
   _windowsFriendly = false;
 
+  _useMessageList = false;
+
   setLogLevel( LoggingPending );
 }
 
@@ -307,6 +309,10 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   CLogMessage* msg;
   QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
   QString str;
+
+  if( _useMessageList ) {
+    _messageList.append( message );
+  }
 
   if( _useStderr ) {
     qDebug() << "          (log)" << message;

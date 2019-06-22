@@ -87,6 +87,11 @@ class CAppLog : public QObject {
 
     bool isOpen() const { return _logOpen; }
 
+    QStringList messageList() const { return _messageList; }
+    void startMessageList() { _useMessageList = true; }
+    void stopMessageList() { _useMessageList = false; }
+    void clearMessageList() { _messageList.clear(); }
+
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
@@ -123,6 +128,9 @@ class CAppLog : public QObject {
 
     QSet<QString> _messagesUniqueTypical;
     QSet<QString> _messagesUniqueVerbose;
+
+    bool _useMessageList;
+    QStringList _messageList;
 };
 
 
