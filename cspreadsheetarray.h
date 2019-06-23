@@ -140,6 +140,8 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     void setData( const CTwoDArray<QVariant>& data );
     CTwoDArray<QVariant> data( const bool containsHeaderRow );
 
+    CSpreadsheetWorkBook* workbook() const { return _wb; }
+
     static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
 
   protected:
