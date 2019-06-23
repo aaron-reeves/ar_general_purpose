@@ -1044,6 +1044,32 @@ bool isEmptyStringList( const QStringList& list ) {
 }
 
 
+bool stringListContainsDuplicates( const QStringList& list, const bool countBlanks ) {
+  QSet<QString> strSet;
+
+  for( int i = 0; i < list.count(); ++i ) {
+    if( list.at(i).isEmpty() && !countBlanks )
+      continue;
+    else if( strSet.contains( list.at(i) ) )
+      return true;
+    else
+      strSet.insert( list.at(i) );
+  }
+
+  return false;
+}
+
+
+bool stringListContainsBlanks( const QStringList& list ) {
+  for( int i = 0; i < list.count(); ++i ) {
+    if( list.at(i).isEmpty() )
+      return true;
+  }
+
+  return false;
+}
+
+
 #if defined(_WIN32) || defined(WIN32)
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp
