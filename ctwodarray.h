@@ -68,7 +68,7 @@ class CTwoDArray {
     int colCount() const { return _nCols; }
     int rowCount() const { return _nRows; }
 
-    bool isEmpty() const { return( (0 == _nCols) && (0 == _nRows) ); }
+    bool isEmpty() const { return( (0 == _nCols) || (0 == _nRows) ); }
 
 
     // Column and row names
