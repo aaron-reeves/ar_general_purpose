@@ -641,7 +641,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
     .arg( cell->xf )
     .arg( cell->l )
     .arg( cell->d )
-    .arg( (char*)cell->str )
+    .arg( cell->str )
   ;
 
   // XLS_RECORD_RK = 0x027E
@@ -649,7 +649,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   // XLS_RECORD_MULRK = 0x00BD
   if( ( XLS_RECORD_RK == cell->id ) || ( XLS_RECORD_MULRK == cell->id ) || ( XLS_RECORD_NUMBER == cell->id ) ) {
     if( wb->isXlsDate( cell->xf, cell->d ) ) {
-      val = xlsDate( (int)cell->d, wb->isXls1904DateSystem() );
+      val = xlsDate( int( cell->d ), wb->isXls1904DateSystem() );
     }
     else if( wb->isXlsTime( cell->xf, cell->d ) ) {
       val = xlsTime( cell->d );
@@ -673,8 +673,8 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
       msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
     }
     else {
-      if (!strcmp((char *)cell->str, "bool")) { // its boolean, and test cell->d
-        if( 1 == (int)cell->d ) {
+      if (!strcmp( cell->str, "bool")) { // its boolean, and test cell->d
+        if( 1 == int( cell->d ) ) {
           val = true;
         }
         else {
@@ -682,12 +682,12 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
         }
         msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
       }
-      else if (!strcmp((char *)cell->str, "error")) { // formula is in error
+      else if (!strcmp( cell->str, "error" ) ) { // formula is in error
         val = "*error*";
         msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
       }
       else { // ... cell->str is valid as the result of a string formula.
-        val = QString( "%1" ).arg( (char*)cell->str );
+        val = QString( "%1" ).arg( cell->str );
         msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
       }
     }
@@ -697,7 +697,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   //-------------------
   // XLS_RECORD_BOOLERR = 0x0205
   else if( XLS_RECORD_BOOLERR == cell->id ) {
-    if( 0 == (int)cell->d ) {
+    if( 0 == int( cell->d ) ) {
       val = false;
     }
     else {
@@ -709,7 +709,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   // Deal with strings
   //------------------
   else if( nullptr != cell->str ) {
-     val = QString( "%1" ).arg( (char*)cell->str );
+     val = QString( "%1" ).arg( cell->str );
      msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
   }
 
@@ -952,7 +952,7 @@ void CSpreadsheet::unmergeCellsInRow( const int r, const bool duplicateValues ) 
 }
 
 
-bool CSpreadsheet::columnIsEmpty(const int c , const bool excludeHeaderRow /* = false */) {
+bool CSpreadsheet::columnIsEmpty( const int c, const bool excludeHeaderRow /* = false */) {
   bool result = true; // Until shown otherwise.
 
   int firstRow;
@@ -963,9 +963,19 @@ bool CSpreadsheet::columnIsEmpty(const int c , const bool excludeHeaderRow /* = 
 
   for( int r = firstRow; r < this->nRows(); ++r ) {
     QVariant v = this->cellValue( c, r );
-    if( !v.isNull() || ( (QVariant::String == v.type()) && !(v.toString().isEmpty()) ) ) {
-      result = false;
-      break;
+    if( !v.isNull() ) {
+      if( QVariant::String == v.type() ) {
+        if( !(v.toString().isEmpty()) ) {
+          //qDebug() << "Column" << c << "is not empty: value in row" << r << "(" << v.toString() << ")" << v.type() << v.toString().isEmpty();
+          result = false;
+          break;
+        }
+      }
+      else {
+        //qDebug() << "Column" << c << "is not empty: variant is not null" << v.type();
+        result = false;
+        break;
+      }
     }
   }
 
@@ -978,9 +988,19 @@ bool CSpreadsheet::rowIsEmpty( const int r ) {
 
   for( int c = 0; c < this->nCols(); ++c ) {
     QVariant v = this->cellValue( c, r );
-    if( !v.isNull() || ( (QVariant::String == v.type()) && !(v.toString().isEmpty()) ) ) {
-      result = false;
-      break;
+    if( !v.isNull() ) {
+      if( QVariant::String == v.type() ) {
+        if( !(v.toString().isEmpty()) ) {
+          //qDebug() << "Row" << r << "is not empty: value in column" << c << "(" << v.toString() << ")" << v.type() << v.toString().isEmpty();
+          result = false;
+          break;
+        }
+      }
+      else {
+        //qDebug() << "Row" << r << "is not empty: variant is not null" << v.type();
+        result = false;
+        break;
+      }
     }
   }
 
@@ -1016,7 +1036,7 @@ bool CSpreadsheet::hasEmptyRows() {
 }
 
 
-void CSpreadsheet::removeEmptyColumns(const bool excludeHeaderRow /* = false */ ) {
+void CSpreadsheet::removeEmptyColumns( const bool excludeHeaderRow /* = false */ ) {
   QList<int> emptyCols;
 
   for( int c = 0; c < this->nCols(); ++c ) {
@@ -1189,7 +1209,7 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
   _xlsXFs.clear();
   for( unsigned int i = 0; i < _pWB->xfs.count; ++i ) {
     if( 0 != _pWB->xfs.xf[i].format ) {
-      _xlsXFs.insert( i, _pWB->xfs.xf[i].format );
+      _xlsXFs.insert( int( i ), _pWB->xfs.xf[i].format );
 
       if( _displayVerboseOutput )
         cout << "XFs: " << "i: " << i << ", format: " << _pWB->xfs.xf[i].format << ", type: " << _pWB->xfs.xf[i].type << endl;
@@ -1200,7 +1220,7 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
 
 
   for( unsigned int i = 0; i < _pWB->sheets.count; ++i ) {
-    _sheetNames.insert( i, _pWB->sheets.sheet[i].name );
+    _sheetNames.insert( int( i ), _pWB->sheets.sheet[i].name );
 
     if( _displayVerboseOutput )
       cout << _pWB->sheets.sheet[i].name << endl;
@@ -1299,7 +1319,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXls( const int rowIdx, const int 
   // Process the indicated row
   //==========================
   xlsWORD cellRow, cellCol;
-  cellRow = rowIdx;
+  cellRow = xlsWORD( rowIdx );
 
   for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
     xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
@@ -1367,6 +1387,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
   if( _sheets.contains( sheetIdx ) ) {
     _errMsg = QString( "The selected sheet has already been read: %1" ).arg( sheetIdx );
+    return true;
   }
 
   CSpreadsheet sheet( this );
