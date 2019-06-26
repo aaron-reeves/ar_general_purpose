@@ -60,7 +60,7 @@ CCmdLine::CCmdLine() {
 }
 
 
-CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs ) {
+CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs /* = true */ ) {
   _originalString = "";
   splitLine( argc, argv, clearArgs );
 }
@@ -146,7 +146,7 @@ int CCmdLine::splitFile( const QString& fileName ) {
 
   returns number of switches found
 ------------------------------------------------------*/
-int CCmdLine::splitLine( int argc, char** argv, bool clearArgs ) {
+int CCmdLine::splitLine( int argc, char** argv, bool clearArgs /* = true */ ) {
 	QString arg;
   QString curParam; // current argv[x]
 	int i;
