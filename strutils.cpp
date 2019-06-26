@@ -224,11 +224,32 @@ bool strIsInt( const QString& str ) {
   return ok;
 }
 
+bool strIsDouble( const QString& str ) {
+  bool ok;
+  str.toDouble( &ok );
+  return ok;
+}
+
+bool strIsNumber( const QString& str ) {
+  return( strIsInt( str ) || strIsDouble( str ) );
+}
+
 
 int strToInt( const QString& str, const int defaultVal ) {
   bool ok;
 
   int result = str.toInt( &ok );
+
+  if( !ok )
+    result = defaultVal;
+
+  return result;
+}
+
+double strToDouble( const QString& str, const double defaultVal ) {
+  bool ok;
+
+  double result = str.toDouble( &ok );
 
   if( !ok )
     result = defaultVal;
