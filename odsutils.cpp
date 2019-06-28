@@ -47,7 +47,7 @@ QCsv ODS::odsToCsv( const QString& filename ) {
       }
 
       if( nullsFound < nCols ) {
-        csv.appendRow( list );
+        csv.append( list );
       }
       else {
         break;
