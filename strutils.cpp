@@ -185,7 +185,7 @@ bool strIsBool( const QString& str ) {
 }
 
 
-bool strToBool( QString val, bool* ok /* = NULL */ ) {
+bool strToBool( QString val, bool* ok /* = nullptr */ ) {
   val = val.trimmed().toLower();
 
   if(

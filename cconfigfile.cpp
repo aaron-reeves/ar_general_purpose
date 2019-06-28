@@ -274,7 +274,7 @@ void CConfigFile::debug( const bool showRemovedBlocks /* = true */ ) {
 
 
 void CConfigFile::writeToStream( QTextStream* stream ) {
-  if( !_blockList.isEmpty() && ( NULL != stream ) ) {
+  if( !_blockList.isEmpty() && ( nullptr != stream ) ) {
     for( int i = 0; i < _blockList.count(); ++i ) {
       CConfigBlock* block = _blockList.at(i);
       if( !block->removed() ) {
