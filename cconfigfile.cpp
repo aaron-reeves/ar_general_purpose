@@ -193,12 +193,11 @@ QString CConfigFile::value( QString blockName, QString key ) const {
 }
 
 
-int CConfigFile::multiContains( QString blockName, QString key ) const {
+int CConfigFile::multiContains( const QString& blockName, QString key ) const {
   int result = 0;
   key = key.trimmed().toLower();
-  blockName = blockName.trimmed().toLower();
 
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName );
+  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     CConfigBlock* block = blocks.at(i);
 
@@ -211,12 +210,11 @@ int CConfigFile::multiContains( QString blockName, QString key ) const {
 }
 
 
-QStringList CConfigFile::multiValues( QString blockName, QString key ) const {
+QStringList CConfigFile::values( const QString& blockName, QString key ) const {
   QStringList result;
   key = key.trimmed().toLower();
-  blockName = blockName.trimmed().toLower();
 
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName );
+  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     CConfigBlock* block = blocks.at(i);
 
@@ -229,11 +227,10 @@ QStringList CConfigFile::multiValues( QString blockName, QString key ) const {
 }
 
 
-bool CConfigFile::contains( QString blockName ) const {
+bool CConfigFile::contains( const QString& blockName ) const {
   bool result = false;
-  blockName = blockName.trimmed().toLower();
 
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName );
+  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     if( !blocks.at(i)->removed() ) {
       result = true;
@@ -245,11 +242,10 @@ bool CConfigFile::contains( QString blockName ) const {
 }
 
 
-int CConfigFile::multiContains( QString blockName ) const {
+int CConfigFile::multiContains( const QString& blockName ) const {
   int result = 0;
-  blockName = blockName.trimmed().toLower();
 
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName );
+  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     if( !blocks.at(i)->removed() ) {
       ++result;
@@ -257,6 +253,23 @@ int CConfigFile::multiContains( QString blockName ) const {
   }
 
   return result;
+}
+
+
+CConfigBlock* CConfigFile::block( const QString& blockName ) const {
+  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
+  for( int i = 0; i < blocks.count(); ++i ) {
+    if( !blocks.at(i)->removed() ) {
+      return blocks.at(i);
+    }
+  }
+
+  return nullptr;
+}
+
+
+QList<CConfigBlock*> CConfigFile::blocks( const QString& blockName ) const {
+  return _blockHash.values( blockName.trimmed().toLower() );
 }
 
 

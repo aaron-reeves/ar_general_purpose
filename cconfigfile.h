@@ -64,22 +64,34 @@ class CConfigFile {
     CConfigFile( const CConfigFile& other );
     virtual ~CConfigFile();
 
-    // FIXME: referencing individual blocks by index may require some work in the code.
+    // FIXME: referencing individual blocks by index, rather than by name, may require some work in the code.
 
-    // Check only the FIRST ENCOUNTERED block with the indicated name.
-    //----------------------------------------------------------------
+    // Does the file contain AT LEAST one block with the indicated name?
+    bool contains( const QString& blockName ) const;
+    
+    // .. AT LEAST one block with the indicated key?
     bool contains( QString blockName, QString key ) const;
+    
+    // AT LEAST one block with the indicated key, set to the indicated value?
     bool contains( QString blockName, QString key, QString value ) const;
+
+    // Return the FIRST block with the indicated name
+    CConfigBlock* block( const QString& blockName ) const;
+    
+    // Return the value from the FIRST block with the indicated name
     QString value( QString blockName, QString key ) const;
 
-    // Check ALL blocks with the indicated name.
-    //------------------------------------------
+    // How many blocks with the specified name?
+    int multiContains( const QString& blockName ) const;
+    
     // How many blocks with the specified name contain the key?
-    int multiContains( QString blockName, QString key ) const;
-    QStringList multiValues( QString blockName, QString key ) const;
+    int multiContains( const QString& blockName, QString key ) const;
 
-    bool contains( QString blockName ) const;
-    int multiContains( QString blockName ) const;
+    // Return a list of ALL blocks with the specified name
+    QList<CConfigBlock*> blocks( const QString& blockName ) const;
+    
+    // Return the indicated key value from EVERY block with the specified name
+    QStringList values( const QString& blockName, QString key ) const;
 
     virtual void debug( const bool showRemovedBlocks = true );
 
