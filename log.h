@@ -16,6 +16,11 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+#ifdef QSQL_USED
+  #include <QSqlQuery>
+  #include <QSqlError>
+#endif
+
 class CLockFile;
 
 extern CLockFile lockFile;
@@ -38,6 +43,9 @@ void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical 
 void logVerbose( const QString& msg );
 void logBlank( const LogLevel logLevel = LoggingTypical );
 
+#ifdef QSQL_USED
+void logFailedQuery( QSqlQuery* query, const QString& description = "Query" );
+#endif
 
 class CLogMessage {
   public:
