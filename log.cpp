@@ -49,7 +49,7 @@ void logBlank( const LogLevel logLevel /* = LoggingTypical */ ) {
 #ifdef QSQL_USED
 void logFailedQuery( QSqlQuery* query, const QString& description /* = "Query" */ ) {
   appLog << ">>> " << description << " failed:" << endl;
-  appLog << prettyPrint( query->lastQuery().simplified(), 100, false, false, 2 ) << endl;
+  appLog << prettyPrint( query->lastQuery().simplified().trimmed(), 100, false, false, 2 ) << endl;
   appLog << prettyPrint( query->lastError().text(), 100, false, false, 2 ) << "<<< (End)" << endl;
 }
 #endif
