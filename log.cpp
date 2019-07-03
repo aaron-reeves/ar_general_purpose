@@ -15,42 +15,97 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 #include <QDebug>
-
 #include <ar_general_purpose/arcommon.h>
+
+#ifdef QCONCURRENT_USED
+  #include <QBasicMutex>
+  static QBasicMutex _mutex;
+#endif
 
 CAppLog appLog;
 CLockFile lockFile;
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
   appLog.logMessage( msg, logLevel );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 
 void logMsgUnique( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
   appLog.logMessageUnique( msg, logLevel );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 
 void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypical */ ) {
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
   for( int i = 0; i < msgs.count(); ++i ) {
-    logMsg( msgs.at(i), logLevel );
+    appLog.logMessage( msgs.at(i), logLevel );
   }
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 
 
 void logVerbose( QString msg ) {
-  logMsg( msg, LoggingVerbose );
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
+  appLog.logMessage( msg, LoggingVerbose );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 
 
 void logBlank( const LogLevel logLevel /* = LoggingTypical */ ) {
-  logMsg( QString(), logLevel );
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
+  appLog.logMessage( QString(), logLevel );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 
 
 #ifdef QSQL_USED
 void logFailedQuery( QSqlQuery* query, const QString& description /* = "Query" */ ) {
-  appLog << ">>> " << description << " failed:" << endl;
-  appLog << prettyPrint( query->lastQuery().simplified().trimmed(), 100, false, false, 2 ) << endl;
-  appLog << prettyPrint( query->lastError().text(), 100, false, false, 2 ) << "<<< (End)" << endl;
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
+  QString msg = QString( ">>> %1 failed:\n" ).arg( description );
+  msg.append( prettyPrint( query->lastQuery().simplified().trimmed(), 100, false, false, 2 ) );
+  msg.append( '\n' );
+  msg.append( QString( "%1 %2" ).arg( prettyPrint( query->lastError().text(), 100, false, false, 2 ) ).arg( "<<< (End)\n" ) );
+
+  appLog.logMessage( msg, LoggingTypical );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
 }
 #endif
 
@@ -61,15 +116,15 @@ CLogMessage::CLogMessage( const int level, const QString& msg ) {
 }
 
 
-CAppLog::CAppLog() : QObject() {
-  initialize();
+CAppLog::CAppLog() : QObject() { 
+  initialize(); 
 }
 
 
 CAppLog::CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
   initialize();
 
-  openLog( fileName, logLevel, freq );
+  openLog( fileName, logLevel, freq );  
 }
 
 
@@ -111,16 +166,19 @@ CAppLog::~CAppLog() {
 
 
 bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) {
+  bool result = false;
+
   if( this->isOpen() && ( fileName == _logFileName ) && ( logLevel == _logLevel ) && ( freq == _freq ) ) {
-    return _logOpen;
+    result = _logOpen;
   }
   else {
     setFileFrequency( freq );
     setFileName( fileName );
     setLogLevel( logLevel );
 
-    return _logOpen;
+    result = _logOpen;
   }
+  return result;
 }
 
 
@@ -186,16 +244,16 @@ void CAppLog::setLogLevel( const LogLevel logLevel ) {
         //qDebug() << "Log file is not open!";  
       }
     }
-  }  
+  }
 }
 
 
 bool CAppLog::openLog() {
     _logFile = new QFile( _logFileName );
-  
+
     if( _autoTruncate )
       truncateLogFile();
-  
+
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
       if( _windowsFriendly )
@@ -393,7 +451,7 @@ CAppLog& CAppLog::operator<<( const int number ) {
 
 CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
   if( (f == ::endl) || (f == ::flush) ) {
-    logMsg( _msgInProgress, LoggingTypical );
+    this->logMessage( _msgInProgress, LoggingTypical );
     _msgInProgress.clear();
   }
   else {

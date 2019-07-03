@@ -36,7 +36,9 @@ enum LogLevel {
   LoggingVerbose
 };
 
-
+// The logMsgx functions are thread-safe.
+// Do not call any appLog functions directly from different threads.
+// See below for more details.
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
 void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical );
@@ -44,6 +46,7 @@ void logVerbose( const QString& msg );
 void logBlank( const LogLevel logLevel = LoggingTypical );
 
 #ifdef QSQL_USED
+// Thread-safe
 void logFailedQuery( QSqlQuery* query, const QString& description = "Query" );
 #endif
 
@@ -57,6 +60,13 @@ class CLogMessage {
 
 typedef QList<CLogMessage*> TLogMessageList;
 
+
+// WARNING:
+// Do not call any appLog functions directly from different threads.
+// Ensure that the master appLog is set up by the main thread, and
+// that any other instances are entirely self-contained within a single thread.
+// Once established, the master appLog can be accessed via the logMsgx functions
+// shown above, which are protected by a mutex and are thread-safe.
 class CAppLog : public QObject {
   Q_OBJECT
 
@@ -142,6 +152,7 @@ class CAppLog : public QObject {
 };
 
 
+// Not thread-safe: if needed, set up and remove a lock file from the main thread.
 class CLockFile {
   public:
     CLockFile();
@@ -159,6 +170,7 @@ class CLockFile {
 };
 
 
+// Not thread-safe: if needed, set up and use from a single thread.
 class CLogFileContents {
   public:
     CLogFileContents( const QString& filename, const bool saveFullContents, const bool includeQueryDetails );
