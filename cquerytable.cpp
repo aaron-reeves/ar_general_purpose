@@ -6,8 +6,8 @@
 //-----------------------------------------------------------------
   CQueryTable::CQueryTable() {
     _ownsQuery = false;
-    _query = NULL;
-    _db = NULL;
+    _query = nullptr;
+    _db = nullptr;
   }
 
 
@@ -20,7 +20,7 @@
 
 
   CQueryTable::CQueryTable( QSqlQuery* query ) {
-    _db = NULL;
+    _db = nullptr;
     _query = query;
     _ownsQuery = false;
   }
@@ -153,7 +153,7 @@
     QList<int> arr;
     QList<QStringList> rowsAsStr;
 
-    if(( NULL == stream) || ( NULL == _query ) ) {
+    if(( nullptr == stream) || ( nullptr == _query ) ) {
       //qDebug() << "No stream in printTableFormat()";
       return;
     }
@@ -224,7 +224,7 @@
     int maxNameLen = 0;
     QStringList labelList;
 
-    if(( NULL == stream) || ( NULL == _query ) ) {
+    if(( nullptr == stream) || ( nullptr == _query ) ) {
       //qDebug() << "No stream in printListFormat()";
       return;
     }
