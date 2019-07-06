@@ -1,0 +1,7 @@
+#ifndef AR_QTYPEINFO_H
+#define AR_QTYPEINFO_H
+
+Q_DECLARE_TYPEINFO( QVector<int>, Q_MOVABLE_TYPE );
+Q_DECLARE_TYPEINFO( QVector<bool>, Q_MOVABLE_TYPE );
+
+#endif // AR_QTYPEINFO_H
