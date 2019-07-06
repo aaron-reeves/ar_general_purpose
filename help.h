@@ -64,7 +64,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 class CHelpItem {
   public:
     CHelpItem();
-    CHelpItem( QString part1, QString part2 );
+    CHelpItem( const QString& part1, const QString& part2 );
     CHelpItem( const char* part1, const char* part2 );
 
     QString part1() const { return _part1; }
@@ -76,7 +76,7 @@ class CHelpItem {
 };
 
 
-class CHelpItemList : public QList<CHelpItem> {
+class CHelpItemList : public QVector<CHelpItem> {
   public:
     CHelpItemList();
     void append( const char* part1, const char* part2 );
@@ -85,7 +85,7 @@ class CHelpItemList : public QList<CHelpItem> {
     void append();
 };
 
-void printHelpList( CHelpItemList list, const int breakAtColumn = 55, const int extraPadding = 0 );
+void printHelpList( const CHelpItemList& list, const int& breakAtColumn = 55, const int& extraPadding = 0 );
 
 void showSampleHelpMessage();
 

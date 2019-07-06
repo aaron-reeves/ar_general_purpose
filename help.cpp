@@ -53,7 +53,7 @@ CHelpItem::CHelpItem() {
 }
 
 
-CHelpItem::CHelpItem( QString part1, QString part2 ) {
+CHelpItem::CHelpItem( const QString& part1, const QString& part2 ) {
   _part1 = part1;
   _part2 = part2;
 }
@@ -65,23 +65,23 @@ CHelpItem::CHelpItem( const char* part1, const char* part2 ) {
 }
 
 
-CHelpItemList::CHelpItemList() : QList<CHelpItem>() {
+CHelpItemList::CHelpItemList() : QVector<CHelpItem>() {
   // Nothing else to do here
 }
 
 
 void CHelpItemList::append() {
-  QList<CHelpItem>::append( CHelpItem( "", "" ) );
+  QVector<CHelpItem>::append( CHelpItem( "", "" ) );
 }
 
 
 void CHelpItemList::append( const char* part1, const char* part2 ) {
-  QList<CHelpItem>::append( CHelpItem( part1, part2 ) );
+  QVector<CHelpItem>::append( CHelpItem( part1, part2 ) );
 }
 
 
 void CHelpItemList::append( const QString& part1, const QString& part2 ) {
-  QList<CHelpItem>::append( CHelpItem( part1, part2 ) );
+  QVector<CHelpItem>::append( CHelpItem( part1, part2 ) );
 }
 
 
@@ -96,7 +96,7 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 }
 
 
-void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, const int extraPadding /* = 0 */ ) {
+void printHelpList( const CHelpItemList& list, const int& breakAtColumn /* = 55 */, const int& extraPadding /* = 0 */ ) {
   int i, j;
   int maxPart1Len = 0;
   int nPadding;
@@ -106,8 +106,8 @@ void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, cons
   // Ignore any first part with a length over 20 characters,
   // since such items will span both columns anyway.
   for( i = 0; i < list.count(); ++i ) {
-    if( 20 > list[i].part1().length() )
-      maxPart1Len = std::max( maxPart1Len, list[i].part1().length() );
+    if( 20 > list.at(i).part1().length() )
+      maxPart1Len = std::max( maxPart1Len, list.at(i).part1().length() );
   }
 
   if( 20 < maxPart1Len )
@@ -116,13 +116,13 @@ void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, cons
   nPadding = maxPart1Len + 1;
 
   for( i = 0; i < list.count(); ++i ) {
-    if( 0 == list[i].part1().length() )
-      cout << prettyPrint( list[i].part2(), 75 );
+    if( 0 == list.at(i).part1().length() )
+      cout << prettyPrint( list.at(i).part2(), 75 );
     else {
 
       // Make bulleted lists look cool.
-      if( list[i].part2().startsWith( '-' ) ) {
-        QStringList tmpLines = prettyPrintedList( list[i].part2(), (breakAtColumn - 2), false, true, nPadding + 2 );
+      if( list.at(i).part2().startsWith( '-' ) ) {
+        QStringList tmpLines = prettyPrintedList( list.at(i).part2(), (breakAtColumn - 2), false, true, nPadding + 2 );
         lines.clear();
         lines.append( tmpLines.at(0) );
         for( int k = 1; k < tmpLines.count(); ++k ) {
@@ -130,11 +130,11 @@ void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, cons
         }
       }
       else {
-        lines = prettyPrintedList( list[i].part2(), breakAtColumn, false, true, nPadding );
+        lines = prettyPrintedList( list.at(i).part2(), breakAtColumn, false, true, nPadding );
       }
 
-      if( list[i].part1().length() > maxPart1Len ) {
-        cout << list[i].part1() << endl;
+      if( list.at(i).part1().length() > maxPart1Len ) {
+        cout << list.at(i).part1() << endl;
         for( j = 0; j < lines.count(); ++j ) {
           for( int k = 0; k < extraPadding; ++k )
             cout << " ";
@@ -142,8 +142,8 @@ void printHelpList( CHelpItemList list, const int breakAtColumn /* = 55 */, cons
         }
       }
       else {
-        line0 = lines.at(0).right( lines.at(0).length() - (list[i].part1().length() + 1) );
-        cout << list[i].part1() << " " << line0 << endl;
+        line0 = lines.at(0).right( lines.at(0).length() - (list.at(i).part1().length() + 1) );
+        cout << list.at(i).part1() << " " << line0 << endl;
         for( j = 1; j < lines.count(); ++j )
           cout << lines.at(j) << endl;
       }
