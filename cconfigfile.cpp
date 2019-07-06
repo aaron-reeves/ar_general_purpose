@@ -1,5 +1,6 @@
 #include "cconfigfile.h"
 
+#include <ar_general_purpose/arcommon.h>
 
 QString ConfigReturnCode::resultString( const int& returnCode ) {
   QString result;
@@ -54,11 +55,11 @@ void CConfigBlock::writeToStream( QTextStream* stream ) {
 }
 
 
-void CConfigBlock::debug() {
-  qDebug() << QString( "Block '%1':" ).arg( this->name() ) << this->count();
+void CConfigBlock::debug() const {
+  qDb() << QString( "Block '%1':" ).arg( this->name() ) << this->count();
 
   foreach( const QString& key, this->keys() )
-    qDebug() << key << this->value( key );
+    qDb() << key << this->value( key );
 }
 
 
@@ -124,18 +125,18 @@ void CConfigFile::buildBasic( const QString& fn ) {
 }
 
 
-bool CConfigFile::contains( QString blockName, QString key ) const {
+bool CConfigFile::contains( const QString& blockName, const QString& key ) const {
   // There may be multiple blocks with the same name.
   // This function checks only the FIRST REMAINING block with the indicated name.
   bool result = false;
-  key = key.trimmed().toLower();
-  blockName = blockName.trimmed().toLower();
+  QString keyX = key.trimmed().toLower();
+  QString blockNameX = blockName.trimmed().toLower();
 
   for( int i = 0; i < _blockList.count(); ++i ) {
     CConfigBlock* block = _blockList.at(i);
 
-    if( !block->removed() && (block->name().toLower() == blockName) ) {
-      if( block->contains( key ) ) {
+    if( !block->removed() && (block->name().toLower() == blockNameX) ) {
+      if( block->contains( keyX ) ) {
         result = true;
       }
       break;
@@ -146,19 +147,19 @@ bool CConfigFile::contains( QString blockName, QString key ) const {
 }
 
 
-bool CConfigFile::contains( QString blockName, QString key, QString value ) const {
+bool CConfigFile::contains( const QString& blockName, const QString& key, QString value ) const {
   // There may be multiple blocks with the same name.
   // This function checks only the FIRST REMAINING block with the indicated name.
   bool result = false;
-  key = key.trimmed().toLower();
-  blockName = blockName.trimmed().toLower();
+  QString keyX = key.trimmed().toLower();
+  QString blockNameX = blockName.trimmed().toLower();
 
   for( int i = 0; i < _blockList.count(); ++i ) {
     CConfigBlock* block = _blockList.at(i);
 
-    if( !block->removed() && (block->name().toLower() == blockName) ) {
-      if( block->contains( key ) ) {
-        if( value == block->value( key ) )
+    if( !block->removed() && (block->name().toLower() == blockNameX) ) {
+      if( block->contains( keyX ) ) {
+        if( value == block->value( keyX ) )
           result = true;
         else
           result = false;
@@ -171,19 +172,19 @@ bool CConfigFile::contains( QString blockName, QString key, QString value ) cons
 }
 
 
-QString CConfigFile::value( QString blockName, QString key ) const {
+QString CConfigFile::value( const QString& blockName, const QString& key ) const {
   // There may be multiple blocks with the same name.
   // This function checks only the FIRST REMAINING block with the indicated name.
   QString result;
-  key = key.trimmed().toLower();
-  blockName = blockName.trimmed().toLower();
+  QString keyX = key.trimmed().toLower();
+  QString blockNameX = blockName.trimmed().toLower();
 
   for( int i = 0; i < _blockList.count(); ++i ) {
     CConfigBlock* block = _blockList.at(i);
 
-    if( !block->removed() && (block->name().toLower() == blockName) ) {
-      if( block->contains( key ) ) {
-        result = block->value( key );
+    if( !block->removed() && (block->name().toLower() == blockNameX) ) {
+      if( block->contains( keyX ) ) {
+        result = block->value( keyX );
       }
       break;
     }
@@ -193,15 +194,15 @@ QString CConfigFile::value( QString blockName, QString key ) const {
 }
 
 
-int CConfigFile::multiContains( const QString& blockName, QString key ) const {
+int CConfigFile::multiContains( const QString& blockName, const QString& key ) const {
   int result = 0;
-  key = key.trimmed().toLower();
+   QString keyX = key.trimmed().toLower();
 
   QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     CConfigBlock* block = blocks.at(i);
 
-    if( !block->removed() && block->contains( key ) ) {
+    if( !block->removed() && block->contains( keyX ) ) {
       ++result;
     }
   }
@@ -212,14 +213,14 @@ int CConfigFile::multiContains( const QString& blockName, QString key ) const {
 
 QStringList CConfigFile::values( const QString& blockName, QString key ) const {
   QStringList result;
-  key = key.trimmed().toLower();
+   QString keyX = key.trimmed().toLower();
 
   QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
   for( int i = 0; i < blocks.count(); ++i ) {
     CConfigBlock* block = blocks.at(i);
 
-    if( !block->removed() && block->contains( key ) ) {
-      result.append( block->value( key ) );
+    if( !block->removed() && block->contains( keyX ) ) {
+      result.append( block->value( keyX ) );
     }
   }
 
@@ -273,16 +274,16 @@ QList<CConfigBlock*> CConfigFile::blocks( const QString& blockName ) const {
 }
 
 
-void CConfigFile::debug( const bool showRemovedBlocks /* = true */ ) {
+void CConfigFile::debug( const bool& showRemovedBlocks /* = true */ ) const {
   for( int i = 0; i < _blockList.count(); ++i ) {
     CConfigBlock* block = _blockList.at(i);
     if( !block->removed() || showRemovedBlocks ) {
       block->debug();
-      qDebug() << endl;
+      qDb() << endl;
     }
   }
 
-  qDebug() << "Configuration return code:" << this->_returnValue << ConfigReturnCode::resultString( this->_returnValue );
+  qDb() << "Configuration return code:" << this->_returnValue << ConfigReturnCode::resultString( this->_returnValue );
 }
 
 
@@ -299,7 +300,7 @@ void CConfigFile::writeToStream( QTextStream* stream ) {
 }
 
 
-int CConfigFile::fillBlock( CConfigBlock* block, QStringList strList ) {
+int CConfigFile::fillBlock( CConfigBlock* block, const QStringList& strList ) {
   int result = ConfigReturnCode::Success; // until shown otherwise
 
   QStringList lineParts;

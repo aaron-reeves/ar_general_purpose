@@ -47,7 +47,7 @@ class CConfigBlock : public QMap<QString, QString> {
     void setRemoved( const bool val ) { _removed = val; }
 
     void writeToStream( QTextStream* stream );
-    void debug();
+    void debug() const;
 
   protected:
     QString _name;
@@ -70,22 +70,22 @@ class CConfigFile {
     bool contains( const QString& blockName ) const;
     
     // .. AT LEAST one block with the indicated key?
-    bool contains( QString blockName, QString key ) const;
+    bool contains(const QString& blockName, const QString& key ) const;
     
     // AT LEAST one block with the indicated key, set to the indicated value?
-    bool contains( QString blockName, QString key, QString value ) const;
+    bool contains( const QString& blockName, const QString& key, QString value ) const;
 
     // Return the FIRST block with the indicated name
     CConfigBlock* block( const QString& blockName ) const;
     
     // Return the value from the FIRST block with the indicated name
-    QString value( QString blockName, QString key ) const;
+    QString value( const QString& blockName, const QString& key ) const;
 
     // How many blocks with the specified name?
     int multiContains( const QString& blockName ) const;
     
     // How many blocks with the specified name contain the key?
-    int multiContains( const QString& blockName, QString key ) const;
+    int multiContains( const QString& blockName, const QString& key ) const;
 
     // Return a list of ALL blocks with the specified name
     QList<CConfigBlock*> blocks( const QString& blockName ) const;
@@ -93,16 +93,16 @@ class CConfigFile {
     // Return the indicated key value from EVERY block with the specified name
     QStringList values( const QString& blockName, QString key ) const;
 
-    virtual void debug( const bool showRemovedBlocks = true );
+    virtual void debug( const bool& showRemovedBlocks = true ) const;
 
     virtual void writeToStream( QTextStream* stream );
 
-    int result() { return _returnValue; }
-    QString resultString() { return ConfigReturnCode::resultString( _returnValue ); }
+    int result() const { return _returnValue; }
+    QString resultString() const { return ConfigReturnCode::resultString( _returnValue ); }
 
-    QString errorMessage() { return _errorMessage; }
+    QString errorMessage() const { return _errorMessage; }
 
-    QString fileName() { return _fileName; }
+    QString fileName() const { return _fileName; }
 
     bool setWorkingDirectory();
 
@@ -110,7 +110,7 @@ class CConfigFile {
     void buildBasic( const QString& fn );
     int processBlock( QStringList strList );
     int processFile( QFile* file );
-    int fillBlock( CConfigBlock* block, QStringList strList );
+    int fillBlock( CConfigBlock* block, const QStringList& strList );
 
     QString _fileName;
 

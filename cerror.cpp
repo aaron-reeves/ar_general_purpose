@@ -26,7 +26,7 @@ CError::CError(){
 }
 
 
-CError::CError( const ErrorType type, const QString& msg, const int dataSourceID /* = -1 */, const int lineNumber /* = -1 */ ) {
+CError::CError( const ErrorType& type, const QString& msg, const int& dataSourceID /* = -1 */, const int& lineNumber /* = -1 */ ) {
   _type = type;
   _msg = msg.trimmed();
   _lineNumber = lineNumber;
@@ -76,7 +76,7 @@ QString CError::typeAsString() const {
 }
 
 
-QString CError::typeAsString( const ErrorType type ) {
+QString CError::typeAsString( const ErrorType& type ) {
   QString typeStr;
 
   switch( type ) {
@@ -101,7 +101,7 @@ void CError::debug() const {
 }
 
 
-CErrorList::CErrorList( const bool useAppLog ){
+CErrorList::CErrorList( const bool& useAppLog ){
   _useAppLog = useAppLog;
 }
 
@@ -181,12 +181,12 @@ QString CErrorList::logMessage() const {
 }
   
 
-CError CErrorList::at( const int i ) const {
+CError CErrorList::at( const int& i ) const {
   return _list.at(i);
 }
 
 
-void CErrorList::append( CError err ) {
+void CErrorList::append( const CError& err ) {
   _list.append( err );
 
   if( _useAppLog ) {
@@ -208,7 +208,7 @@ void CErrorList::append( CError err ) {
 //}
 
 
-void CErrorList::append( CErrorList src ) {
+void CErrorList::append( const CErrorList& src ) {
   for( int i = 0; i < src.count(); ++i ) {
     _list.append( src.at(i) );
 
@@ -218,12 +218,12 @@ void CErrorList::append( CErrorList src ) {
 }
 
 
-QString CErrorList::messageAt( const int i ) {
+QString CErrorList::messageAt( const int& i ) const {
   return _list.at(i).logMessage();
 }
 
 
-QString CErrorList::asText() {
+QString CErrorList::asText() const {
   QString result;
   for( int i = 0; i < count(); ++i ) {
     result.append( _list.at(i).msg() );
@@ -234,7 +234,7 @@ QString CErrorList::asText() {
 }
 
 
-bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat fmt ) {
+bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat& fmt ) {
   QFile data( filename );
   if( data.open( QFile::WriteOnly | QFile::Truncate ) ) {
     QTextStream out( &data );
