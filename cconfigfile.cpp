@@ -37,6 +37,16 @@ CConfigBlock::CConfigBlock( const QString& name ) : QMap<QString, QString>() {
 
 
 CConfigBlock::CConfigBlock( const CConfigBlock& other ) : QMap<QString, QString>( other ) {
+  assign( other );
+}
+
+
+CConfigBlock& CConfigBlock::operator=( const CConfigBlock& other ) {
+  assign( other );
+  return *this;
+}
+
+void CConfigBlock::assign( const CConfigBlock& other ) {
   _name = other._name;
   _removed = other._removed;
 }
@@ -89,18 +99,18 @@ CConfigFile::CConfigFile( const QString& configFileName ) {
   buildBasic( configFileName );
 }
 
+// Polymorphic classes should not be copied.
+//CConfigFile::CConfigFile( const CConfigFile& other ) {
+//  foreach( CConfigBlock* block, other._blockList ) {
+//    CConfigBlock* newBlock = new CConfigBlock( *block );
+//    _blockList.append( newBlock );
+//    _blockHash.insert( newBlock->name(), newBlock );
+//  }
 
-CConfigFile::CConfigFile( const CConfigFile& other ) {
-  foreach( CConfigBlock* block, other._blockList ) {
-    CConfigBlock* newBlock = new CConfigBlock( *block );
-    _blockList.append( newBlock );
-    _blockHash.insert( newBlock->name(), newBlock );
-  }
-
-  _fileName = other._fileName;
-  _errorMessage = other._errorMessage;
-  _returnValue = other._returnValue;
-}
+//  _fileName = other._fileName;
+//  _errorMessage = other._errorMessage;
+//  _returnValue = other._returnValue;
+//}
 
 
 CConfigFile::~CConfigFile() {
