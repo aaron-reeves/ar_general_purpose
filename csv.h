@@ -140,7 +140,7 @@ class QCsv {
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator
 
-    virtual ~QCsv(); // Destroys the object.
+    ~QCsv(); // Destroys the object.
 
     // Parses a CSV-formatted multi-line string, breaking it into its component parts
     // which can then be accessed via the various qCSV functions.
@@ -155,7 +155,7 @@ class QCsv {
     // Opens the file/object for reading/manipulation.  Returns false and sets an error flag if open failed.
     // This isn't strictly necessary for mode EntireFile, as it happens implicitly (at least when the main version of the constructor is used).
     // It's a good habit to get into, however, as explicitly opening a LineByLine file is required.
-    virtual bool open();
+    bool open();
     void close(); // Closes an open file.
     bool toFront(); // Resets to the top of the file, so that moveNext() will return the first row of data.
     int moveNext();  // Moves to the next row of data.  Returns the number of fields encountered, or -1 if the row is empty or does not exist.
@@ -369,7 +369,8 @@ class QCsvObject : public QObject, QCsv {
       const bool containsFieldList,
       const bool stringsContainDelimiters = true,
       const QCsvMode mode = QCsv::LineByLine,
-      const bool checkForComment = false
+      const bool checkForComment = false,
+      QObject* parent = nullptr
     );
 
     // Used for building a CSV data set from scratch.
@@ -378,7 +379,7 @@ class QCsvObject : public QObject, QCsv {
 
     //qCSV( const qCSV& other );
 
-    virtual ~QCsvObject();
+    ~QCsvObject();
 
     int readNext();
 
