@@ -32,7 +32,7 @@ CSpreadsheetCell::CSpreadsheetCell() {
 }
 
 
-CSpreadsheetCell::CSpreadsheetCell( const QVariant val ) {
+CSpreadsheetCell::CSpreadsheetCell( const QVariant& val ) {
   _value = val;
   _colSpan = 1;
   _rowSpan = 1;
@@ -42,7 +42,7 @@ CSpreadsheetCell::CSpreadsheetCell( const QVariant val ) {
 }
 
 
-CSpreadsheetCell::CSpreadsheetCell( const QVariant val, const int colSpan, const int rowSpan ) {
+CSpreadsheetCell::CSpreadsheetCell( const QVariant& val, const int colSpan, const int rowSpan ) {
   _value = val;
   _colSpan = qMax( colSpan, 1 );
   _rowSpan = qMax( rowSpan, 1 );
@@ -126,7 +126,7 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows ) : CTwoDArray<CSpr
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
   initialize();
 
   for( int c = 0; c < nCols; ++c ) {
@@ -137,7 +137,7 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant def
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal ) {
   initialize();
 }
 
@@ -180,13 +180,13 @@ void CSpreadsheet::assign( const CSpreadsheet& other ) {
 
 
 void CSpreadsheet::debug( const int padding /* = 10 */) const {
-  qDb() << QString( "Matrix %1 cols x %2 rows:" ).arg( nCols() ).arg( nRows() );
+  qDb() << QStringLiteral( "Matrix %1 cols x %2 rows:" ).arg( nCols() ).arg( nRows() );
 
   for( int r = 0; r < this->nRows(); ++r ) {
-    QString str = QString( "  Row %1: " ).arg( r );
+    QString str = QStringLiteral( "  Row %1: " ).arg( r );
 
     for( int c = 0; c < this->nCols(); ++c ) {
-      str.append( rightPaddedStr( QString( "%1" ).arg( this->at( c, r ).value().toString() ), padding ) );
+      str.append( rightPaddedStr( QStringLiteral( "%1" ).arg( this->at( c, r ).value().toString() ), padding ) );
     }
 
     qDb() << str;
