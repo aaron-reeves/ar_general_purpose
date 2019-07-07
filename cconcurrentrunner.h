@@ -16,6 +16,9 @@ class CConcurrentList {
 
     // Override this function to do anything useful.
     virtual QHash<QString, int> populateDatabase( CConfigDatabase cfdb, const int& dataSourceID, const bool& insertRecords );
+
+  private:
+    Q_DISABLE_COPY( CConcurrentList )
 };
 
 
