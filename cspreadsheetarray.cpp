@@ -205,7 +205,7 @@ QVariant CSpreadsheet::cellValue(const QString& cellLabel ) const {
     row = cellLabel.right( cellLabel.length() - 2 );
   }
   else {
-    col = cellLabel.left( 1 ).toUpper();
+    col = cellLabel.at(0).toUpper();
     row = cellLabel.right( cellLabel.length() - 1 );
   }
 
@@ -384,7 +384,7 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
 
   for( int c = 0; c < this->nCols(); ++c ) {
     if( QVariant::DateTime == this->at( c, rowNumber ).value().type() )
-      list.append( this->at( c, rowNumber).value().toDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) );
+      list.append( this->at( c, rowNumber).value().toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") ) );
     else
       list.append( this->at( c, rowNumber).value().toString().trimmed() );
   }
@@ -398,11 +398,11 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 
   if( this->isEmpty() ) {
     qDebug() << "is empty";
-    csv.setError( QCsv::ERROR_OTHER, "Specified worksheet is empty." );
+    csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet is empty.") );
   }
   else if( !this->isTidy( containsHeaderRow ) ) {
     qDebug() << "Not tidy";
-    csv.setError( QCsv::ERROR_OTHER, "Specified worksheet does not have a tidy CSV format." );
+    csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet does not have a tidy CSV format.") );
   }
   else {
     QStringList firstRow;
@@ -535,7 +535,7 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
-      cout << QString( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
+      cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
     return false;
   }
   if( displayVerboseOutput )
@@ -547,7 +547,9 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
     return false;
   }
   if( displayVerboseOutput )
-    cout << QString( "Cell range: rows( %1, %2 ), columns (%3, %4)" ).arg( cellRange.firstRow() ).arg( cellRange.lastRow() ).arg( cellRange.firstColumn() ).arg( cellRange.lastColumn() ) << endl;
+    cout << QStringLiteral( "Cell range: rows( %1, %2 ), columns (%3, %4)" )
+      .arg( QString::number( cellRange.firstRow() ), QString::number( cellRange.lastRow() ), QString::number( cellRange.firstColumn() ), QString::number( cellRange.lastColumn() ) )
+    << endl;
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
@@ -558,7 +560,7 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
       QVariant val = xlsx->read( row, col );
 
       if( val.type() == QVariant::String ) {
-        val = val.toString().replace( "_x000D_\n", "\n" );
+        val = val.toString().replace( QLatin1String("_x000D_\n"), QLatin1String("\n") );
       }
 
       CSpreadsheetCell ssCell( val, 0, 0 );
@@ -609,8 +611,8 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         _hasSpannedCells = ( _hasSpannedCells || ssCell.hasSpan() );
 
         if( displayVerboseOutput ) {
-          msg.replace( "CELLCOL", QString::number( cellCol ), Qt::CaseSensitive );
-          msg.replace( "CELLROW", QString::number( cellRow ), Qt::CaseSensitive );
+          msg.replace( QLatin1String("CELLCOL"), QString::number( cellCol ), Qt::CaseSensitive );
+          msg.replace( QLatin1String("CELLROW"), QString::number( cellRow ), Qt::CaseSensitive );
           cout << msg << endl;
         }
       }
@@ -634,8 +636,8 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   // Deal with numbers
   //------------------
   msg =
-    QString( "Row: CELLROW, Col: CELLCOL, id: %1, row: %2, col, %3, xf: %4, l: %5, d: %6, str: %7\n" )
-    .arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
+    QStringLiteral( "Row: CELLROW, Col: CELLCOL, id: %1, row: %2, col, %3, xf: %4, l: %5, d: %6, str: %7\n" )
+    .arg( QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
     .arg( cell->row )
     .arg( cell->col )
     .arg( cell->xf )
@@ -660,7 +662,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
     else {
       val = cell->d;
     }
-    msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (numeric): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+    msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
   }
 
   // Deal with formulas
@@ -670,7 +672,7 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   else if ( (XLS_RECORD_FORMULA == cell->id) || (XLS_RECORD_FORMULA_ALT == cell->id) ) {
     if (cell->l == 0) { // its a number
       val = cell->d;
-      msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+      msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
     }
     else {
       if (!strcmp( cell->str, "bool")) { // its boolean, and test cell->d
@@ -680,15 +682,15 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
         else {
           val = false;
         }
-        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
       }
       else if (!strcmp( cell->str, "error" ) ) { // formula is in error
         val = "*error*";
-        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString() ).arg( QString( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
       }
       else { // ... cell->str is valid as the result of a string formula.
-        val = QString( "%1" ).arg( cell->str );
-        msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
+        val = QStringLiteral( "%1" ).arg( cell->str );
+        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
       }
     }
   }
@@ -709,17 +711,17 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   // Deal with strings
   //------------------
   else if( nullptr != cell->str ) {
-     val = QString( "%1" ).arg( cell->str );
-     msg.append( QString( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
+     val = QStringLiteral( "%1" ).arg( cell->str );
+     msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
   }
 
   // Deal with 'empty' cells
   //------------------------
   else {
-    msg.append( QString( "Row: CELLROW, Col: CELLCOL, (Empty cell)" ) );
+    msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, (Empty cell)" ) );
   }
 
-  msg.append( QString( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
+  msg.append( QStringLiteral( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
 
   return val;
 }
@@ -1116,7 +1118,7 @@ void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat,
       _ok = openXlsxWorkbook();
       break;
     default:
-      _errMsg = "Spreadsheet file format cannot be determined.";
+      _errMsg = QStringLiteral("Spreadsheet file format cannot be determined.");
       _ok = false;
       break;
   }
@@ -1136,29 +1138,29 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
 
   if( error ) {
     if( nullptr != errMsg )
-      *errMsg = "File type cannot be determined: there is a problem with the filemagic library.";
+      *errMsg = QStringLiteral("File type cannot be determined: there is a problem with the filemagic library.");
 
     if( nullptr != ok )
       *ok = false;
   }
 
   // Excel (*.xls) files look like this to FileMagic
-  else if( fileType.contains( "Composite Document File V2 Document" ) || fileType.contains( "CDF V2 Document" ) ) {
+  else if( fileType.contains( QLatin1String("Composite Document File V2 Document") ) || fileType.contains( QLatin1String("CDF V2 Document") ) ) {
     fileFormat = Format97_2003;
   }
 
   // Excel (*.xlsx) files look like this to FileMagic
   else if(
-    ( fileType.startsWith( "Zip archive data" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+    ( fileType.startsWith( QLatin1String("Zip archive data") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
     // || ( fileType.startsWith( "Zip archive data" ) && fileName.endsWith( ".xls", Qt::CaseInsensitive ) ) // I think this was a mistake...
-    || ( 0 == fileType.compare( "Microsoft Excel 2007+" ) )
-    || ( fileType.contains( "Microsoft OOXML" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+    || ( 0 == fileType.compare( QLatin1String("Microsoft Excel 2007+") ) )
+    || ( fileType.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
   ) {
     fileFormat = Format2007;
   }
   else {
     if( nullptr != errMsg )
-      *errMsg = QString( "File type cannot be matched. The filemagic library returned an unrecognized type: %1" ).arg( fileType );
+      *errMsg = QStringLiteral( "File type cannot be matched. The filemagic library returned an unrecognized type: %1" ).arg( fileType );
 
     if( nullptr != ok )
       *ok = false;
@@ -1184,11 +1186,11 @@ bool CSpreadsheetWorkBook::openXlsxWorkbook() {
 bool CSpreadsheetWorkBook::openXlsWorkbook() {
   // Open workbook, choose standard conversion
   //------------------------------------------
-  QString encoding = "UTF-8"; // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
+  QString encoding = QStringLiteral("UTF-8"); // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
   _pWB = xls::xls_open( _srcFileName.toLatin1().data(), encoding.toLatin1().data() );
 
   if( nullptr == _pWB ) {
-    _errMsg = "Specified file could not be opened.  Wrong format?";
+    _errMsg = QStringLiteral("Specified file could not be opened.  Wrong format?");
     return false;
   }
 
@@ -1276,20 +1278,20 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QSt
   QVariantList result;
 
   if( !_xlsx->selectSheet( sheetName ) ) {
-    _errMsg = QString( "Specified worksheet (%1) could not be selected." ).arg( sheetName );
+    _errMsg = QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName );
     return result;
   }
 
   QXlsx::CellRange cellRange = _xlsx->dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
-    _errMsg = "Sheet dimensions appear to be incorrect.";
+    _errMsg = QStringLiteral("Sheet dimensions appear to be incorrect.");
     return result;
   }
 
   int row = rowIdx + 1;
 
   if( (row < cellRange.firstRow()) || (row > cellRange.lastRow()) ) {
-    _errMsg = "Cell range is out of bounds.";
+    _errMsg = QStringLiteral("Cell range is out of bounds.");
     return result;
   }
 
@@ -1298,7 +1300,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QSt
 
     QVariant val = _xlsx->read( row, col );
     if( val.type() == QVariant::String ) {
-      val = val.toString().replace( "_x000D_\n", "\n" );
+      val = val.toString().replace( QLatin1String("_x000D_\n"), QLatin1String("\n") );
     }
 
     result.append( val );
@@ -1348,12 +1350,12 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
   QVariantList result;
 
   if( !_ok ) {
-    _errMsg = "Workbook is not open.";
+    _errMsg = QStringLiteral("Workbook is not open.");
     return result;
   }
 
   if( !_sheetNames.containsKey( sheetIdx ) ) {
-    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
+    _errMsg = QStringLiteral( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
     return result;
   }
 
@@ -1366,7 +1368,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
       break;
     default:
       Q_UNREACHABLE();
-      _errMsg = "Format is not specified.";
+      _errMsg = QStringLiteral("Format is not specified.");
       break;
   }
 
@@ -1376,17 +1378,17 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
 
 bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   if( !_ok ) {
-    _errMsg = "Workbook is not open.";
+    _errMsg = QStringLiteral("Workbook is not open.");
     return false;
   }
 
   if( !_sheetNames.containsKey( sheetIdx ) ) {
-    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
+    _errMsg = QStringLiteral( "Specified work sheet does not exist: %1" ).arg( sheetIdx );
     return false;
   }
 
   if( _sheets.contains( sheetIdx ) ) {
-    _errMsg = QString( "The selected sheet has already been read: %1" ).arg( sheetIdx );
+    _errMsg = QStringLiteral( "The selected sheet has already been read: %1" ).arg( sheetIdx );
     return true;
   }
 
@@ -1402,7 +1404,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
       break;
     default:
       Q_UNREACHABLE();
-      _errMsg = "Format is not specified.";
+      _errMsg = QStringLiteral("Format is not specified.");
       result = false;
       break;
   }
@@ -1416,7 +1418,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
 bool CSpreadsheetWorkBook::readSheet( const QString& sheetName ) {
   if( !_sheetNames.containsValue( sheetName ) ) {
-    _errMsg = QString( "Specified work sheet does not exist: %1" ).arg( sheetName );
+    _errMsg = QStringLiteral( "Specified work sheet does not exist: %1" ).arg( sheetName );
     return false;
   }
   else {
@@ -1427,7 +1429,7 @@ bool CSpreadsheetWorkBook::readSheet( const QString& sheetName ) {
 
 bool CSpreadsheetWorkBook::readAllSheets() {
   if( !_ok ) {
-    _errMsg = "Workbook is not open.";
+    _errMsg = QStringLiteral("Workbook is not open.");
     return false;
   }
 
@@ -1477,14 +1479,14 @@ bool CSpreadsheetWorkBook::isXlsDate(const int xf, const double d ) {
       QString fmtStr = _xlsFormats.value( fmt );
 
       looksLikeDate = (
-        fmtStr.contains( "yy" )
-        || fmtStr.contains( "dd" )
+        fmtStr.contains( QLatin1String("yy") )
+        || fmtStr.contains( QLatin1String("dd") )
       );
 
       looksLikeTime = (
-        fmtStr.contains( "AM/PM" )
-        || fmtStr.contains( "h" )
-        || fmtStr.contains( "s" )
+        fmtStr.contains( QLatin1String("AM/PM") )
+        || fmtStr.contains( QLatin1String("h") )
+        || fmtStr.contains( QLatin1String("s") )
       );
 
       result = ( looksLikeDate && !looksLikeTime );
@@ -1513,11 +1515,11 @@ bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) {
     QString fmtStr = _xlsFormats.value( fmt );
 
     looksLikeDate = (
-      ( fmtStr.contains( "yy" ) || fmtStr.contains( "dd" ) )
+      ( fmtStr.contains( QLatin1String("yy") ) || fmtStr.contains( QLatin1String("dd") ) )
     );
 
     looksLikeTime = (
-      ( fmtStr.contains( "AM/PM" ) || fmtStr.contains( "h" ) || fmtStr.contains( "s" ) )
+      ( fmtStr.contains( QLatin1String("AM/PM") ) || fmtStr.contains( QLatin1String("h") ) || fmtStr.contains( QLatin1String("s") ) )
       && ( 1.0 > d )
     );
 
@@ -1548,14 +1550,14 @@ bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
     fmtStr = _xlsFormats.value( fmt );
 
     looksLikeDate = (
-      fmtStr.contains( "yy" )
-      || fmtStr.contains( "dd" )
+      fmtStr.contains( QLatin1String("yy") )
+      || fmtStr.contains( QLatin1String("dd") )
     );
 
     looksLikeTime = (
-      fmtStr.contains( "AM/PM" )
-      || fmtStr.contains( "h" )
-      || fmtStr.contains( "s" )
+      fmtStr.contains( QLatin1String("AM/PM") )
+      || fmtStr.contains( QLatin1String("h") )
+      || fmtStr.contains( QLatin1String("s") )
     );
 
     result = ( looksLikeDate && looksLikeTime );
@@ -1567,20 +1569,20 @@ bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
 
 bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to add sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to add sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can only be added to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can only be added to Format2007 files");
   }
   else if( !sheetName.isEmpty() && this->hasSheet( sheetName ) ) {
     _ok = false;
-    _errMsg = QString( "Duplicate sheet name: '%1'" ).arg( sheetName );
+    _errMsg = QStringLiteral( "Duplicate sheet name: '%1'" ).arg( sheetName );
   }
   else {
     _ok = _xlsx->addSheet( sheetName );
     if( !_ok ) {
-      _errMsg = QString( "Could not insert sheet with name '%1'" ).arg( sheetName );
+      _errMsg = QStringLiteral( "Could not insert sheet with name '%1'" ).arg( sheetName );
     }
     else {
       _sheetNames.insert( this->sheetCount(), sheetName );
@@ -1593,11 +1595,11 @@ bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ 
 
 bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to delete sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to delete sheet.");
   }
   else if( !_sheetNames.containsKey( sheetIdx ) ) {
     _ok = false;
-    _errMsg = QString( "Sheet does not exist: %1" ).arg( sheetIdx );
+    _errMsg = QStringLiteral( "Sheet does not exist: %1" ).arg( sheetIdx );
   }
   else {
     _ok = this->deleteSheet( _sheetNames.retrieveValue( sheetIdx ) );
@@ -1609,20 +1611,20 @@ bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
 
 bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to delete sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to delete sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can only be deleted from Format2007 files";
+    _errMsg = QStringLiteral("Sheets can only be deleted from Format2007 files");
   }
   else if( !this->hasSheet( sheetName ) ) {
     _ok = false;
-    _errMsg = QString( "Sheet does not exist: '%1'" ).arg( sheetName );
+    _errMsg = QStringLiteral( "Sheet does not exist: '%1'" ).arg( sheetName );
   }
   else {
     _ok = _xlsx->deleteSheet( sheetName );
     if( !_ok ) {
-      _errMsg = QString( "Could not delete sheet '%1'" ).arg( sheetName );
+      _errMsg = QStringLiteral( "Could not delete sheet '%1'" ).arg( sheetName );
     }
     else {
       _sheetNames.removeValue( sheetName );
@@ -1635,15 +1637,15 @@ bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
 
 bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to write sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to write sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can only be written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can only be written to Format2007 files");
   }
   else if( !_sheetNames.containsKey( sheetIdx ) ) {
     _ok = false;
-    _errMsg = QString( "Sheet does not exist: %1" ).arg( sheetIdx );
+    _errMsg = QStringLiteral( "Sheet does not exist: %1" ).arg( sheetIdx );
   }
   else {
     _ok = this->writeSheet( _sheetNames.retrieveValue( sheetIdx ), data );
@@ -1655,11 +1657,11 @@ bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVar
 
 bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to write sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to write sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can written to Format2007 files");
   }
   _errMsg = QString();
 
@@ -1670,7 +1672,7 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
   if( _ok ) {
     if( !_xlsx->selectSheet( sheetName ) ) {
       _ok = false;
-      _errMsg = QString( "Could not select sheet %1" ).arg( sheetName );
+      _errMsg = QStringLiteral( "Could not select sheet %1" ).arg( sheetName );
     }
     else {
       _ok = true;
@@ -1709,7 +1711,7 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
     }
 
     if( !_ok ) {
-      _errMsg = QString( "Could not write data to sheet %1" ).arg( sheetName );
+      _errMsg = QStringLiteral( "Could not write data to sheet %1" ).arg( sheetName );
     }
   }
 
@@ -1719,17 +1721,17 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
 
 bool CSpreadsheetWorkBook::selectSheet( const int sheetIdx ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to select sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to select sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can written to Format2007 files");
   }
   else {
     QString name = sheetName( sheetIdx );
     if( name.isEmpty() ) {
       _ok = false;
-      _errMsg = QString( "No sheet with index %1 to select" ).arg( sheetIdx );
+      _errMsg = QStringLiteral( "No sheet with index %1 to select" ).arg( sheetIdx );
     }
     else {
       _ok = this->selectSheet( name );
@@ -1741,19 +1743,19 @@ bool CSpreadsheetWorkBook::selectSheet( const int sheetIdx ) {
 
 bool CSpreadsheetWorkBook::selectSheet( const QString& name ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to select sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to select sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can written to Format2007 files");
   }
   else if( !_sheetNames.containsValue( name ) ) {
     _ok = false;
-    _errMsg = QString( "No sheet with name '%1' to select" ).arg( name );
+    _errMsg = QStringLiteral( "No sheet with name '%1' to select" ).arg( name );
   }
   else if( !_xlsx->selectSheet( name ) ) {
     _ok = false;
-    _errMsg = QString( "Could not select sheet with name '%1'" ).arg( name );
+    _errMsg = QStringLiteral( "Could not select sheet with name '%1'" ).arg( name );
   }
 
   return _ok;
@@ -1763,16 +1765,16 @@ bool CSpreadsheetWorkBook::selectSheet( const QString& name ) {
 
 bool CSpreadsheetWorkBook::save() {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to save sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to save sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can written to Format2007 files");
   }
   else {
     _ok = _xlsx->save();
     if( !_ok ) {
-      _errMsg = "File could not be written.";
+      _errMsg = QStringLiteral("File could not be written.");
     }
   }
   return _ok;
@@ -1781,16 +1783,16 @@ bool CSpreadsheetWorkBook::save() {
 
 bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
   if( !_ok ) {
-    _errMsg = "Correct existing errors before attempting to save sheet.";
+    _errMsg = QStringLiteral("Correct existing errors before attempting to save sheet.");
   }
   else if( Format2007 != _fileFormat  ) {
     _ok = false;
-    _errMsg = "Sheets can written to Format2007 files";
+    _errMsg = QStringLiteral("Sheets can written to Format2007 files");
   }
   else {
     _ok = _xlsx->saveAs( filename );
     if( !_ok ) {
-      _errMsg = "File could not be written.";
+      _errMsg = QStringLiteral("File could not be written.");
     }
     else {
       _srcFileName = filename;

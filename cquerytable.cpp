@@ -59,7 +59,7 @@
   QString CQueryTable::header( const QList<int>& arr ) {
     int i, j;
     int spaces;
-    QString head = "";
+    QString head;
 
     for( i = 0; arr.size() > i; ++i ) {
       head.append( "+" );
@@ -75,14 +75,14 @@
   }
 
 
-  QString CQueryTable::column( QString label, int len ) {
+  QString CQueryTable::column( const QString& label, const int len ) {
     QString col;
     int i;
     int lenDiff;
 
     if( label.length() <= len ) {
       // Prepend the leading space
-      col = QString( " %1" ).arg( label ); // Note the leading space
+      col = QStringLiteral( " %1" ).arg( label ); // Note the leading space
 
       // Add spaces until desired length is reached
       lenDiff = len - label.length();
@@ -94,7 +94,7 @@
       col.append( " " );
     }
     else {
-      col = QString( " %1" ).arg( label ); // Note the leading space
+      col = QStringLiteral( " %1" ).arg( label ); // Note the leading space
       col = col.left( len - 2 );
       col = col + "... "; // Note the trailing space
     }
@@ -107,7 +107,7 @@
     QString str;
 
     if( var.isNull() ) {
-      str = "NULL";
+      str = QStringLiteral("NULL");
     }
     else {
       //qDebug() << var;
@@ -123,10 +123,10 @@
           str = var.toString();
           break;
         case QVariant::Date:
-          str = var.toDate().toString( "yyyy-MM-dd" );
+          str = var.toDate().toString( QStringLiteral("yyyy-MM-dd") );
           break;
         case QVariant::DateTime:
-          str = var.toDateTime().toString( "yyyy-MM-dd hh:mm:ss" );
+          str = var.toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") );
           break;
         default:
           Q_UNREACHABLE();
@@ -136,7 +136,7 @@
     return str;
   }
 
-  QString CQueryTable::listLabel( QString label, int desiredLen ) {
+  QString CQueryTable::listLabel( QString label, const int desiredLen ) {
     int i;
     int diff = desiredLen - label.length();
     for( i = 0; diff > i; ++i ) label.prepend( " " );

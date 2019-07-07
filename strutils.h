@@ -26,7 +26,7 @@ QString abbreviatePath( const QString& path , const int targetLength = 0 ); // i
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
 QString camelCase( QString str );
 QString postgresCase( QString str );
-QString titleCase( QString str );
+QString titleCase( const QString& strng );
 
 QString findAndRemove(const QString& str3, QString str1 );
 QString findAndReplace( const QString& str3, const QString& str2, QString str1 );

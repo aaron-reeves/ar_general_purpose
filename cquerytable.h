@@ -25,9 +25,9 @@ class CQueryTable {
 
     // Helper functions
     QString header( const QList<int>& arr );
-    QString column( QString label, int len );
+    QString column( const QString& label, const int len );
     QString dbVariantToString( const QVariant& var );
-    QString listLabel( QString label, int desiredLen );
+    QString listLabel( QString label, const int desiredLen );
 };
 
 #endif // CQUERYTABLE_H

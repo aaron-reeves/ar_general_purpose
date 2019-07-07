@@ -85,7 +85,7 @@ class CHelpItemList : public QVector<CHelpItem> {
     void append();
 };
 
-void printHelpList( const CHelpItemList& list, const int& breakAtColumn = 55, const int& extraPadding = 0 );
+void printHelpList( const CHelpItemList& list, const int breakAtColumn = 55, const int extraPadding = 0 );
 
 void showSampleHelpMessage();
 

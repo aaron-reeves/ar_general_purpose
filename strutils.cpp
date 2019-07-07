@@ -114,8 +114,8 @@ QString postgresCase( QString str ) {
 }
 
 
-QString titleCase( QString str ){
-  str = str.simplified().trimmed();
+QString titleCase( const QString& strng ){
+  QString str = strng.simplified().trimmed();
   QString result;
   QChar c;
 

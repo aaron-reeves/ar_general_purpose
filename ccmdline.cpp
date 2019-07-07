@@ -56,18 +56,18 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/strutils.h>
 
 CCmdLine::CCmdLine() {
-  _originalString = "";
+  _originalString = QString();
 }
 
 
 CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs /* = true */ ) {
-  _originalString = "";
+  _originalString = QString();
   splitLine( argc, argv, clearArgs );
 }
 
     
 CCmdLine::CCmdLine( const QString& fileName ) {
-  _originalString = "";
+  _originalString = QString();
   splitFile( fileName );
 }
 
@@ -78,7 +78,7 @@ int CCmdLine::processList( QStringList list ) {
   char* arg;
   unsigned int size;
 
-  list.prepend( "dummy" );
+  list.prepend( QStringLiteral("dummy") );
   
   // Construct a char** from the string list
   argv = new char*[list.count()];
@@ -146,14 +146,14 @@ int CCmdLine::splitFile( const QString& fileName ) {
 
   returns number of switches found
 ------------------------------------------------------*/
-int CCmdLine::splitLine( int argc, char** argv, bool clearArgs /* = true */ ) {
+int CCmdLine::splitLine( const int argc, char** argv, bool clearArgs /* = true */ ) {
 	QString arg;
   QString curParam; // current argv[x]
 	int i;
 
    if( clearArgs ) {
     _hash.clear();
-    _originalString = "";
+    _originalString = QString();
   }
 
   // Build the original string, which might be requested later.
@@ -175,7 +175,7 @@ int CCmdLine::splitLine( int argc, char** argv, bool clearArgs /* = true */ ) {
         curParam = argv[i];
 
          // Clear args between switches to prevent problems
-         arg = "";
+         arg = QString();
 
         // look at next input string to see if it's a switch or an argument
         if (i + 1 < argc) {
@@ -187,7 +187,7 @@ int CCmdLine::splitLine( int argc, char** argv, bool clearArgs /* = true */ ) {
               i++;
            }
            else {
-              arg = "";
+              arg = QString();
            }
         }
 
@@ -195,7 +195,7 @@ int CCmdLine::splitLine( int argc, char** argv, bool clearArgs /* = true */ ) {
         QStringList cmd;
 
         // only add non-empty args
-        if (arg != "") {
+        if (!arg.isEmpty()) {
            cmd.append(arg);
         }
 
@@ -359,7 +359,7 @@ QString CCmdLine::safeArgument( const QString& pSwitch, const QString& name, con
    cmdLine.GetArgument("-a", 0)     p1
    cmdLine.GetArgument("-b", 1)     throws (int)0, returns an empty string
 ------------------------------------------------------*/
-QString CCmdLine::argument( const QString& pSwitch, int iIdx ) {
+QString CCmdLine::argument( const QString& pSwitch, const int iIdx ) {
   if( this->hasSwitch( pSwitch ) && ( iIdx < this->argumentCount( pSwitch ) ) )
     return _hash.value( pSwitch ).at( iIdx );
 
@@ -442,17 +442,17 @@ QStringList CCmdLine::arguments(  const QString& pSwitch ) {
 /* Returns true if any of the following switches is present: -h, --help, -? */
 bool  CCmdLine::hasHelp() {
   return(
-    this->hasSwitch( "-h" )
-    || this->hasSwitch( "--help" )
-    || this->hasSwitch( "-?" )
+    this->hasSwitch( QStringLiteral("-h") )
+    || this->hasSwitch( QStringLiteral("--help") )
+    || this->hasSwitch( QStringLiteral("-?") )
   );
 }
 
 /* Returns true if any of the following switches is present: -v, --version */
 bool  CCmdLine::hasVersion() {
   return(
-    this->hasSwitch( "-v" )
-    || this->hasSwitch( "--version" )
+    this->hasSwitch( QStringLiteral("-v") )
+    || this->hasSwitch( QStringLiteral("--version") )
   );
 }
 
@@ -471,7 +471,7 @@ QString CCmdLine::asString( const QString& pSwitch ) {
       list.append( this->argument( pSwitch, i ) );
     }
 
-    result = list.join( " " );
+    result = list.join( QStringLiteral(" ") );
   }
 
   return result;
@@ -483,7 +483,7 @@ void CCmdLine::debug( void ) {
 
   while( it.hasNext() ) {
     it.next();
-    qDebug() << "Key " << it.key() << " values " << it.value().join( ", " );
+    qDebug() << "Key " << it.key() << " values " << it.value().join( QStringLiteral(", ") );
   }
 }
 

@@ -44,7 +44,7 @@ QString ReturnCode::codeList() {
 
 QString ReturnCode::codeDescr( const int val ) {
   if( SUCCESS == val )
-    return "SUCCESS: No errors were encountered.";
+    return QStringLiteral( "SUCCESS: No errors were encountered." );
   else {
      QString result;
 

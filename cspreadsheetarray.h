@@ -269,6 +269,9 @@ class CSpreadsheetWorkBook {
     QHash<int, QString> _xlsFormats; // key = format index, value = string format
     bool _xlsIs1904;
     //---------------------------------------------------------------------------------
+
+  private:
+    Q_DISABLE_COPY( CSpreadsheetWorkBook )
 };
 
 #endif // CSPREADSHEETARRAY_H

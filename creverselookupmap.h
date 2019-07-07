@@ -114,7 +114,7 @@ class CReverseLookupMap {
 
       void debug() {
         int i;
-        qDebug() << QString( "Forward:" );
+        qDebug() << "Forward:";
         for( i = 0; i < forwardMap.count(); ++i )
           qDebug() << "  " << forwardMap.keys().at(i) << forwardMap.values().at(i);
         qDebug() << "Backward:";

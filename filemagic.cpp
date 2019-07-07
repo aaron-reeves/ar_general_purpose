@@ -16,19 +16,19 @@ enum CheckFileTypes {
 QString setMagicPath( bool* error, QString* errorMessage ) {
   QString magicFile;
 
-  if( QFile::exists( "C:/libs/C_libs/bin/magic" ) )
-    magicFile = "C:/libs/C_libs/bin/magic";
-  else if( QFile::exists(  QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
-    magicFile = QString( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
-  else if( QFile::exists( "/usr/share/file/magic" ) )
-    magicFile = "/usr/share/file/magic";
-  else if( QFile::exists( "/etc/magic" ) )
-    magicFile = "/etc/magic";
+  if( QFile::exists( QStringLiteral("C:/libs/C_libs/bin/magic") ) )
+    magicFile = QStringLiteral("C:/libs/C_libs/bin/magic");
+  else if( QFile::exists(  QStringLiteral( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
+    magicFile = QStringLiteral( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
+  else if( QFile::exists( QStringLiteral("/usr/share/file/magic") ) )
+    magicFile = QStringLiteral("/usr/share/file/magic");
+  else if( QFile::exists( QStringLiteral("/etc/magic") ) )
+    magicFile = QStringLiteral("/etc/magic");
   else {
     if( nullptr != error )
       *error = true;
     if( nullptr != errorMessage )
-      *errorMessage = "Could not find magic file.";
+      *errorMessage = QStringLiteral("Could not find magic file.");
   }
 
   return magicFile;
@@ -55,9 +55,9 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
     if( nullptr != error )
       *error = true;
     if( nullptr != errorMessage )
-      *errorMessage = QString( "magicLoadMagic failed: %1" ).arg( errMsg );
+      *errorMessage = QStringLiteral( "magicLoadMagic failed: %1" ).arg( errMsg );
 
-    return "";
+    return QLatin1String("");
   }
 
   // Check the file type.
@@ -76,9 +76,9 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
     if( nullptr != error )
       *error = true;
     if( nullptr != errorMessage )
-      *errorMessage = QString( "magicProcess failed: %1" ).arg( errMsg );
+      *errorMessage = QStringLiteral( "magicProcess failed: %1" ).arg( errMsg );
 
-    result = "";
+    result = QLatin1String("");
   }
 
   magicCloseMagic( magic );
@@ -108,7 +108,7 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
     if( nullptr != error )
       *error = true;    
     if( nullptr != errorMessage )
-      *errorMessage = QString( "magicLoadMagic failed: %1" ).arg( errMsg );
+      *errorMessage = QStringLiteral( "magicLoadMagic failed: %1" ).arg( errMsg );
 
     return false;
   }
@@ -138,15 +138,15 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
         break;
       case CHECKXLSX:
           result = (
-            ( fileTypeInfo.startsWith( "Zip archive data" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
-            || ( 0 == fileTypeInfo.compare( "Microsoft Excel 2007+" ) )
-            || ( fileTypeInfo.contains( "Microsoft OOXML" ) && fileName.endsWith( ".xlsx", Qt::CaseInsensitive ) )
+            ( fileTypeInfo.startsWith( QLatin1String("Zip archive data") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
+            || ( 0 == fileTypeInfo.compare( QLatin1String("Microsoft Excel 2007+") ) )
+            || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
           );
         break;
       case CHECKXLS:
         result = (
-          fileTypeInfo.contains( "Composite Document File V2 Document" )
-          || fileTypeInfo.contains( "CDF V2 Document" )
+          fileTypeInfo.contains( QLatin1String("Composite Document File V2 Document") )
+          || fileTypeInfo.contains( QLatin1String("CDF V2 Document") )
         );
         break;
       default:
@@ -160,7 +160,7 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
     if( nullptr != error )
       *error = true;
     if( nullptr != errorMessage )
-      *errorMessage = QString( "magicProcess failed: %1" ).arg( errMsg );
+      *errorMessage = QStringLiteral( "magicProcess failed: %1" ).arg( errMsg );
 
     result = false;
   }
@@ -208,16 +208,16 @@ bool looksLikeTextFile( const QString& fileName ) {
 }
 
 
-magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg ) {
+magic_set* magicLoadMagic( const QString& magicFile, const int flags, QString& errMsg ) {
   struct magic_set* magic = magic_open( flags );
 
   if( nullptr == magic ) {
-    errMsg = "Could not open magic.";
+    errMsg = QStringLiteral("Could not open magic.");
     return nullptr;
   }
   else {
     if( -1 == magic_load( magic,  magicFile.toLatin1().data() ) ) {
-      errMsg = "Could not load magic.";
+      errMsg = QStringLiteral("Could not load magic.");
       magic_close( magic );
       return nullptr;
     }
@@ -232,13 +232,13 @@ bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileT
   const char* type = magic_file( ms, fileName.toLatin1().data() );
 
   if( nullptr == type ) {
-    errMsg = QString( "%1" ).arg( magic_error( ms ) );
-    fileTypeInfo = "";
+    errMsg = QStringLiteral( "%1" ).arg( magic_error( ms ) );
+    fileTypeInfo = QLatin1String("");
     return false;
   }
   else {
-    fileTypeInfo = QString( "%1" ).arg( type );
-    errMsg = "";
+    fileTypeInfo = QStringLiteral( "%1" ).arg( type );
+    errMsg = QLatin1String("");
     return true;
   }
 }

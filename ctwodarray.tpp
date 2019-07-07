@@ -189,7 +189,7 @@ void CTwoDArray<T>::appendRow() {
   ++_nRows;
 
   if( this->hasRowNames() ) {
-    QString newRowName = QString( "Row_%1" ).arg( _nRows );
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
     Q_ASSERT( !_rowNames.contains( newRowName ) );
     _rowNames.append( newRowName );
   }
@@ -245,7 +245,7 @@ void CTwoDArray<T>::appendRow(const QVector<T>& values ) {
   ++_nRows;
 
   if( this->hasRowNames() ) {
-    QString newRowName = QString( "Row_%1" ).arg( _nRows );
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
     Q_ASSERT( !_rowNames.contains( newRowName ) );
     _rowNames.append( newRowName );
   }
@@ -260,7 +260,7 @@ void CTwoDArray<T>::appendRow( const QList<T>& values ) {
   ++_nRows;
 
   if( this->hasRowNames() ) {
-    QString newRowName = QString( "Row_%1" ).arg( _nRows );
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
     Q_ASSERT( !_rowNames.contains( newRowName ) );
     _rowNames.append( newRowName );
   }

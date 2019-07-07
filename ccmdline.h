@@ -133,7 +133,7 @@ class CCmdLine {
     CCmdLine( const QString& fileName ); 
   
     /* Parses the command line into switches and arguments. Returns number of switches found. */
-    int splitLine( int argc, char** argv, bool clearArgs = true );
+    int splitLine( const int argc, char** argv, bool clearArgs = true );
     
     int splitString( QString str );
     
@@ -152,11 +152,11 @@ class CCmdLine {
     bool isAmbiguous( const QStringList& pSwitches );
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
-    QString safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault );
+    QString safeArgument( const QString& pSwitch, const int iIdx, const QString& pDefault );
     QString safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault );
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
-    QString argument( const QString& pSwitch, int iIdx);
+    QString argument( const QString& pSwitch, const int iIdx);
     QString argument( const QString& pSwitch, const QString& name );
 
     QString argument( const QStringList& pSwitches, int iIdx );

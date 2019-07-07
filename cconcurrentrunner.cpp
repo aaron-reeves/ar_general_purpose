@@ -4,17 +4,17 @@
 //-------------------------------------------------------------------------------------
 // Class CConcurrentList
 //-------------------------------------------------------------------------------------
-CConcurrentList::CConcurrentList() {
+CConcurrencyManager::CConcurrencyManager() {
   // Do nothing here.
 }
 
 
-CConcurrentList::~CConcurrentList() {
+CConcurrencyManager::~CConcurrencyManager() {
   // Do nothing here.
 }
 
 
-QHash<QString, int> CConcurrentList::populateDatabase( CConfigDatabase cfdb, const int& dataSourceID, const bool& insertRecords ) {
+QHash<QString, int> CConcurrencyManager::populateDatabase( const CConfigDatabase& cfdb, const int dataSourceID, const bool insertRecords ) {
   Q_UNUSED( cfdb );
   Q_UNUSED( dataSourceID );
   Q_UNUSED( insertRecords );
@@ -28,7 +28,7 @@ QHash<QString, int> CConcurrentList::populateDatabase( CConfigDatabase cfdb, con
 //-------------------------------------------------------------------------------------
 // Class CCtsRunner
 //-------------------------------------------------------------------------------------
-CConcurrentRunner::CConcurrentRunner( CConcurrentList* list, QFuture< QHash<QString, int> > f ) {
+CConcurrentRunner::CConcurrentRunner( CConcurrencyManager* list, const QFuture< QHash<QString, int> >& f ) {
   _timer.start();
   _timeInMsec = 0;
   _hasFinished = false;
@@ -96,9 +96,9 @@ QHash<QString, int> CConcurrentRunner::result() const {
 
 
 int CConcurrentRunner::adjustMaxListSize(
-    const bool& threadsFull,
+    const bool threadsFull,
     const QList<int>& maxListSize,
-    const int& idealThreadCount,
+    const int idealThreadCount,
     const QList<int>& threadsInUse,
     const QList<bool>& backlog
 ) {

@@ -52,13 +52,13 @@ class CXlCsv : public QCsv {
       const QString& filename,
       const bool containsFieldList,
       const int nLinesToSkip = 0,
-      const QString& sheetname = ""
+      const QString& sheetname = QString()
     );
     ~CXlCsv(); // Basic destructor
 
     // Opens the file/object for reading/manipulation in EntireFile mode.
     // Format and filename must have been specified.  Sheet name and nCommentRows are optional.
-    virtual bool open();
+    bool open();
 
     // The file format
     void setFileFormat( const CSpreadsheetWorkBook::SpreadsheetFileFormat val ) { _fileFormat = val; }

@@ -112,8 +112,17 @@ CErrorList::CErrorList() {
 
 
 CErrorList::CErrorList( const CErrorList& other ) {
+  assign( other );
+}
+
+void CErrorList::assign( const CErrorList& other ) {
   _useAppLog = other._useAppLog;
   _list = other._list;
+}
+
+CErrorList& CErrorList::operator=( const CErrorList& other ) {
+  assign( other );
+  return *this;
 }
 
 

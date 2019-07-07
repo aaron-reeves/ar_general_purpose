@@ -26,7 +26,7 @@ void PrintMemoryInfo( /*DWORD processID*/ ) {
 
 
 unsigned long procWorkingSet() {
-  int result = 0;
+  unsigned long result = 0;
 
   #if defined(_WIN32) || defined(WIN32)
     PROCESS_MEMORY_COUNTERS pmc;
@@ -42,12 +42,12 @@ unsigned long procWorkingSet() {
 
 
 unsigned long procPrivateWorkingSet() {
-  int result = 0;
+  unsigned long result = 0;
 
   #if defined(_WIN32) || defined(WIN32)
     PROCESS_MEMORY_COUNTERS_EX pmc;
 
-    if ( GetProcessMemoryInfo( GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS *) &pmc, sizeof(pmc)) )  {
+    if ( GetProcessMemoryInfo( GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmc), sizeof(pmc)) )  {
       result = pmc.PrivateUsage;
     }
 

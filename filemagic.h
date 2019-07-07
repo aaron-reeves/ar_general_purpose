@@ -23,7 +23,7 @@ bool looksLikeTextFile( const QString& fileName );
  * -------------------------------------
  */
 struct magic_set;
-magic_set* magicLoadMagic( const QString& magicFile, int flags, QString& errMsg );
+magic_set* magicLoadMagic( const QString& magicFile, const int flags, QString& errMsg );
 bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileTypeInfo, QString& errMsg );
 void magicCloseMagic( struct magic_set* ms );
 

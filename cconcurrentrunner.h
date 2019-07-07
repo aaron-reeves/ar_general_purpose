@@ -7,24 +7,24 @@
 #include <ar_general_purpose/returncodes.h>
 #include <epic_general_purpose/cepicconfigfile.h>
 
-class CConcurrentList {
+class CConcurrencyManager {
   public:
-    CConcurrentList();
-    virtual ~CConcurrentList();
+    CConcurrencyManager();
+    virtual ~CConcurrencyManager();
 
     void waitForOneToFinish();
 
     // Override this function to do anything useful.
-    virtual QHash<QString, int> populateDatabase( CConfigDatabase cfdb, const int& dataSourceID, const bool& insertRecords );
+    virtual QHash<QString, int> populateDatabase( const CConfigDatabase& cfdb, const int dataSourceID, const bool insertRecords );
 
   private:
-    Q_DISABLE_COPY( CConcurrentList )
+    Q_DISABLE_COPY( CConcurrencyManager )
 };
 
 
 class CConcurrentRunner {
   public:
-    CConcurrentRunner( CConcurrentList* list, QFuture< QHash<QString, int> > f );
+    CConcurrentRunner(CConcurrencyManager* list, const QFuture<QHash<QString, int> >& f );
     ~CConcurrentRunner();
 
     qint64 runtime() const; // in milliseconds. -1 if process hasn't yet ended.
@@ -35,9 +35,9 @@ class CConcurrentRunner {
     QHash<QString, int> result() const;
 
     static int adjustMaxListSize(
-      const bool& threadsFull,
+      const bool threadsFull,
       const QList<int>& maxListSize,
-      const int& idealThreadCount,
+      const int idealThreadCount,
       const QList<int>& threadsInUse,
       const QList<bool>& backlog
     );
@@ -53,10 +53,13 @@ class CConcurrentRunner {
     void cleanup();
 
     QFuture< QHash<QString, int> > _future;
-    CConcurrentList* _list;
+    CConcurrencyManager* _list;
     bool _hasFinished;
     QElapsedTimer _timer;
     qint64 _timeInMsec;
+
+  private:
+    Q_DISABLE_COPY( CConcurrentRunner )
 };
 
 #endif // CCONCURRENTRUNNER_H

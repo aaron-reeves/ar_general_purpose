@@ -96,7 +96,7 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 }
 
 
-void printHelpList( const CHelpItemList& list, const int& breakAtColumn /* = 55 */, const int& extraPadding /* = 0 */ ) {
+void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 */, const int extraPadding /* = 0 */ ) {
   int i, j;
   int maxPart1Len = 0;
   int nPadding;
@@ -126,7 +126,7 @@ void printHelpList( const CHelpItemList& list, const int& breakAtColumn /* = 55 
         lines.clear();
         lines.append( tmpLines.at(0) );
         for( int k = 1; k < tmpLines.count(); ++k ) {
-          lines.append( QString( "  %1" ).arg( tmpLines.at(k) ) );
+          lines.append( QStringLiteral( "  %1" ).arg( tmpLines.at(k) ) );
         }
       }
       else {

@@ -36,6 +36,7 @@ class CError {
     CError( const ErrorType type, const QString& msg, const int dataSourceID = -1, const int lineNumber = -1 );
     CError( const CError& other );
     CError& operator=( const CError& other );
+    ~CError() { /* Do nothing */ }
 
     ErrorType type() const { return _type; }
     QString msg() const { return _msg.trimmed(); }
@@ -63,6 +64,7 @@ class CErrorList {
   public:
     CErrorList();
     CErrorList( const CErrorList& other );
+    CErrorList& operator=( const CErrorList& other );
     ~CErrorList();
 
     enum ErrorFileFormat {
@@ -88,6 +90,7 @@ class CErrorList {
     bool writeFile( const QString& filename, const ErrorFileFormat fmt );
     
   protected:
+    void assign( const CErrorList& other );
     bool _useAppLog;
     QVector<CError> _list;
 };
