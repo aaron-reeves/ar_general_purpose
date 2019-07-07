@@ -47,7 +47,7 @@ void logBlank( const LogLevel logLevel = LoggingTypical );
 
 #ifdef QSQL_USED
 // Thread-safe
-void logFailedQuery( QSqlQuery* query, const QString& description = "Query" );
+void logFailedQuery( QSqlQuery* query, const QString& description = QStringLiteral("Query") );
 #endif
 
 class CLogMessage {
@@ -80,7 +80,7 @@ class CAppLog : public QObject {
     CAppLog();
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
+    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile, QObject* parent = nullptr );
     
     bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     void closeLog();

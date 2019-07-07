@@ -10,7 +10,7 @@ struct STimeBits {
   int msec;
 };
 
-STimeBits timeBits( const qint64& ms ) {
+STimeBits timeBits( const qint64 ms ) {
   STimeBits result;
 
   int hours = int( trunc( ms / 1000.0 / 60.0 / 60.0 ) );
@@ -45,15 +45,8 @@ STimeBits timeBits( const qint64& ms ) {
 QString elapsedTimeToString( const qint64 msec, const bool includeMSecs /* = false */ ) {
   STimeBits tb = timeBits( msec );
 
-  if( includeMSecs ) {
-    return
-      QString( "%1:%2:%3.%4" )
-        .arg( tb.hour )
-        .arg( paddedInt( tb.minute, 2 ) )
-        .arg( paddedInt( tb.second, 2 )
-        .arg( rightPaddedStr( paddedInt( tb.msec, 3 ), 3, '0' ) ) )
-    ;
-  }
+  if( includeMSecs )
+    return QStringLiteral( "%1:%2:%3.%4" ).arg( QString::number( tb.hour ), paddedInt( tb.minute, 2 ), paddedInt( tb.second, 2 ), rightPaddedStr( paddedInt( tb.msec, 3 ), 3, '0' ) );
   else
-    return QString( "%1:%2:%3" ).arg( tb.hour ).arg( paddedInt( tb.minute, 2 ) ).arg( paddedInt( tb.second, 2 ) );
+    return QStringLiteral( "%1:%2:%3" ).arg( QString::number( tb.hour ), paddedInt( tb.minute, 2 ) , paddedInt( tb.second, 2 ) );
 }

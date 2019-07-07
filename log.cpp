@@ -121,7 +121,7 @@ CAppLog::CAppLog() : QObject() {
 }
 
 
-CAppLog::CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) : QObject() {
+CAppLog::CAppLog(const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */, QObject* parent /* = nullptr */ ) : QObject( parent ) {
   initialize();
 
   openLog( fileName, logLevel, freq );  
