@@ -32,8 +32,8 @@ class CSpreadsheetCell {
   friend class CSpreadsheet;
   public:
     CSpreadsheetCell();
-    CSpreadsheetCell( const QVariant val );
-    CSpreadsheetCell( const QVariant val, const int colSpan, const int rowSpan );
+    CSpreadsheetCell( const QVariant& val );
+    CSpreadsheetCell( const QVariant& val, const int colSpan, const int rowSpan );
     CSpreadsheetCell( const CSpreadsheetCell& other );
     CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
     ~CSpreadsheetCell();
@@ -60,7 +60,7 @@ class CSpreadsheetCell {
     int colSpan() const { return _colSpan; }
     int rowSpan() const { return _rowSpan; }
 
-    void setValue( QVariant value ) { _value = value; }
+    void setValue( const QVariant& value ) { _value = value; }
     const QVariant value() const { return _value; }
 
     void debug();
@@ -93,8 +93,8 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     CSpreadsheet();
     CSpreadsheet( CSpreadsheetWorkBook* wb );
     CSpreadsheet( const int nCols, const int nRows );
-    CSpreadsheet( const int nCols, const int nRows, const QVariant defaultVal );
-    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell defaultVal );
+    CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal );
+    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal );
     CSpreadsheet( const CTwoDArray<QVariant>& data );
     CSpreadsheet( const CSpreadsheet& other );
     CSpreadsheet& operator=( const CSpreadsheet& other );
