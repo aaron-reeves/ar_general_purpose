@@ -1723,8 +1723,9 @@ QCsvObject::QCsvObject(
   const bool containsFieldList,
   const bool stringsContainDelimiters/*  = true */,
   const QCsvMode mode /* = qCSV::LineByLine */,
-  const bool checkForComment /* = false */
-) : QObject(), QCsv( filename, containsFieldList, stringsContainDelimiters, mode, checkForComment ) {
+  const bool checkForComment /* = false */,
+  QObject* parent /* = nullptr */
+) : QObject( parent ), QCsv( filename, containsFieldList, stringsContainDelimiters, mode, checkForComment ) {
   // Do nothing.
 }
 
