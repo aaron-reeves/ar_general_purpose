@@ -384,60 +384,60 @@ void CTwoDArray<T>::setRowNames( const QStringList& names ) {
 //----------------------------------------------------------------------------------------------
 template <class T>
 void CTwoDArray<T>::setValue( const QString& colName, const int r, const T val ) {
-  Q_ASSERT( _colNames.contains( colName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
   setValue( _colNames.indexOf( colName ), r, val );
 }
 
 template <class T>
 void CTwoDArray<T>::setValue( const int c, const QString& rowName, const T val ) {
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   setValue( c, _rowNames.indexOf( rowName ), val );
 }
 
 template <class T>
 void CTwoDArray<T>::setValue( const QString& colName, const QString& rowName, const T val ) {
-  Q_ASSERT( _colNames.contains( colName ) );
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   setValue( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ), val );
 }
 
 
 template <class T>
 T& CTwoDArray<T>::value( const QString& colName, const int r ) {
-  Q_ASSERT( _colNames.contains( colName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
   return this->value( _colNames.indexOf( colName ), r );
 }
 
 template <class T>
 T& CTwoDArray<T>::value( const int c, const QString& rowName ) {
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   return this->value( c, _rowNames.indexOf( rowName ) );
 }
 
 template <class T>
 T& CTwoDArray<T>::value( const QString& colName, const QString& rowName ) {
-  Q_ASSERT( _colNames.contains( colName ) );
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   return this->value( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ) );
 }
 
 
 template <class T>
 const T& CTwoDArray<T>::value( const QString& colName, const int r ) const {
-  Q_ASSERT( _colNames.contains( colName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
   return this->value( _colNames.indexOf( colName ), r );
 }
 
 template <class T>
 const T& CTwoDArray<T>::value( const int c, const QString& rowName ) const {
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   return this->value( c, _rowNames.indexOf( rowName ) );
 }
 
 template <class T>
 const T& CTwoDArray<T>::value( const QString& colName, const QString& rowName ) const {
-  Q_ASSERT( _colNames.contains( colName ) );
-  Q_ASSERT( _rowNames.contains( rowName ) );
+  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
   return this->value( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ) );
 }
 //----------------------------------------------------------------------------------------------
