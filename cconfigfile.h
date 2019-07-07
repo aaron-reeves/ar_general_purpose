@@ -40,6 +40,7 @@ class CConfigBlock : public QMap<QString, QString> {
   public:
     CConfigBlock( const QString& name );
     CConfigBlock( const CConfigBlock& other );
+    CConfigBlock& operator=( const CConfigBlock& other );
     ~CConfigBlock();
 
     QString name() const { return _name; }
@@ -50,9 +51,11 @@ class CConfigBlock : public QMap<QString, QString> {
     void debug() const;
 
   protected:
+    void assign( const CConfigBlock& other );
     QString _name;
     bool _removed;
 };
+
 
 typedef QMapIterator<QString, QString> CConfigBlockIterator;
 
@@ -61,7 +64,7 @@ class CConfigFile {
     CConfigFile();
     CConfigFile( QStringList* args );
     CConfigFile( const QString& configFileName );
-    CConfigFile( const CConfigFile& other );
+    //CConfigFile( const CConfigFile& other ); // Polymorphic class shouldn't be copied...
     virtual ~CConfigFile();
 
     // FIXME: referencing individual blocks by index, rather than by name, may require some work in the code.
@@ -119,6 +122,9 @@ class CConfigFile {
 
     QString _errorMessage;
     int _returnValue;
+
+  private:
+    Q_DISABLE_COPY( CConfigFile )
 };
 
 
