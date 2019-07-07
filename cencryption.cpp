@@ -15,7 +15,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstring.h>
 #include <QDebug>
 
-QByteArray CEncryption::rc4Encrypt( QString input, QString pwd ) {
+QByteArray CEncryption::rc4Encrypt( const QString& input, const QString& pwd ) {
   QByteArray temp;
   int i;
   int j = 0;
@@ -59,12 +59,12 @@ QByteArray CEncryption::rc4Encrypt( QString input, QString pwd ) {
 
 // rc4 encryption function based on code written by Joseph Gama
 // See http://www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeID=4653&lngWId=3
-void CEncryption::rc4( char* ByteInput, char* pwd, char* &ByteOutput ){
+void CEncryption::rc4( const char* ByteInput, const char* pwd, char*& ByteOutput ){
   char* temp;
   int i,j=0,t,tmp,tmp2,s[256], k[256];
   for (tmp=0;tmp<256;tmp++){
     s[tmp]=tmp;
-    k[tmp]=pwd[(tmp % strlen((char *)pwd))];
+    k[tmp]=pwd[( tmp % int( strlen(pwd) ) )];
   }
   for (i=0;i<256;i++){
     j = (j + s[i] + k[i]) % 256;
@@ -73,9 +73,9 @@ void CEncryption::rc4( char* ByteInput, char* pwd, char* &ByteOutput ){
     s[j]=tmp;
   }
 
-  temp = new char [ (int)strlen(ByteInput)  + 1 ] ;
+  temp = new char [ int( strlen(ByteInput) ) + 1 ] ;
   i=j=0;
-  for (tmp=0;tmp<(int)strlen(ByteInput);tmp++){
+  for( tmp=0; tmp<int( strlen(ByteInput) ); tmp++){
     i = (i + 1) % 256;
     j = (j + s[i]) % 256;
     tmp2=s[i];
@@ -86,7 +86,7 @@ void CEncryption::rc4( char* ByteInput, char* pwd, char* &ByteOutput ){
       temp[tmp]=ByteInput[tmp];
     }
     else {
-      temp[tmp]=s[t]^ByteInput[tmp];
+      temp[tmp]=char( s[t]^ByteInput[tmp] );
     }
     //qDebug() << "Char" << tmp << ":" << temp[tmp] << (int)temp[tmp];
   }
@@ -96,11 +96,10 @@ void CEncryption::rc4( char* ByteInput, char* pwd, char* &ByteOutput ){
 }
 
 
-QString CEncryption::hexEncode( QString temp ) {
+QString CEncryption::hexEncode( const QString& temp ) {
   int i;
   unsigned char c;
-  QString str;
-  QString temp3 = "";
+  QString temp3;
   QString temp4;
 
   for( i = 0; i < temp.length(); ++i ) {
@@ -122,7 +121,7 @@ QString CEncryption::hexEncode( QString temp ) {
 }
 
 
-QString CEncryption::hexDecode( QString str ) {
+QString CEncryption::hexDecode( const QString& str ) {
   int i;
   QChar hc, lc;
   QString ret;
@@ -138,7 +137,7 @@ QString CEncryption::hexDecode( QString str ) {
 
 
 // a subroutine that unescapes escaped characters.
-int CEncryption::intFromHex(QChar hc, QChar lc ) {
+int CEncryption::intFromHex( const QChar hc, const QChar lc ) {
   int Hi;        // holds high byte
   int Lo;        // holds low byte
   int Result;    // holds result
@@ -147,15 +146,13 @@ int CEncryption::intFromHex(QChar hc, QChar lc ) {
   if( hc.isDigit() )
     Hi = hc.digitValue();
   else {
-    hc = hc.toLower();
-    Hi = hc.unicode() - a.unicode() + 10;
+    Hi = hc.toLower().unicode() - a.unicode() + 10;
   }
 
   if( lc.isDigit() )
     Lo = lc.digitValue();
   else {
-    lc = lc.toLower();
-    Lo = lc.unicode() - a.unicode() + 10;
+    Lo = lc.toLower().unicode() - a.unicode() + 10;
   }
 
   Result = Lo + (16 * Hi);

@@ -55,7 +55,7 @@ namespace CSV {
   QList<QStringList> parseFromString(const QString &string, const QChar delimiter = ',' );
 
   // Parses a CSV file
-  QList<QStringList> parseFromFile(const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
+  QList<QStringList> parseFromFile(const QString &filename, const QChar delimiter = ',', const QString &codec = QString() );
 
   // Generates a string list containing properly formatted CSV elements
   QStringList csvStringList( const QStringList& elements, const QChar delimiter = ',', const StringCase stringCase = OriginalCase );
@@ -64,7 +64,7 @@ namespace CSV {
   QString writeLine( const QStringList& elements, const QChar delimiter = ',', const StringCase stringCase = OriginalCase );
 
   // Writes a properly formatted multi-line CSV string from its component parts
-  bool write(const QList<QStringList> data, const QString &filename, const QChar delimiter = ',', const QString &codec = "" );
+  bool write(const QList<QStringList>& data, const QString &filename, const QChar delimiter = ',', const QString& codec = QString() );
 }
 
 
@@ -147,7 +147,7 @@ class QCsv {
     // Don't forget that for all other property values, reasonable defaults are used.
     // Also, most property values (see below) need to be specified before open() is called.
     void processString(
-        QString text,
+        const QString& text,
         const bool containsFieldList,
         const bool stringsContainDelimiters
     );
@@ -216,7 +216,7 @@ class QCsv {
     bool setFieldFormat( const QString& fieldName, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
     bool setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
 
-    bool writeFile( const QString &filename, const QString &codec = "" ); // Write contents of the CSV object to a file.
+    bool writeFile( const QString &filename, const QString &codec = QString() ); // Write contents of the CSV object to a file.
 
     // Generates a subset of this object, with only rows in which the indicated field contains the indicated value (which may or may not be case-sensitive).
     // These functions work only in entire-file mode.
@@ -251,10 +251,10 @@ class QCsv {
     bool isOpen() const { return _isOpen; }
 
     // These properties can be used
-    void setContainsFieldList( bool setVal ); // If true then the first line of the file will be treated as a list of field/column names.  Default value is true.
+    void setContainsFieldList( const bool setVal ); // If true then the first line of the file will be treated as a list of field/column names.  Default value is true.
     bool containsFieldList() const { return _containsFieldList; }
 
-    void setFilename( QString filename ); // The file name of the CSV file to process
+    void setFilename( const QString& filename ); // The file name of the CSV file to process
     QString filename() const { return _srcFilename; }
 
     void setDelimiter( const QChar val ) { _delimiter = val; } // The delimiter character.  Default value is a comma.

@@ -45,6 +45,6 @@
  * PostgreSQL function lastval(), but by querying the appropriate sequence,
  * which, at the moment, must be specified.
  */
-int getLastInsertId( QSqlDatabase* db, const QString& sequenceName );
+int getLastInsertId( const QSqlDatabase* db, const QString& sequenceName );
 
 #endif // GETLASTINSERTID_H

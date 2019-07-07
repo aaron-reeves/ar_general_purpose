@@ -32,7 +32,7 @@ class ConfigReturnCode {
       LastReturnCode // Not a real return code.  Used to easily iterate over all return codes.
     };
 
-    static QString resultString( const int& returnCode );
+    static QString resultString( const int returnCode );
 };
 
 
@@ -73,7 +73,7 @@ class CConfigFile {
     bool contains(const QString& blockName, const QString& key ) const;
     
     // AT LEAST one block with the indicated key, set to the indicated value?
-    bool contains( const QString& blockName, const QString& key, QString value ) const;
+    bool contains( const QString& blockName, const QString& key, const QString& value ) const;
 
     // Return the FIRST block with the indicated name
     CConfigBlock* block( const QString& blockName ) const;
@@ -91,9 +91,9 @@ class CConfigFile {
     QList<CConfigBlock*> blocks( const QString& blockName ) const;
     
     // Return the indicated key value from EVERY block with the specified name
-    QStringList values( const QString& blockName, QString key ) const;
+    QStringList values( const QString& blockName, const QString& key ) const;
 
-    virtual void debug( const bool& showRemovedBlocks = true ) const;
+    virtual void debug( const bool showRemovedBlocks = true ) const;
 
     virtual void writeToStream( QTextStream* stream );
 

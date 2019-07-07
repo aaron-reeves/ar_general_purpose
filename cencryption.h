@@ -17,13 +17,13 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CEncryption {
   public:
-    static QByteArray rc4Encrypt( QString input, QString pwd );
-    static QString hexEncode( QString str );
-    static QString hexDecode( QString str );
+    static QByteArray rc4Encrypt( const QString& input, const QString& pwd );
+    static QString hexEncode( const QString& str );
+    static QString hexDecode( const QString& str );
 
   protected:
-    static void rc4( char* ByteInput, char* pwd, char* &ByteOutput );
-    static int intFromHex( QChar hc, QChar lc );
+    static void rc4( const char* ByteInput, const char* pwd, char*& ByteOutput );
+    static int intFromHex( const QChar hc, const QChar lc );
 };
 
 #endif

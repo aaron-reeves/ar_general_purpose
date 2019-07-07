@@ -64,7 +64,7 @@ void logMsg( const QStringList& msgs, const LogLevel logLevel /* = LoggingTypica
 }
 
 
-void logVerbose( QString msg ) {
+void logVerbose( const QString& msg ) {
   #ifdef QCONCURRENT_USED
     _mutex.lock();
   #endif
@@ -96,10 +96,10 @@ void logFailedQuery( QSqlQuery* query, const QString& description /* = "Query" *
     _mutex.lock();
   #endif
 
-  QString msg = QString( ">>> %1 failed:\n" ).arg( description );
+  QString msg = QStringLiteral( ">>> %1 failed:\n" ).arg( description );
   msg.append( prettyPrint( query->lastQuery().simplified().trimmed(), 100, false, false, 2 ) );
   msg.append( '\n' );
-  msg.append( QString( "%1 %2" ).arg( prettyPrint( query->lastError().text(), 100, false, false, 2 ) ).arg( "<<< (End)\n" ) );
+  msg.append( QStringLiteral( "%1 %2" ).arg( prettyPrint( query->lastError().text(), 100, false, false, 2 ), QStringLiteral("<<< (End)\n") ) );
 
   appLog.logMessage( msg, LoggingTypical );
 
@@ -130,8 +130,8 @@ CAppLog::CAppLog( const QString& fileName, const LogLevel logLevel, const FileFr
 
 void CAppLog::initialize() {
   _logOpen = false;
-  _logFileName = "";
-  _logPath = "";
+  _logFileName = QString();
+  _logPath = QString();
 
   _logFile = nullptr;
   _logTextStream = nullptr;
@@ -188,7 +188,7 @@ void CAppLog::setFileName( const QString& fileName ) {
 
   switch ( _freq ) {
     case DailyFiles:
-      fn = QString( "%1/%2-%3" ).arg( fi.absolutePath() ).arg( QDate::currentDate().toString( "yyyyMMdd" ) ).arg( fi.fileName() );
+      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDate::currentDate().toString( QStringLiteral("yyyyMMdd") ), fi.fileName() );
       break;
 
     // For now, fall through for all other options.
@@ -321,7 +321,7 @@ void CAppLog::truncateLogFile() {
   }
 
   if( truncNeeded ) {
-    QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
+    QString dt = QDateTime::currentDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz") );
   
     // Write a new log...
     if( _logFile->open( QIODevice::WriteOnly ) ) {
@@ -343,7 +343,7 @@ void CAppLog::truncateLogFile() {
 
 QString CAppLog::makeWindowsFriendly( QString message ) {
   message.remove( '\r' );
-  message.replace( '\n', "\r\n" );
+  message.replace( '\n', QLatin1String("\r\n") );
 
   return message;
 }
@@ -374,7 +374,7 @@ void CAppLog::logMessageUnique( const QString& message, const LogLevel logLevel 
 
 void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   CLogMessage* msg;
-  QString dt = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
+  QString dt = QDateTime::currentDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz") );
   QString str;
 
   if( _useMessageList ) {
@@ -395,10 +395,10 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
 
   if( LoggingPending == _logLevel ) {
     if( !message.isEmpty() ) {      
-      str = QString( "%1: %2" ).arg( dt ).arg( message );
+      str = QStringLiteral( "%1: %2" ).arg( dt, message );
     }
     else {
-      str = "";
+      str = QString();
     }
 
     msg = new CLogMessage( logLevel, str );
@@ -494,8 +494,8 @@ void CAppLog::processPendingMessages() {
 
 CLockFile::CLockFile() {
   _useLockFile = false;
-  _fileName = "";
-  _path = "";
+  _fileName = QString();
+  _path = QString();
 }
 
 
@@ -515,7 +515,7 @@ bool CLockFile::useLockFile() {
 
 
 bool CLockFile::exists() {
-  return QFileInfo( _fileName ).exists();
+  return QFileInfo::exists( _fileName );
 }
 
 
@@ -523,7 +523,7 @@ bool CLockFile::write() {
   QFile data( _fileName );
   if( data.open( QFile::WriteOnly | QFile::Truncate ) ) {
     QTextStream out( &data );
-    out << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss:zzz" );
+    out << QDateTime::currentDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss:zzz") );
     return true;
   }
   else {
@@ -548,7 +548,7 @@ QString CLogFileContents::trimMatch( QString line, const QRegExp& exp ) {
 }
 
 
-void CLogFileContents::processLine( QString line, const bool includeQueryDetails ) {
+void CLogFileContents::processLine( const QString& line, const bool includeQueryDetails ) {
   if( line.trimmed().isEmpty() )
     return;
 
@@ -558,11 +558,11 @@ void CLogFileContents::processLine( QString line, const bool includeQueryDetails
   // with ">>>" at the beginning of a block and "<<< (End)" at the end.
   // This will format such text blocks appropriately.
   //-------------------------------------------------------------------
-  if( line.contains( ">>>" ) ) {
+  if( line.contains( QLatin1String(">>>") ) ) {
     QStringList list = line.split( '\n' );
 
     if( includeQueryDetails && ( 2 < list.count() ) ) {
-      msg = QString( "%1 | %2" ).arg( list.at(1).trimmed() ).arg( list.at(2).trimmed() );
+      msg = QStringLiteral( "%1 | %2" ).arg( list.at(1).trimmed(), list.at(2).trimmed() );
     }
     else {
       msg = list.at(1).trimmed();
@@ -574,19 +574,19 @@ void CLogFileContents::processLine( QString line, const bool includeQueryDetails
   // Otherwise, my log files begin with "Line xxx:" or "Lines xxx, yyy:".
   // This statement strips this bit of noise away.
   //---------------------------------------------------------------------
-  else if( line.startsWith( "Lines" ) ) {
+  else if( line.startsWith( QStringLiteral("Lines") ) ) {
     msg = trimMatch( line, QRegExp( "^Lines\\s[0-9]+\\s?[,]\\s?[0-9]+[:]" ) );
   }
-  else if( line.startsWith( "Line" ) ) {
+  else if( line.startsWith( QStringLiteral("Line") ) ) {
     msg = trimMatch( line, QRegExp( "^Line\\s[0-9]+[:]" ) );
   }
   else {
     msg = line;
   }
 
-  msg.replace( QRegExp( "line\\s[0-9]+" ), "line x" );
+  msg.replace( QRegExp( "line\\s[0-9]+" ), QStringLiteral("line x") );
 
-  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), "(detail: x)" );
+  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), QStringLiteral("(detail: x)") );
 
   if( _hash.contains( msg ) )
     _hash[msg] = _hash.value( msg ) + 1;
@@ -597,8 +597,11 @@ void CLogFileContents::processLine( QString line, const bool includeQueryDetails
 
 void CLogFileContents::generateSummary() {
   QMultiHash<int, QString> countHash;
-  QList<int> counts;
+  QVector<int> counts;
   _maxCount = 0;
+
+  // The number of entries required won't be any greater than this.
+  counts.reserve( _hash.count() );
 
   QHashIterator<QString, int> it( _hash );
   while( it.hasNext() ) {
@@ -608,6 +611,8 @@ void CLogFileContents::generateSummary() {
     if( !counts.contains( it.value() ) )
       counts.append( it.value() );
   }
+
+  counts.squeeze();
 
   std::sort( counts.begin(), counts.end() );
 
@@ -648,12 +653,12 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
     // with ">>>" at the beginning of a block and "<<< (End)" at the end.
     // This will format such text blocks appropriately.
     //--------------------------------------------------------------------
-    if( line.contains( ">>>" ) ) {
+    if( line.contains( QStringLiteral(">>>") ) ) {
       do {
         line2 = trimMatch( stream.readLine(), timeStamp );
         line.append( "\n" );
         line.append( line2 );
-      } while( !line2.contains( "<<<" ) );
+      } while( !line2.contains( QStringLiteral("<<<") ) );
     }
 
     if( saveFullContents )
@@ -667,7 +672,7 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
 
 
 void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
-  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+  int maxLen = QStringLiteral( "%1" ).arg( _maxCount ).length();
 
   QString keyStr;
   for( int i = 0; i < _entries.count(); ++i ) {
@@ -680,12 +685,12 @@ void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
 QStringList CLogFileContents::summary() const {
   QStringList result;
 
-  int maxLen = QString( "%1" ).arg( _maxCount ).length();
+  int maxLen = QStringLiteral( "%1" ).arg( _maxCount ).length();
 
   QString keyStr;
   for( int i = 0; i < _entries.count(); ++i ) {
     keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
-    result.append( QString( "%1: %2").arg( keyStr ).arg( _entries.at(i) )  );
+    result.append( QStringLiteral( "%1: %2" ).arg( keyStr, _entries.at(i) )  );
   }
 
   return result;

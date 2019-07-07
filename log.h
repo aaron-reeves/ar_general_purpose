@@ -90,10 +90,10 @@ class CAppLog : public QObject {
     void setLogLevel(const LogLevel logLevel );
     void setFileFrequency( const FileFrequency freq ) { _freq = freq; }
     void setFileName( const QString& fileName );
-    void setUseStderr( const bool& val ) { _useStderr = val; }
-    void setAutoTruncate( const bool& val ) { _autoTruncate = val; }
-    void setConsoleEcho( const bool& val ) { _consoleEcho = val; }
-    void setWindowsFriendly( const bool& val ) { _windowsFriendly = val; }
+    void setUseStderr( const bool val ) { _useStderr = val; }
+    void setAutoTruncate( const bool val ) { _autoTruncate = val; }
+    void setConsoleEcho( const bool val ) { _consoleEcho = val; }
+    void setWindowsFriendly( const bool val ) { _windowsFriendly = val; }
 
     void logMessageUnique( const QString& message, const LogLevel logLevel );
     void logMessage( QString message, const LogLevel logLevel );
@@ -181,14 +181,14 @@ class CLogFileContents {
     void writeSummaryToStream( QTextStream* stream );
 
   protected:
-    void processLine( QString line, const bool includeQueryDetails );
+    void processLine( const QString& line, const bool includeQueryDetails );
     QString trimMatch( QString line, const QRegExp& exp );
     void generateSummary();
 
     int _result;
     QStringList _fullContents;
 
-    QList<int> _entryCounts;
+    QVector<int> _entryCounts;
     QStringList _entries;
     int _maxCount;
 

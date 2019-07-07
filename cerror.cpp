@@ -20,13 +20,13 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 CError::CError(){
   _type = Unspecified;
-  _msg = "";
+  _msg = QString();
   _lineNumber = -1;
   _dataSourceID = -1;
 }
 
 
-CError::CError( const ErrorType& type, const QString& msg, const int& dataSourceID /* = -1 */, const int& lineNumber /* = -1 */ ) {
+CError::CError(const ErrorType type, const QString& msg, const int dataSourceID /* = -1 */, const int lineNumber /* = -1 */ ) {
   _type = type;
   _msg = msg.trimmed();
   _lineNumber = lineNumber;
@@ -57,14 +57,14 @@ QString CError::logMessage() const {
 
   if( !this->_msg.isEmpty() ) {
     if( -1 < _lineNumber )
-      str = QString( "Line %1: %2:" ).arg( this->_lineNumber ).arg( this->typeAsString().toUpper() );
+      str = QStringLiteral( "Line %1: %2:" ).arg( this->_lineNumber ).arg( this->typeAsString().toUpper() );
     else
-      str = QString( "%1:" ).arg( this->typeAsString().toUpper() );
+      str = QStringLiteral( "%1:" ).arg( this->typeAsString().toUpper() );
 
-    if( this->_msg.contains( "\n" ) )
-      str.append( QString( ">>> %1 <<< (End)" ).arg( this->_msg ) );
+    if( this->_msg.contains( '\n' ) )
+      str.append( QStringLiteral( ">>> %1 <<< (End)" ).arg( this->_msg ) );
     else
-      str.append( QString( " %1" ).arg( this->_msg ) );
+      str.append( QStringLiteral( " %1" ).arg( this->_msg ) );
   }
 
   return str.trimmed();
@@ -76,16 +76,16 @@ QString CError::typeAsString() const {
 }
 
 
-QString CError::typeAsString( const ErrorType& type ) {
+QString CError::typeAsString( const ErrorType type ) {
   QString typeStr;
 
   switch( type ) {
-    case CError::Ok: typeStr = "Ok"; break;
-    case CError::Information: typeStr = "Information"; break;
-    case CError::Question: typeStr = "Question"; break;
-    case CError::Warning: typeStr = "Warning"; break;
-    case CError::Critical: typeStr = "Critical"; break;
-    case CError::Fatal: typeStr = "Fatal"; break;
+    case CError::Ok: typeStr = QStringLiteral("Ok"); break;
+    case CError::Information: typeStr = QStringLiteral("Information"); break;
+    case CError::Question: typeStr = QStringLiteral("Question"); break;
+    case CError::Warning: typeStr = QStringLiteral("Warning"); break;
+    case CError::Critical: typeStr = QStringLiteral("Critical"); break;
+    case CError::Fatal: typeStr = QStringLiteral("Fatal"); break;
     default:
       qDebug() << "Problem encountered in CError::typeAsString()";
       Q_ASSERT( false );
@@ -96,12 +96,12 @@ QString CError::typeAsString( const ErrorType& type ) {
 }
 
 void CError::debug() const {
-  QString q = QString( "%1: %2, %3, %4" ).arg( this->typeAsString() ).arg( this->msg() ).arg( this->dataSourceID() ).arg( this->lineNumber() );
+  QString q = QStringLiteral( "%1: %2, %3, %4" ).arg( this->typeAsString(), this->msg(), QString::number( this->dataSourceID() ), QString::number( this->lineNumber() ) );
   qDebug() << q;
 }
 
 
-CErrorList::CErrorList( const bool& useAppLog ){
+CErrorList::CErrorList( const bool useAppLog ){
   _useAppLog = useAppLog;
 }
 
@@ -181,7 +181,7 @@ QString CErrorList::logMessage() const {
 }
   
 
-CError CErrorList::at( const int& i ) const {
+CError CErrorList::at( const int i ) const {
   return _list.at(i);
 }
 
@@ -191,9 +191,9 @@ void CErrorList::append( const CError& err ) {
 
   if( _useAppLog ) {
     if( -1 == err.lineNumber() )
-      logMsg( QString( "??? LINE -1: (%1) %2" ).arg( err.typeAsString() ).arg( err.msg() ), LoggingTypical );
+      logMsg( QStringLiteral( "??? LINE -1: (%1) %2" ).arg( err.typeAsString(), err.msg() ), LoggingTypical );
     else
-      logMsg( QString( "Line %1: (%2) %3" ).arg( err.lineNumber() ).arg( err.typeAsString() ).arg( err.msg() ), LoggingTypical );
+      logMsg( QStringLiteral( "Line %1: (%2) %3" ).arg( QString::number( err.lineNumber() ), err.typeAsString(), err.msg() ), LoggingTypical );
   }
 }
 
@@ -218,7 +218,7 @@ void CErrorList::append( const CErrorList& src ) {
 }
 
 
-QString CErrorList::messageAt( const int& i ) const {
+QString CErrorList::messageAt( const int i ) const {
   return _list.at(i).logMessage();
 }
 
@@ -234,7 +234,7 @@ QString CErrorList::asText() const {
 }
 
 
-bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat& fmt ) {
+bool CErrorList::writeFile( const QString& filename, const ErrorFileFormat fmt ) {
   QFile data( filename );
   if( data.open( QFile::WriteOnly | QFile::Truncate ) ) {
     QTextStream out( &data );

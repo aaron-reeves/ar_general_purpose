@@ -1,9 +1,9 @@
 #include "getlastinsertid.h"
 
-int getLastInsertId( QSqlDatabase* db, const QString& sequenceName ) {
+int getLastInsertId( const QSqlDatabase* db, const QString& sequenceName ) {
   QSqlQuery q( *db );
 
-  if( q.exec( QString( "SELECT last_value FROM %1" ).arg( sequenceName ) ) ) {
+  if( q.exec( QStringLiteral( "SELECT last_value FROM %1" ).arg( sequenceName ) ) ) {
     q.next();
     return q.value(0).toInt();
   }

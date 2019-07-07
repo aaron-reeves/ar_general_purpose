@@ -24,12 +24,12 @@ QStringList regularExpressionMatches( const QString& pattern, const QString& sub
 QString abbreviatePath( const QString& path , const int targetLength = 0 ); // if targetLength > 0, aim for that.  Otherwise, just do what you can.
 
 QString quoteString( const QString& str, const QChar quoteMark = '"' );
-QString camelCase( const QString& str );
-QString postgresCase( const QString& str );
+QString camelCase( QString str );
+QString postgresCase( QString str );
 QString titleCase( QString str );
 
-QString findAndRemove( QString str3, QString str1 );
-QString findAndReplace( QString str3, QString str2, QString str1 );
+QString findAndRemove(const QString& str3, QString str1 );
+QString findAndReplace( const QString& str3, const QString& str2, QString str1 );
 
 QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
@@ -57,14 +57,14 @@ QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 
-QString splitNear( int pos, QString & str, int maxLenAdd = 0, bool usePunct = true, bool forceBreak = true );
-QStringList prettyPrintedList( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
-QString prettyPrint( const QString srcStr, int prefLineLen = 50, bool usePunct = true, bool forceBreak = true, int indent = 0 );
+QString splitNear( const int pos, QString& str, const int maxLenAdd = 0, const bool usePunct = true, const bool forceBreak = true );
+QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true, const bool forceBreak = true, const int indent = 0 );
+QString prettyPrint( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true, const bool forceBreak = true, const int indent = 0 );
 
 QStringList stringsFromVariants( const QList<QVariant>& variants );
 QStringList stringsFromVariants( const QVector<QVariant>& variants );
 
-bool isComment( const QString st );
+bool isComment( const QString& st );
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader );
 bool isEmptyStringList( const QStringList& list );
@@ -83,9 +83,9 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 
 // Replaces single quotes " with double quotes "" and wraps s in double quotes.
 QString csvQuote( QString s );
-QString csvQuote( QStringList s, const QChar delimiter = ',' );
+QString csvQuote( const QStringList& s, const QChar delimiter = ',' );
 
-bool isHexDigit( const QChar& c );
+bool isHexDigit( const QChar c );
 
 bool isEmailAddress( const QString& str );
 
@@ -94,7 +94,7 @@ enum StrUtilsDateFormat {
   UKDateFormat
 };
 
-QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const int defaultCentury = 2000 );
+QDate guessDateFromString( const QString& dateString, const StrUtilsDateFormat fmt, const int defaultCentury = 2000 );
 
 
 #if defined(_WIN32) || defined(WIN32)

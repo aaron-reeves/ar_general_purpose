@@ -2,28 +2,28 @@
 
 #include <ar_general_purpose/arcommon.h>
 
-QString ConfigReturnCode::resultString( const int& returnCode ) {
+QString ConfigReturnCode::resultString( const int returnCode ) {
   QString result;
   switch( returnCode ) {
-    case ConfigReturnCode::Success: result = "Success"; break;
-    case ConfigReturnCode::SuccessWithBadRows: result = "Success with bad rows"; break;
-    case ConfigReturnCode::BadArguments: result = "Bad arguments"; break;
-    case ConfigReturnCode::UnrecognizedFunction: result = "Unrecognized function"; break;
-    case ConfigReturnCode::MissingConfigFile: result = "Missing config file"; break;
-    case ConfigReturnCode::CannotOpenConfigFile: result = "Cannot open config file"; break;
-    case ConfigReturnCode::BadConfiguration: result = "Bad configuration"; break;
-    case ConfigReturnCode::BadFunctionConfiguration: result = "Bad function configuration"; break;
-    case ConfigReturnCode::BadDatabaseConfiguration: result = "Bad database configuration"; break;
-    case ConfigReturnCode::BadDatabaseSchema: result = "Bad database schema"; break;
-    case ConfigReturnCode::MissingInstructions: result = "Missing instructions"; break;
-    case ConfigReturnCode::EmptyInputFile: result = "Empty input file"; break;
-    case ConfigReturnCode::CannotOpenInputFile: result = "Cannot open input file"; break;
-    case ConfigReturnCode::QueryDidNotExecute: result = "Query did not execute"; break;
-    case ConfigReturnCode::CannotOpenOutputFile: result = "Cannot open output file"; break;
-    case ConfigReturnCode::BadFileFormat: result = "Bad file format"; break;
-    case ConfigReturnCode::BadDataField: result = "Bad data field"; break;
+    case ConfigReturnCode::Success: result = QStringLiteral("Success"); break;
+    case ConfigReturnCode::SuccessWithBadRows: result = QStringLiteral("Success with bad rows"); break;
+    case ConfigReturnCode::BadArguments: result = QStringLiteral("Bad arguments"); break;
+    case ConfigReturnCode::UnrecognizedFunction: result = QStringLiteral("Unrecognized function"); break;
+    case ConfigReturnCode::MissingConfigFile: result = QStringLiteral("Missing config file"); break;
+    case ConfigReturnCode::CannotOpenConfigFile: result = QStringLiteral("Cannot open config file"); break;
+    case ConfigReturnCode::BadConfiguration: result = QStringLiteral("Bad configuration"); break;
+    case ConfigReturnCode::BadFunctionConfiguration: result = QStringLiteral("Bad function configuration"); break;
+    case ConfigReturnCode::BadDatabaseConfiguration: result = QStringLiteral("Bad database configuration"); break;
+    case ConfigReturnCode::BadDatabaseSchema: result = QStringLiteral("Bad database schema"); break;
+    case ConfigReturnCode::MissingInstructions: result = QStringLiteral("Missing instructions"); break;
+    case ConfigReturnCode::EmptyInputFile: result = QStringLiteral("Empty input file"); break;
+    case ConfigReturnCode::CannotOpenInputFile: result = QStringLiteral("Cannot open input file"); break;
+    case ConfigReturnCode::QueryDidNotExecute: result = QStringLiteral("Query did not execute"); break;
+    case ConfigReturnCode::CannotOpenOutputFile: result = QStringLiteral("Cannot open output file"); break;
+    case ConfigReturnCode::BadFileFormat: result = QStringLiteral("Bad file format"); break;
+    case ConfigReturnCode::BadDataField: result = QStringLiteral("Bad data field"); break;
 
-    default: result = "Undefined error.";
+    default: result = QStringLiteral("Undefined error.");
   }
 
   return result;
@@ -49,29 +49,32 @@ CConfigBlock::~CConfigBlock() {
 void CConfigBlock::writeToStream( QTextStream* stream ) {
   *stream << "[" << this->name() << "]" << endl;
 
-  foreach( const QString& key, this->keys() ) {
+  QStringList keys = this->keys();
+  foreach( const QString& key, keys ) {
     *stream << "  " << key << " <- " << this->value( key ) << endl;
   }
 }
 
 
 void CConfigBlock::debug() const {
-  qDb() << QString( "Block '%1':" ).arg( this->name() ) << this->count();
+  qDb() << QStringLiteral( "Block '%1':" ).arg( this->name() ) << this->count();
 
-  foreach( const QString& key, this->keys() )
+  QStringList keys = this->keys();
+  for( const QString& key : keys ) {
     qDb() << key << this->value( key );
+  }
 }
 
 
 CConfigFile::CConfigFile() {
-  _fileName = "";
-  _errorMessage = "";
+  _fileName = QString();
+  _errorMessage = QString();
   _returnValue = ConfigReturnCode::Success;
 }
 
 
 CConfigFile::CConfigFile( QStringList* args ) {
-  _fileName = "";
+  _fileName = QString();
 
   if( 1 != args->count() )
     _returnValue = ConfigReturnCode::BadArguments;
@@ -111,7 +114,7 @@ CConfigFile::~CConfigFile() {
 void CConfigFile::buildBasic( const QString& fn ) {
   // Until shown otherwise...
   _returnValue = ConfigReturnCode::Success;
-  _errorMessage = "";
+  _errorMessage = QString();
 
   // Attempt to parse the file.
   QFile file( fn );
@@ -147,7 +150,7 @@ bool CConfigFile::contains( const QString& blockName, const QString& key ) const
 }
 
 
-bool CConfigFile::contains( const QString& blockName, const QString& key, QString value ) const {
+bool CConfigFile::contains( const QString& blockName, const QString& key, const QString& value ) const {
   // There may be multiple blocks with the same name.
   // This function checks only the FIRST REMAINING block with the indicated name.
   bool result = false;
@@ -211,7 +214,7 @@ int CConfigFile::multiContains( const QString& blockName, const QString& key ) c
 }
 
 
-QStringList CConfigFile::values( const QString& blockName, QString key ) const {
+QStringList CConfigFile::values( const QString& blockName, const QString& key ) const {
   QStringList result;
    QString keyX = key.trimmed().toLower();
 
@@ -274,7 +277,7 @@ QList<CConfigBlock*> CConfigFile::blocks( const QString& blockName ) const {
 }
 
 
-void CConfigFile::debug( const bool& showRemovedBlocks /* = true */ ) const {
+void CConfigFile::debug( const bool showRemovedBlocks /* = true */ ) const {
   for( int i = 0; i < _blockList.count(); ++i ) {
     CConfigBlock* block = _blockList.at(i);
     if( !block->removed() || showRemovedBlocks ) {
@@ -308,7 +311,7 @@ int CConfigFile::fillBlock( CConfigBlock* block, const QStringList& strList ) {
 
   for( int i = 0; i < strList.count(); ++i ) {
     lineParts.clear();
-    lineParts = strList.at(i).split( "<-" );
+    lineParts = strList.at(i).split( QStringLiteral("<-") );
 
     if( 2 != lineParts.count() ) {
       qDebug() << "Wrong number of line parts:" << lineParts;
@@ -339,7 +342,7 @@ int CConfigFile::processFile( QFile* file ) {
 
   int result = ConfigReturnCode::Success; // until shown otherwise
 
-  QString line = "";
+  QString line = QString();
   QStringList block;
   QTextStream in(file);
   bool inComment = false;
@@ -349,18 +352,18 @@ int CConfigFile::processFile( QFile* file ) {
 
     if( line.isEmpty() || line.startsWith('#') )
       continue;
-    else if( ( 0 == line.compare( "[startcomment]", Qt::CaseInsensitive ) ) || ( 0 == line.compare( "[begincomment]", Qt::CaseInsensitive ) ) ) {
+    else if( ( 0 == line.compare( QLatin1String("[startcomment]"), Qt::CaseInsensitive ) ) || ( 0 == line.compare( QLatin1String("[begincomment]"), Qt::CaseInsensitive ) ) ) {
       inComment = true;
       continue;
     }
-    else if( 0 == line.compare( "[endcomment]", Qt::CaseInsensitive ) ) {
+    else if( 0 == line.compare( QLatin1String("[endcomment]"), Qt::CaseInsensitive ) ) {
       inComment = false;
       continue;
     }
     else if( inComment ) {
       continue;
     }
-    else if( !inComment && ( 0 == line.compare( "[endconfig]", Qt::CaseInsensitive ) ) ) {
+    else if( !inComment && ( 0 == line.compare( QLatin1String("[endconfig]"), Qt::CaseInsensitive ) ) ) {
       break;
     }
     else {
@@ -413,8 +416,8 @@ int CConfigFile::processBlock( QStringList strList ) {
 
 
 bool CConfigFile::setWorkingDirectory() {
-  if( this->contains( "Directories", "WorkingDir" ) ) {
-    return QDir::setCurrent( this->value( "Directories", "WorkingDir" ) );
+  if( this->contains( QStringLiteral("Directories"), QStringLiteral("WorkingDir") ) ) {
+    return QDir::setCurrent( this->value( QStringLiteral("Directories"), QStringLiteral("WorkingDir") ) );
   }
   else {
     return true;

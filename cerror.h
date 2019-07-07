@@ -33,7 +33,7 @@ class CError {
     };
 
     CError();
-    CError( const ErrorType& type, const QString& msg, const int& dataSourceID = -1, const int& lineNumber = -1 );
+    CError( const ErrorType type, const QString& msg, const int dataSourceID = -1, const int lineNumber = -1 );
     CError( const CError& other );
     CError& operator=( const CError& other );
 
@@ -44,7 +44,7 @@ class CError {
     int dataSourceID() const { return _dataSourceID; }
 
     QString typeAsString() const;
-    static QString typeAsString( const ErrorType& type );
+    static QString typeAsString( const ErrorType type );
 
     void debug() const;
 
@@ -75,17 +75,17 @@ class CErrorList {
     
     QString logMessage() const;
     
-    CErrorList( const bool& useAppLog );
+    CErrorList( const bool useAppLog );
     void clear();
     int count() const;
-    QString messageAt( const int& i ) const;
-    CError at( const int& i ) const;
+    QString messageAt( const int i ) const;
+    CError at( const int i ) const;
     void append( const CError& err );
     //void append( CError::ErrorType level, const QString& msg );
     void append( const CErrorList& src );
     QString asText() const;
 
-    bool writeFile( const QString& filename, const ErrorFileFormat& fmt );
+    bool writeFile( const QString& filename, const ErrorFileFormat fmt );
     
   protected:
     bool _useAppLog;

@@ -28,7 +28,7 @@ extern QTextStream cout; //(stdout, QIODevice::WriteOnly);
 extern QTextStream cerr; //(stderr, QIODevice::WriteOnly);
 extern QTextStream cin;
 
-void setStdinEcho(bool enable = true);
+void setStdinEcho( const bool enable = true );
 
 void consoleErr( const QString& msg, const bool silent );
 void consoleErr( const char* msg, const bool silent );

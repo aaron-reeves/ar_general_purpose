@@ -25,14 +25,14 @@ QTextStream cerr( stderr, QIODevice::WriteOnly );
 QTextStream cin( stdin,  QIODevice::ReadOnly );
 
 // From http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin
-void setStdinEcho(bool enable /* = true */){
+void setStdinEcho( const bool enable /* = true */){
   #if defined(_WIN32) || defined(WIN32)
       HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
       DWORD mode;
       GetConsoleMode(hStdin, &mode);
 
       if( !enable )
-          mode &= ~ENABLE_ECHO_INPUT;
+          mode &= DWORD( ~ENABLE_ECHO_INPUT );
       else
           mode |= ENABLE_ECHO_INPUT;
 

@@ -43,7 +43,7 @@ QString abbreviatePath( const QString& path, const int targetLength ) {
   if( 6 >= list.count() )
     result = path;
   else
-    result = QString( "%1/%2/%3/.../%4/%5" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at(2) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+    result = QStringLiteral( "%1/%2/%3/.../%4/%5" ).arg( list.at(0), list.at(1), list.at(2), list.at( list.count() - 2), list.at( list.count() - 1 ) );
 
   if( 0 == targetLength )
     return result;
@@ -52,21 +52,21 @@ QString abbreviatePath( const QString& path, const int targetLength ) {
   else if( 5 >= list.count() )
     result = path;
   else
-    result = QString( "%1/%2/.../%3/%4" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 2) ).arg( list.at( list.count() - 1 ) );
+    result = QStringLiteral( "%1/%2/.../%3/%4" ).arg( list.at(0), list.at(1), list.at( list.count() - 2), list.at( list.count() - 1 ) );
 
   if( targetLength > result.length() )
     return result;
   else if( 4 >= list.count() )
     result = path;
   else
-    result = QString( "%1/%2/.../%3" ).arg( list.at(0) ).arg( list.at(1) ).arg( list.at( list.count() - 1) );
+    result = QStringLiteral( "%1/%2/.../%3" ).arg( list.at(0), list.at(1), list.at( list.count() - 1) );
 
   if( targetLength > result.length() )
     return result;
   else if( 3 >= list.count() )
     result = path;
   else
-    result = QString( "%1/.../%2" ).arg( list.at(0) ).arg( list.at( list.count() - 1) );
+    result = QStringLiteral( "%1/.../%2" ).arg( list.at(0), list.at( list.count() - 1) );
 
   return result;
 }
@@ -82,8 +82,8 @@ QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
 
   if( !ok ) {
     res = str;
-    res.replace( quoteMark, QString( "%1%1" ).arg( quoteMark ) );
-    res = QString( "%1%2%1" ).arg( quoteMark ).arg( str );
+    res.replace( quoteMark, QStringLiteral( "%1%1" ).arg( quoteMark ) );
+    res = QStringLiteral( "%1%2%1" ).arg( quoteMark ).arg( str );
   }
   else
     res = str;
@@ -92,27 +92,25 @@ QString quoteString( const QString& str, const QChar quoteMark /* = '"' */ ) {
 }
 
 
-QString camelCase( const QString& str ) {
-  QString tmp = str;
-  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+QString camelCase( QString str ) {
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), QStringLiteral( " ") );
 
-  QStringList list = tmp.simplified().split( ' ' );
+  QStringList list = str.simplified().split( ' ' );
   for( int i = 0; i < list.count(); ++i )
-    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1);
+    list[i] = list.at(i).at(0).toUpper() + list.at(i).mid(1);
 
-  return list.join( "" );
+  return list.join( QString() );
 }
 
 
-QString postgresCase( const QString& str ) {
-  QString tmp = str;
-  tmp.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), " " );
+QString postgresCase( QString str ) {
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), QStringLiteral(" ") );
 
-  QStringList list = tmp.simplified().split( ' ' );
+  QStringList list = str.simplified().split( ' ' );
   for( int i = 0; i < list.count(); ++i )
     list[i] = list.at(i).toLower();
 
-  return list.join( "_" );
+  return list.join( '_' );
 }
 
 
@@ -146,25 +144,25 @@ QString titleCase( QString str ){
 
 QString boolToStr( const bool val ) {
   if( val )
-    return "-1";
+    return QStringLiteral("-1");
   else
-    return "0";
+    return QStringLiteral("0");
 }
 
 
 QString boolToText( const bool val ) {
   if( val )
-    return "true";
+    return QStringLiteral("true");
   else
-    return "false";
+    return QStringLiteral("false");
 }
 
 
 QString variantBoolToText( const QVariant& val ) {
   if( val.type() != QVariant::Bool )
-    return "invalid";
+    return QStringLiteral("invalid");
   else if( val.isNull() )
-    return "null";
+    return QStringLiteral("null");
   else
     return boolToText( val.toBool() );
 }
@@ -172,9 +170,9 @@ QString variantBoolToText( const QVariant& val ) {
 
 QString boolToYesNo( const bool val ) {
   if( val )
-    return "Yes";
+    return QStringLiteral("Yes");
   else
-    return "No";
+    return QStringLiteral("No");
 }
 
 
@@ -261,7 +259,7 @@ double strToDouble( const QString& str, const double defaultVal ) {
 QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ ) {
   QString str;
 
-  str = QString( "%1" ).arg( toPad );
+  str = QStringLiteral( "%1" ).arg( toPad );
 
   return leftPaddedStr( str, places, padChar );
 }
@@ -328,7 +326,7 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* 
 
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
-QString findAndRemove( QString str3, QString str1 ) {
+QString findAndRemove( const QString& str3, QString str1 ) {
   int pos;
   bool test1, test2, test3, test4;
 
@@ -355,7 +353,7 @@ QString findAndRemove( QString str3, QString str1 ) {
 
 // Find all instances of str3 in str1, and replace them with str2,
 // making sure that str3 isn't just part of a longer string.
-QString findAndReplace( QString str3, QString str2, QString str1 ) {
+QString findAndReplace( const QString& str3, const QString& str2, QString str1 ) {
   int pos;
   bool test1, test2, test3, test4;
 
@@ -399,7 +397,7 @@ QString removeDelimiters( const QString& val, QChar delim ) {
 
 QString removeWhiteSpace( QString str1 ) {
   str1 = str1.trimmed().simplified();
-  str1.replace( QRegExp( "\\s" ), "" );
+  str1.replace( QRegExp( "\\s" ), QString() );
 
   return str1;
 }
@@ -411,31 +409,31 @@ QString removeWhiteSpace( const char* str1 ) {
 
 QString trimPunct( QString str ) {
   str = str.trimmed();
-  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), "" );
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), QString() );
   return str;
 }
 
 QString leftTrimmed( QString str ) {
-  return( str.replace( QRegExp( "^\\s+" ), "" ) );
+  return( str.replace( QRegExp( "^\\s+" ), QString() ) );
 }
 
 
 QString rightTrimmed( QString str ) {
-  return( str.replace( QRegExp( "\\s+$" ), "" ) );
+  return( str.replace( QRegExp( "\\s+$" ), QString() ) );
 }
 
 
 // Remove any line breaks in the provided string, and replace them with spaces.
 QString removeLineBreaks( QString str1 ) {
-  str1.replace( "\r\n", " " );
-  str1.replace( "\r", " " ); 
-  str1.replace( "\n", " " );
+  str1.replace( QLatin1String("\r\n"), QLatin1String(" ") );
+  str1.replace( QLatin1String("\r"), QLatin1String(" ") );
+  str1.replace( QLatin1String("\n"), QLatin1String(" ") );
   
   return str1;
 }
 
 
-QString splitNear( int pos, QString & str, int maxLenAdd, bool usePunct, bool forceBreak ) {
+QString splitNear( const int pos, QString& str, const int maxLenAdd, const bool usePunct, const bool forceBreak ) {
   int i;
   QString tmp;
   QChar ch;
@@ -446,7 +444,7 @@ QString splitNear( int pos, QString & str, int maxLenAdd, bool usePunct, bool fo
   // Test 1: is the thing already short enough to return as it is?
   if( tmp.length() <= ( pos + maxLenAdd ) ) {
     result = tmp;
-    str = "";
+    str = QString();
     return result;
   }
 
@@ -496,9 +494,9 @@ QString splitNear( int pos, QString & str, int maxLenAdd, bool usePunct, bool fo
 
 
 
-QStringList prettyPrintedList( const QString srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
+QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen, const bool usePunct, const bool forceBreak, const int indent ) {
   QStringList srcLines, destLines;
-  QString padding = "";
+  QString padding = QString();
   int tenPct;
   QString str, str2;
   int maxLen;
@@ -523,7 +521,7 @@ QStringList prettyPrintedList( const QString srcStr, int prefLineLen, bool usePu
       if( str.length() <= maxLen ) {
         destLines.append( str );
         //qDebug() << QString( "SHRTSTR: %1" ).arg( str );
-        str = "";
+        str = QString();
         break;
       }
       else {
@@ -546,7 +544,7 @@ QStringList prettyPrintedList( const QString srcStr, int prefLineLen, bool usePu
 }
 
 
-QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
+QString prettyPrint( const QString& srcStr, int prefLineLen, bool usePunct, bool forceBreak, int indent ) {
   QStringList destLines;
   QString result;
   int i;
@@ -554,7 +552,7 @@ QString prettyPrint( const QString srcStr, int prefLineLen, bool usePunct, bool 
   destLines = prettyPrintedList( srcStr, prefLineLen, usePunct, forceBreak, indent );
 
   // Assemble the final result from destLines
-  result = "";
+  result = QString();
   for( i = 0; i < destLines.count(); ++i ) {
     //result.append( padding ); // Now handled by the function above.
     result.append( destLines.at(i) );
@@ -586,7 +584,7 @@ QStringList stringsFromVariants( const QVector<QVariant>& variants ) {
 }
 
 
-bool isComment( const QString st ) {
+bool isComment(const QString& st ) {
   bool result;
   QString s = st.trimmed();
 
@@ -622,7 +620,7 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
   re = patternsToMatch.takeAt(0);
 
   if( debug ) qDebug() << "fullLine (before processing):" << fullLine;
-  if( debug ) qDebug() << QString( "Expression %1:" ).arg( counter ) << re.pattern();
+  if( debug ) qDebug() << QStringLiteral( "Expression %1:" ).arg( counter ) << re.pattern();
 
   // Start with the entire line, and eliminate characters one at a time until the pattern matches the new string.
   i = 0;
@@ -785,14 +783,14 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 
 QString csvQuote( QString s ) {
   if(  s.contains( '"' ) )
-    s.replace( '"', "\"\"" );
+    s.replace( '"', QLatin1String("\"\"") );
 
-  s = QString( "\"%1\"" ).arg( s );
+  s = QStringLiteral( "\"%1\"" ).arg( s );
   return s;
 }
 
 
-QString csvQuote(QStringList s , const QChar delimiter /* = ',' */ ) {
+QString csvQuote( const QStringList& s, const QChar delimiter /* = ',' */ ) {
   QString result;
 
   for( int i = 0; i < s.count() - 1; ++i ) {
@@ -806,7 +804,7 @@ QString csvQuote(QStringList s , const QChar delimiter /* = ',' */ ) {
 }
 
 
-bool isHexDigit( const QChar& c ) {
+bool isHexDigit( const QChar c ) {
   bool result;
   if( c.isDigit() )
     return true;
@@ -824,10 +822,10 @@ bool isEmailAddress( const QString& str ) {
 }
 
 
-QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const int defaultCentury /* = 2000 */ ) {
+QDate guessDateFromString( const QString& dateString, const StrUtilsDateFormat fmt, const int defaultCentury /* = 2000 */ ) {
   QDate result = QDate(); // An invalid date, unless a better one can be assigned.
 
-  dateStr = dateStr.trimmed().toLower();
+  QString dateStr = dateString.trimmed().toLower();
 
   // "yyyy-MM-dd"
   QRegExp basic( "^[0-9]{4}[-/]{1}[0-1]?[0-9]{1}[-/]{1}[0-3]?[0-9]{1}$" );
@@ -863,81 +861,81 @@ QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const 
     separator = '/';
 
   if( basic.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "yyyy%1MM%1dd" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "yyyy%1MM%1dd" ).arg( separator ) );
   }
 
   else if( ukDate.exactMatch( dateStr ) && ( UKDateFormat == fmt ) ) {
-    result = QDate::fromString( dateStr, QString( "dd%1MM%1yyyy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "dd%1MM%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "d%1M%1yyyy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "d%1M%1yyyy" ).arg( separator ) );
     }
   }
   else if( usDate.exactMatch( dateStr ) && ( USDateFormat == fmt ) ) {
-    result = QDate::fromString( dateStr, QString( "MM%1dd%1yyyy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "MM%1dd%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "M%1d%1yyyy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "M%1d%1yyyy" ).arg( separator ) );
     }
   }
 
   else if( abbrevMonth1.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "dd%1MMM%1yy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "d%1MMM%1yy" ).arg( separator ) );
     }
 
-    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+    result = result.addYears( defaultCentury - ( QStringLiteral( "%1" ).arg( result.year() ).leftRef(2).toInt() * 100 ) );
   }
   else if( abbrevMonth2.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "dd%1MMM%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "d%1MMM%1yyyy" ).arg( separator ) );
     }
   }
   else if( abbrevMonth3.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "dd%1MMM%1yy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "d%1MMM%1yy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "d%1MMM%1yy" ).arg( separator ) );
     }
 
-    result = result.addYears( defaultCentury - ( QString( "%1" ).arg( result.year() ).left(2).toInt() * 100 ) );
+    result = result.addYears( defaultCentury - ( QStringLiteral( "%1" ).arg( result.year() ).leftRef(2).toInt() * 100 ) );
   }
   else if( abbrevMonth4.exactMatch( dateStr ) ) {
-    result = QDate::fromString( dateStr, QString( "dd%1MMM%1yyyy" ).arg( separator ) );
+    result = QDate::fromString( dateStr, QStringLiteral( "dd%1MMM%1yyyy" ).arg( separator ) );
 
     if( !result.isValid() ) {
-      result = QDate::fromString( dateStr, QString( "d%1MMM%1yyyy" ).arg( separator ) );
+      result = QDate::fromString( dateStr, QStringLiteral( "d%1MMM%1yyyy" ).arg( separator ) );
     }
   }
 
   else if( ukDateTime.exactMatch( dateStr ) && ( UKDateFormat == fmt ) ) {
-    QDateTime dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
+    QDateTime dt = QDateTime::fromString( dateStr, QStringLiteral( "dd%1MM%1yyyy hh:mm" ).arg( separator ) );
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "d%1M%1yyyy hh:mm" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "d%1M%1yyyy hh:mm" ).arg( separator ) );
     }
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "dd%1MM%1yyyy hh:mm:ss" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "dd%1MM%1yyyy hh:mm:ss" ).arg( separator ) );
     }
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "d%1M%1yyyy hh:mm:ss" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "d%1M%1yyyy hh:mm:ss" ).arg( separator ) );
     }
     result = dt.date();
   }
 
   else if( usDateTime.exactMatch( dateStr ) && ( USDateFormat == fmt ) ) {
-    QDateTime dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
+    QDateTime dt = QDateTime::fromString( dateStr, QStringLiteral( "MM%1dd%1yyyy hh:mm" ).arg( separator ) );
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "M%1d%1yyyy hh:mm" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "M%1d%1yyyy hh:mm" ).arg( separator ) );
     }
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "MM%1dd%1yyyy hh:mm:ss" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "MM%1dd%1yyyy hh:mm:ss" ).arg( separator ) );
     }
     if( !dt.isValid() ) {
-      dt = QDateTime::fromString( dateStr, QString( "M%1d%1yyyy hh:mm:ss" ).arg( separator ) );
+      dt = QDateTime::fromString( dateStr, QStringLiteral( "M%1d%1yyyy hh:mm:ss" ).arg( separator ) );
     }
     result = dt.date();
   }
@@ -949,7 +947,7 @@ QDate guessDateFromString( QString dateStr, const StrUtilsDateFormat fmt, const 
 QString stringListListTableHeader( const QList<int>& arr ) {
   int i, j;
   int spaces;
-  QString head = "";
+  QString head;
 
   for( i = 0; arr.size() > i; ++i ) {
     head.append( "+" );
@@ -965,14 +963,14 @@ QString stringListListTableHeader( const QList<int>& arr ) {
 }
 
 
-QString stringListListTableRow( QString label, int len ) {
+QString stringListListTableRow( const QString& label, const int len ) {
   QString row;
   int i;
   int lenDiff;
 
   if( label.length() <= len ) {
     // Prepend the leading space
-    row = QString( " %1" ).arg( label ); // Note the leading space
+    row = QStringLiteral( " %1" ).arg( label ); // Note the leading space
 
     // Add spaces until desired length is reached
     lenDiff = len - label.length();
@@ -984,7 +982,7 @@ QString stringListListTableRow( QString label, int len ) {
     row.append( " " );
   }
   else {
-    row = QString( " %1" ).arg( label ); // Note the leading space
+    row = QStringLiteral( " %1" ).arg( label ); // Note the leading space
     row = row.left( len - 2 );
     row = row + "... "; // Note the trailing space
   }
@@ -1098,7 +1096,7 @@ bool stringListContainsBlanks( const QStringList& list ) {
 void ConvertTToC(char* pszDest, const TCHAR* pszSrc) {
   // FIX ME: zero out the memory for pszDest
   for(unsigned int i = 0; i < _tcslen(pszSrc); i++)
-    pszDest[i] = (char) pszSrc[i];
+    pszDest[i] =  char( pszSrc[i] );
 }
 
 
@@ -1106,6 +1104,6 @@ void ConvertTToC(char* pszDest, const TCHAR* pszSrc) {
 void ConvertCToT(TCHAR* pszDest, const char* pszSrc) {
   // FIX ME: zero out the memory for pszDest
   for(unsigned int i = 0; i < strlen(pszSrc); i++)
-    pszDest[i] = (TCHAR) pszSrc[i];
+    pszDest[i] = TCHAR( pszSrc[i] );
 }
 #endif
