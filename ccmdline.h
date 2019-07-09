@@ -146,25 +146,34 @@ class CCmdLine {
     bool hasSwitches() { return 0 < _hash.count(); }
 
     /* Was the switch found on the command line? */
+    bool hasSwitch( const char* pSwitch ) { return hasSwitch( QString( pSwitch ) ); }
     bool hasSwitch( const QString& pSwitch );
     bool hasSwitch( const QStringList& pSwitches );
 
     bool isAmbiguous( const QStringList& pSwitches );
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
+    QString safeArgument( const char* pSwitch, const int iIdx, const char* pDefault ) { return safeArgument( QString( pSwitch ), iIdx, QString( pDefault ) ); }
+    QString safeArgument( const char* pSwitch, const int iIdx, const QString& pDefault ) { return safeArgument( QString( pSwitch ), iIdx, pDefault ); }
     QString safeArgument( const QString& pSwitch, const int iIdx, const QString& pDefault );
+    QString safeArgument( const char* pSwitch, const  char* name, const char* pDefault ) { return safeArgument( QString( pSwitch ), QString( name ), QString( pDefault ) ); }
+    QString safeArgument( const char* pSwitch, const  char* name, const QString& pDefault ) { return safeArgument( QString( pSwitch ), QString( name ), pDefault ); }
     QString safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault );
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
+    QString argument( const char* pSwitch, const int iIdx) { return argument( QString( pSwitch ), iIdx ); }
     QString argument( const QString& pSwitch, const int iIdx);
+    QString argument( const char* pSwitch, const char* name ) { return argument( QString( pSwitch ), QString( name ) ); }
     QString argument( const QString& pSwitch, const QString& name );
 
     QString argument( const QStringList& pSwitches, int iIdx );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
+    int argumentCount(const char* pSwitch )  { return argumentCount( QString( pSwitch ) ); }
     int argumentCount(const QString& pSwitch );
     int argumentCount( const QStringList& pSwitches );
 
+    bool pair( const char* str1, const char* str2 ) { return pair( QString( str1 ), QString( str2 ) ); }
     bool pair( const QString& str1, const QString& str2 );
 
     /* Returns true if any of the following switches is present: -h, --help, -? */
@@ -174,10 +183,12 @@ class CCmdLine {
     bool hasVersion();
 
     /* Returns a list of arguments associated with a switch. */
+    QStringList arguments( const char* pSwitch ) { return arguments( QString( pSwitch ) ); }
     QStringList arguments( const QString& pSwitch );
 
     /* Returns the original string that contained switches and arguments. Useful for logging. */
     QString asString();
+    QString asString( const char* pSwitch ) { return asString( QString( pSwitch ) ); }
     QString asString( const QString& pSwitch );
 
     void debug( void );
