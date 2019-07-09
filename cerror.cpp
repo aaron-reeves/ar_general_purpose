@@ -35,6 +35,11 @@ CError::CError(const ErrorType type, const QString& msg, const int dataSourceID 
 
 
 CError::CError( const CError& other ) {
+  assign( other );
+}
+
+
+void CError::assign( const CError& other ) {
   _type = other._type;
   _msg = other._msg;
   _lineNumber = other._lineNumber;
@@ -43,11 +48,7 @@ CError::CError( const CError& other ) {
 
 
 CError& CError::operator=( const CError& other ) {
-  _type = other._type;
-  _msg = other._msg;
-  _lineNumber = other._lineNumber;
-  _dataSourceID = other._dataSourceID;
-
+  assign( other );
   return *this;
 }
 

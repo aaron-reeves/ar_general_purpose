@@ -1730,12 +1730,12 @@ QCsvObject::QCsvObject(
 }
 
 
-QCsvObject::QCsvObject( const QStringList& fieldNames ) : QObject(), QCsv( fieldNames ) {
+QCsvObject::QCsvObject( const QStringList& fieldNames, QObject* parent /* = nullptr */ ) : QObject( parent ), QCsv( fieldNames ) {
   // Do nothing.
 }
 
 
-QCsvObject::QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data ) : QObject(), QCsv( fieldNames, data ) {
+QCsvObject::QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data, QObject* parent /* = nullptr */ ) : QObject( parent ), QCsv( fieldNames, data ) {
   // Do nothing.
 }
 

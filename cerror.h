@@ -50,6 +50,8 @@ class CError {
     void debug() const;
 
   protected:
+    void assign( const CError& other );
+
     ErrorType _type;
     QString _msg;
     int _lineNumber;

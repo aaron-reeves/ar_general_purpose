@@ -374,8 +374,8 @@ class QCsvObject : public QObject, QCsv {
     );
 
     // Used for building a CSV data set from scratch.
-    QCsvObject( const QStringList& fieldNames );
-    QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data );
+    QCsvObject( const QStringList& fieldNames, QObject* parent = nullptr );
+    QCsvObject( const QStringList& fieldNames, const QList<QStringList>& data, QObject* parent = nullptr );
 
     //qCSV( const qCSV& other );
 
