@@ -82,11 +82,11 @@ QString ODS::getCellValue( ods::Cell *cell ) {
   if( cell->HasFormula() ) {
     auto *formula = cell->formula();
     if (formula->HasAnError())
-      return QString("(formula error: %1)").arg( formula->error() );
+      return QStringLiteral("(formula error: %1)").arg( formula->error() );
 
     auto &value = formula->value();
     if (value.IsNotSet()) // should never happen
-      return "(formula has no value)";
+      return QStringLiteral("(formula has no value)");
 
     //if (value.IsDouble() || value.IsPercentage()) {
     //  return QString("formula value: ")

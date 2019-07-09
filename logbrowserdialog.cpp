@@ -14,7 +14,7 @@
 #include <QCloseEvent>
 #include <QKeyEvent>
  
-LogBrowserDialog::LogBrowserDialog(QWidget *parent) : QDialog(parent) {
+LogBrowserDialog::LogBrowserDialog( QWidget *parent ) : QDialog(parent) {
   QVBoxLayout *layout = new QVBoxLayout;
   setLayout(layout);
 
@@ -28,12 +28,12 @@ LogBrowserDialog::LogBrowserDialog(QWidget *parent) : QDialog(parent) {
   buttonLayout->addStretch(10);
 
   clearButton = new QPushButton(this);
-  clearButton->setText("clear");
+  clearButton->setText( QStringLiteral("clear") );
   buttonLayout->addWidget(clearButton);
   connect(clearButton, SIGNAL(clicked()), browser, SLOT(clear()));
 
   saveButton = new QPushButton(this);
-  saveButton->setText("save output");
+  saveButton->setText( QStringLiteral("save output") );
   buttonLayout->addWidget(saveButton);
   connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
 
@@ -50,9 +50,13 @@ LogBrowserDialog::~LogBrowserDialog()
  
 void LogBrowserDialog::outputMessage(QtMsgType type, const QString &msg)
 {
-    switch (type) {
+    switch( type ) {
     case QtDebugMsg:
         browser->append(msg);
+        break;
+
+    case QtInfoMsg:
+        browser->append(tr("-- INFO: %1").arg(msg));
         break;
  
     case QtWarningMsg:

@@ -7,7 +7,7 @@ void debugArray( const CTwoDArray<QVariant>& array ) {
     QString result;
 
     for( int c = 0; c < array.nCols(); ++c ) {
-      result.append( QString( "%1 " ).arg( array.at( c, r ).toString() ) );
+      result.append( QStringLiteral( "%1 " ).arg( array.at( c, r ).toString() ) );
     }
     result = result.left( result.length() - 1 );
 

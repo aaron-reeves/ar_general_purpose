@@ -12,8 +12,8 @@ Foundation; either version 2 of the License, or (at your option) any later
 version.
 */
 
-#ifndef _QINTVECTOR_H_
-#define _QINTVECTOR_H_
+#ifndef ARQINTVECTOR_H
+#define ARQINTVECTOR_H
 
 #include <QString>
 #include <QVector>

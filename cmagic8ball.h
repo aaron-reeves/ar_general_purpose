@@ -34,6 +34,9 @@ class CMagic8Ball {
 
     bool _error;
     QString _errorMsg;
+
+  private:
+    Q_DISABLE_COPY( CMagic8Ball )
 };
 
 #endif // CMAGIC8BALL_H

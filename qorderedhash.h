@@ -22,9 +22,11 @@ class QOrderedHash {
       // Nothing to do here.
     }
     QOrderedHash( const QOrderedHash<Key, T>& other ) {
-      this->_hash = other._hash;
-      this->_values = other._values;
-      this->_keys = other._keys;
+      assign( other );
+    }
+    QOrderedHash& operator=( const QOrderedHash<Key, T>& other ) {
+      assign( other );
+      return *this;
     }
 
     ~QOrderedHash() {
@@ -113,6 +115,12 @@ class QOrderedHash {
     }
 
   protected:
+    void assign( const QOrderedHash<Key, T>& other ) {
+      this->_hash = other._hash;
+      this->_values = other._values;
+      this->_keys = other._keys;
+    }
+
     QList<Key> _keys;
     QList<T> _values;
     QHash<Key, T> _hash;

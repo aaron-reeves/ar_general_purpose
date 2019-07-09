@@ -19,8 +19,8 @@ void dec( int& subtractFrom, const int toSubstract );
 bool qBetterFuzzyCompare( const double p1, const double p2);
 
 
-double cartesianDistance( const QPoint& p1, const QPoint& p2 );
-double cartesianDistance( const QPointF& p1, const QPointF& p2 );
-double cartesianDistanceSquared( const QPointF& p1, const QPointF& p2 );
+double cartesianDistance( const QPoint p1, const QPoint p2 );
+double cartesianDistance( const QPointF p1, const QPointF p2 );
+double cartesianDistanceSquared(const QPointF p1, const QPointF p2 );
 
 #endif // QMATH_H

@@ -30,7 +30,7 @@ bool qBetterFuzzyCompare( const double p1, const double p2){
 }
 
 
-double cartesianDistanceSquared( const QPointF& p1, const QPointF& p2 ) {
+double cartesianDistanceSquared( const QPointF p1, const QPointF p2 ) {
   double asq, bsq;
 
   asq = pow( p1.x() - p2.x(), 2.0 );
@@ -40,12 +40,12 @@ double cartesianDistanceSquared( const QPointF& p1, const QPointF& p2 ) {
 }
 
 
-double cartesianDistance( const QPoint& p1, const QPoint& p2 ) {
+double cartesianDistance( const QPoint p1, const QPoint p2 ) {
   return sqrt( cartesianDistanceSquared( QPointF( p1.x(), p1.y() ), QPointF( p2.x(), p2.y() ) ) );
 }
 
 
-double cartesianDistance( const QPointF& p1, const QPointF& p2 ) {
+double cartesianDistance(const QPointF p1, const QPointF p2 ) {
   return sqrt( cartesianDistanceSquared( p1, p2 ) );
 }
 

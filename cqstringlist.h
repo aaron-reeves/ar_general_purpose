@@ -33,19 +33,22 @@ class CQStringList : public QList<QString*>  {
     public:
       CQStringList();
 
-      virtual ~CQStringList();
+      ~CQStringList();
 
-      bool contains( const QString str );
+      bool contains( const QString& str );
 
-      void explode( QString str, QChar splitter );
+      void explode( const QString& str, QChar splitter );
 
-      void debug( void );
+      void debug();
 
-      void setAutoDelete( bool val );
+      void setOwnsObjects( const bool val );
 
     protected:
-      bool _isAutoDelete;
+      bool _ownsObjects;
       unsigned int _currentIndex;
+
+    private:
+      Q_DISABLE_COPY( CQStringList )
 };
 
 #endif

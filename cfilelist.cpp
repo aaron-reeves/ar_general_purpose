@@ -65,7 +65,7 @@ QString CPathString::pathTrimmed( const int nPathsToTrim ) {
   QStringList templ = temp.split( '/' );
 
   if( nPathsToTrim > templ.count() ) {
-    result = "";
+    result = QString();
     qFatal( "Wrong number in CPathString::pathTrimmed()" );
   }
   else {
@@ -144,7 +144,7 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
 
 
 CFileList::CFileList() : QList<CPathString>() {
-	_startingDir = "";
+  _startingDir = QString();
 
 }
 
@@ -190,7 +190,7 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
   filters = filter.split( ';', QString::SkipEmptyParts );
 
   for( int i = 0; i < filters.count(); ++i ) {
-    if( filters.at(i).startsWith( "*." ) )
+    if( filters.at(i).startsWith( QStringLiteral("*.") ) )
       filters[i] = filters.at(i).right( filters.at(i).length() - 1 );
   }
 
@@ -217,7 +217,7 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
         str = finfo.filePath().toLower();
 
         // Check for the wildcard that matches all files.
-        if( filters.contains( ".*" ) ) {
+        if( filters.contains( QStringLiteral(".*") ) ) {
           listItem = CPathString( finfo.filePath() );
 					this->append( listItem );
 				}
@@ -260,7 +260,7 @@ void CFileList::debugList() {
 }
 
 
-void CFileList::merge( CFileList subList ) {
+void CFileList::merge( const CFileList& subList ) {
   CPathString strp;
   int i;
 
@@ -311,8 +311,8 @@ QStringList CFileList::toStringList() const {
 
   for( int i = 0; i < this->count(); ++i ) {
     CPathString strp = this->at(i);
-    strp.replace( "//", "/" );
-    strp.replace( "\\\\", "\\" );
+    strp.replace( QLatin1String("//"), QLatin1String("/") );
+    strp.replace( QLatin1String("\\\\"), QLatin1String("\\") );
     result.append( strp );
   }
 

@@ -21,9 +21,9 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "qcout.h"
 
-void CXmlDom::showElements( QDomNode parentElem, bool recurse, uint indent ) {
-	QString spacer = "";
-	uint i;
+void CXmlDom::showElements( const QDomNode& parentElem, const bool recurse, const int indent ) {
+  QString spacer;
+  int i;
 
 	for( i = 0; i < indent; ++i ) {
 		spacer.append( " " );
@@ -72,7 +72,7 @@ void CXmlDom::showElements( QDomNode parentElem, bool recurse, uint indent ) {
 
 
 
-QDomElement CXmlDom::findElement( QDomNode node, const QString& name, const int idx ) {
+QDomElement CXmlDom::findElement( const QDomNode& node, const QString& name, const int idx ) {
 	QDomElement result;
   QDomElement e;
   int nFound = 0;
@@ -101,7 +101,7 @@ QDomElement CXmlDom::findElement( QDomNode node, const QString& name, const int 
 
 
 
-int CXmlDom::elementCount( QDomNode node, const QString& name ) {
+int CXmlDom::elementCount( const QDomNode& node, const QString& name ) {
 	QDomElement e;
 	QDomNode n= node.firstChild();
   int result = 0;
@@ -122,8 +122,8 @@ int CXmlDom::elementCount( QDomNode node, const QString& name ) {
 
 
 
-QDomAttr CXmlDom::findAttribute( QDomNode node, const QString& name ) {
-  unsigned int i;
+QDomAttr CXmlDom::findAttribute(const QDomNode& node, const QString& name ) {
+  int i;
   QDomAttr a, b;  
   QDomNamedNodeMap attr;
   
@@ -145,7 +145,7 @@ QDomAttr CXmlDom::findAttribute( QDomNode node, const QString& name ) {
 
 
 
-QDomElement CXmlDom::findFirstElementByName( QDomNode node, const QString& childName, bool recurse ) {
+QDomElement CXmlDom::findFirstElementByName( const QDomNode& node, const QString& childName, const bool recurse ) {
 	QDomElement temp, result;
 	QDomNode n;
   QDomElement e;
@@ -180,14 +180,14 @@ QDomElement CXmlDom::findFirstElementByName( QDomNode node, const QString& child
 
 
 
-void CXmlDom::fillDict( TStringDict* d, QDomNode node ) {
+void CXmlDom::fillDict(TStringDict* d, const QDomNode& node ) {
 	QDomNode n = node.firstChild();
 	QDomElement e = n.toElement();
 	QDomText t;
 	QDomAttr a;
 	QDomNamedNodeMap attr;
   QString key;
-  unsigned int i;
+  int i;
   
   if( !( node.toElement().isNull() ) )
     key = node.toElement().tagName();
@@ -196,7 +196,7 @@ void CXmlDom::fillDict( TStringDict* d, QDomNode node ) {
 	for( i = 0; i < attr.length(); ++i ) {
 		a = attr.item( i ).toAttr();
 		if( !( a.isNull() ) ) {
-			d->insert( QString( "ATTR_%1" ).arg( a.name() ), a.value().trimmed() );
+      d->insert( QStringLiteral( "ATTR_%1" ).arg( a.name() ), a.value().trimmed() );
 		}
 	}
 

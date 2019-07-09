@@ -22,15 +22,15 @@ typedef QMap<QString, QString> TStringDict;
 
 class CXmlDom {
   public:
-    void showElements( QDomNode parentElem, bool recurse = false, uint indent = 0 );
+    void showElements( const QDomNode& parentElem, const bool recurse = false, const int indent = 0 );
     
-    int elementCount( QDomNode node, const QString& name ); 		
-    QDomElement findElement( QDomNode node, const QString& name, const int idx = 0 );
-    QDomElement findFirstElementByName( QDomNode node, const QString& childName, bool recurse = false );
+    int elementCount( const QDomNode& node, const QString& name );
+    QDomElement findElement( const QDomNode& node, const QString& name, const int idx = 0 );
+    QDomElement findFirstElementByName( const QDomNode& node, const QString& childName, const bool recurse = false );
     	
-    QDomAttr findAttribute( QDomNode node, const QString& name );
+    QDomAttr findAttribute( const QDomNode& node, const QString& name );
     
-    void fillDict( TStringDict* d, QDomNode node ); 
+    void fillDict( TStringDict* d, const QDomNode& node );
 };
 
 #endif

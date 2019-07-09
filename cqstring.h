@@ -39,7 +39,7 @@ class CQString:public QString {
 
     @param str QString to convert to a CQString
     */
-    CQString( QString str );
+    CQString( const QString& str );
 
     /**
     This version of the constructor creates an empty CQString
@@ -103,7 +103,7 @@ class CQString:public QString {
     @return The positive integer value (a Q_UINT64, or unsigned 64-bit integer) extracted from the string
     @see CQString#getDouble
     */
-    int getInt( QString splitter );
+    int getInt( const QString& splitter );
 
 
     /**
@@ -122,7 +122,7 @@ class CQString:public QString {
     @return The floating point value (a double) extracted from the string
      @see CQString#getInt
     */
-    double getDouble( QString splitter );
+    double getDouble( const QString& splitter );
 };
 
 #endif //CQSTRING_H

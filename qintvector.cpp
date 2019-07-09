@@ -32,13 +32,13 @@ QIntVector::~QIntVector( void ){
   
 
 void QIntVector::append( int val ){
-  ((IntVector*)this)->append( val );
+  static_cast<IntVector*>(this)->append( val );
   _sorted = false;  
 }
 
 
 void QIntVector::resize( const int newSize ){
-  ((IntVector*)this)->resize( newSize );
+  static_cast<IntVector*>(this)->resize( newSize );
   _sorted = false;
 }  
  
@@ -54,17 +54,17 @@ bool QIntVector::isEmpty( void ) {
 
 
 void QIntVector::sort( void ) {
-  qSort( *this );
+  std::sort( this->begin(), this->end() );
   _sorted = true;
 }
 
 
 QString QIntVector::asColString( void ){
   int i;
-  QString result = "";
+  QString result = QString();
   
   for( i = 0; i < this->size(); ++i ) {
-    result.append( QString( "%1" ).arg( this->at(i) ) );
+    result.append( QStringLiteral( "%1" ).arg( this->at(i) ) );
     
     if( i < (this->size() - 1) )
       result.append( "\r\n" );
@@ -76,10 +76,10 @@ QString QIntVector::asColString( void ){
 
 QString QIntVector::asRowString( QChar delimiter /* = ',' */ ){
   int i;
-  QString result = "";
+  QString result = QString();
   
   for( i = 0; i < this->size(); ++i ) {
-    result.append( QString( "%1" ).arg( this->at(i) ) );
+    result.append( QStringLiteral( "%1" ).arg( this->at(i) ) );
     
     if( i < (this->size() - 1) )
       result.append( delimiter );
@@ -218,7 +218,7 @@ double QIntVector::quantileSorted( const double quant ){
 
   n = this->count();
   index = quant * ( n - 1 );
-  lhs = (int)trunc( index );
+  lhs = int(trunc( index ));
   delta = index - lhs;
   
   if( 0 == n ) {

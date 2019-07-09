@@ -48,7 +48,7 @@ CXlCsv::CXlCsv(
 void CXlCsv::initialize() {
   QCsv::initialize();
 
-  _sheetname = "";
+  _sheetname = QLatin1String("");
   _sheetIdx = 0;
   _useSheetname = false;
 
@@ -69,13 +69,13 @@ CXlCsv::~CXlCsv() {
 void CXlCsv::setSheetIdx( const int val ) {
   _sheetIdx = val;
   _useSheetname = false;
-  _sheetname = "";
+  _sheetname = QString();
 }
 
 
 void CXlCsv::setSheetname( const QString& sheetname ) {
   if( sheetname.trimmed().isEmpty() ) {
-    _sheetname = "";
+    _sheetname = QString();
     _useSheetname = false;
     _sheetIdx = 0;
   }
@@ -95,7 +95,7 @@ int CXlCsv::sheetIdx() {
     return _sheetNames.indexOf( _sheetname );
   }
   else {
-    setError( ERROR_INVALID_FIELD_NAME, QString( "Workbook does not contain sheet '%1'" ).arg( _sheetname ) );
+    setError( ERROR_INVALID_FIELD_NAME, QStringLiteral( "Workbook does not contain sheet '%1'" ).arg( _sheetname ) );
     return -1;
   }
 }
@@ -108,8 +108,8 @@ QString CXlCsv::sheetname() {
     return _sheetNames.at( _sheetIdx );
   }
   else {
-    setError( ERROR_INDEX_OUT_OF_RANGE, QString( "Workbook does not contain sheet '%1'" ).arg( _sheetIdx ) );
-    return "";
+    setError( ERROR_INDEX_OUT_OF_RANGE, QStringLiteral( "Workbook does not contain sheet '%1'" ).arg( _sheetIdx ) );
+    return QLatin1String("");
   }
 }
 
@@ -147,26 +147,26 @@ bool CXlCsv::open() {
   }
 
   if( CSpreadsheetWorkBook::FormatUnknown == _fileFormat ) {
-    setError( QCsv::ERROR_OTHER, "Spreadsheet file format must be specified." );
+    setError( QCsv::ERROR_OTHER, QStringLiteral("Spreadsheet file format must be specified.") );
     _errorOnOpen = true;
     return false;
   }
 
   if( _srcFilename.isEmpty() ) {
-    setError( QCsv::ERROR_OPEN, "No input file specified." );
+    setError( QCsv::ERROR_OPEN, QStringLiteral("No input file specified.") );
     _errorOnOpen = true;
     return false;
   }
 
   QFileInfo fi( _srcFilename );
   if( !fi.exists() || !fi.isReadable() ) {
-    setError( QCsv::ERROR_OPEN, "Specified input file does not exist or cannot be read." );
+    setError( QCsv::ERROR_OPEN, QStringLiteral("Specified input file does not exist or cannot be read.") );
     _errorOnOpen = true;
     return false;
   }
 
   if( 0 > _linesToSkip ) {
-    setError( ERROR_INDEX_OUT_OF_RANGE, "Number of lines to skip must be 0 or more." );
+    setError( ERROR_INDEX_OUT_OF_RANGE, QStringLiteral("Number of lines to skip must be 0 or more.") );
     _errorOnOpen = true;
     return false;
   }
@@ -182,7 +182,7 @@ bool CXlCsv::open() {
       result = openXlsx();
       break;
     default:
-      setError( QCsv::ERROR_OTHER, "Specified spreadsheet file format is not supported." );
+      setError( QCsv::ERROR_OTHER, QStringLiteral("Specified spreadsheet file format is not supported.") );
       result = false;
       break;
   }
@@ -200,7 +200,7 @@ bool CXlCsv::openXls() {
 
   if( _useSheetname ) {
     if( !wb.hasSheet( _sheetname ) ) {
-      setError( ERROR_OTHER, QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetname ) );
+      setError( ERROR_OTHER, QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( _sheetname ) );
       return false;
     }
     else {
@@ -209,19 +209,19 @@ bool CXlCsv::openXls() {
   }
 
   if( !wb.hasSheet( _sheetIdx ) ) {
-    setError( ERROR_OTHER, QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetIdx ) );
+    setError( ERROR_OTHER, QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( _sheetIdx ) );
     return false;
   }
 
   if( !wb.readSheet( _sheetIdx ) ) {
-    setError( ERROR_OTHER, "Specified worksheet could not be read." );
+    setError( ERROR_OTHER, QStringLiteral("Specified worksheet could not be read.") );
     return false;
   }
 
   CSpreadsheet sheet = wb.sheet( _sheetIdx );
 
   if( !sheet.isTidy( this->containsFieldList() ) ) {
-    setError( ERROR_OTHER, "Specified worksheet does not have a tidy CSV format." );
+    setError( ERROR_OTHER, QStringLiteral("Specified worksheet does not have a tidy CSV format.") );
     return false;
   }
 
@@ -258,16 +258,16 @@ bool CXlCsv::openXlsx() {
   if( !ok || !xlsx.selectSheet( sheetToOpen ) ) {
     _error = QCsv::ERROR_OTHER;
     if( _useSheetname )
-      _errorMsg = QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetname );
+      _errorMsg = QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( _sheetname );
     else
-      _errorMsg = QString( "Specified worksheet (%1) could not be selected." ).arg( _sheetIdx );
+      _errorMsg = QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( _sheetIdx );
     return false;
   }
 
   QXlsx::CellRange cellRange = xlsx.dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     _error = QCsv::ERROR_OTHER;
-    _errorMsg = "Cell range is out of bounds.";
+    _errorMsg = QStringLiteral("Cell range is out of bounds.");
     return false;
   }
 
@@ -312,7 +312,7 @@ bool CXlCsv::openXlsx() {
       }
 
       if( QVariant::DateTime == val.type() )
-        list.append( val.toDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) );
+        list.append( val.toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") ) );
       else
         list.append( val.toString() );
     }
@@ -335,21 +335,21 @@ bool CXlCsv::openXlsx() {
 
 bool CXlCsv::setFieldFormatXl( const QString& fieldName, const ColumnFormat fmt ) {
   if( !_isOpen ) {
-    setError( QCsv::ERROR_OPEN, "File must be open to set a field format." );
+    setError( QCsv::ERROR_OPEN, QStringLiteral("File must be open to set a field format.") );
     return false;
   }
   else if( EntireFile != this->mode() ) {
-    setError( QCsv::ERROR_WRONG_MODE, "Mode must be EntireFile to set a field format." );
+    setError( QCsv::ERROR_WRONG_MODE, QStringLiteral("Mode must be EntireFile to set a field format.") );
     return false;
   }
   else if( !this->containsFieldList() ) {
-    setError( QCsv::ERROR_NO_FIELDLIST, "This file does not have field names." );
+    setError( QCsv::ERROR_NO_FIELDLIST, QStringLiteral("This file does not have field names.") );
     return false;
   }
   else {
     int fieldIdx = fieldIndexOf( fieldName.trimmed() );
     if( -1 == fieldIdx ) {
-      setError( QCsv::ERROR_INVALID_FIELD_NAME, QString( "Field name '%1' does not exist." ).arg( fieldName ) );
+      setError( QCsv::ERROR_INVALID_FIELD_NAME, QStringLiteral( "Field name '%1' does not exist." ).arg( fieldName ) );
       return false;
     }
     else {
@@ -363,19 +363,19 @@ bool CXlCsv::setFieldFormatXl( const int fieldIdx, const ColumnFormat fmt ) {
   bool result = true; // Until shown otherwise.
 
   if( !_isOpen ) {
-    setError( QCsv::ERROR_OPEN, "File must be open to set a field format." );
+    setError( QCsv::ERROR_OPEN, QStringLiteral("File must be open to set a field format.") );
     result = false;
   }
   else if( EntireFile != this->mode() ) {
-    setError( QCsv::ERROR_WRONG_MODE, "Mode must be EntireFile to set a field format." );
+    setError( QCsv::ERROR_WRONG_MODE, QStringLiteral("Mode must be EntireFile to set a field format.") );
     result = false;
   }
   else if( 0 > fieldIdx ) {
-    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, "Negative field index provided." );
+    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, QStringLiteral("Negative field index provided.") );
     result = false;
   }
   else if( this->fieldCount() <= fieldIdx ) {
-    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, QString( "Field index %1 is out of range." ).arg( fieldIdx ) );
+    setError( QCsv::ERROR_INDEX_OUT_OF_RANGE, QStringLiteral( "Field index %1 is out of range." ).arg( fieldIdx ) );
     result = false;
   }
   else {
@@ -409,22 +409,22 @@ bool CXlCsv::setFieldFormatXl( const int fieldIdx, const ColumnFormat fmt ) {
           }
 
           if( date.isValid() ) {
-            _data[row][fieldIdx] = date.toString( "yyyy-MM-dd" );
+            _data[row][fieldIdx] = date.toString( QStringLiteral("yyyy-MM-dd") );
           }
           else {
-            setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
+            setError( QCsv::ERROR_OTHER, QStringLiteral( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
             result = false;
           }
         }
         else { // There is nothing more that can be done here.  Maybe try QCsv::setFieldFormat()
-          setError( QCsv::ERROR_OTHER, QString( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
+          setError( QCsv::ERROR_OTHER, QStringLiteral( "Format of cell at row %1, column %2 cannot be changed to DateFormat." ).arg( row ).arg( fieldIdx ) );
           result = false;
         }
       }
     }
     else {
       // FIXME: TimeFormat and DateTimeFormat are not yet handled.
-      setError( QCsv::ERROR_OTHER, "Field format not yet supported." );
+      setError( QCsv::ERROR_OTHER, QStringLiteral("Field format not yet supported.") );
       result = false;
     }
   }

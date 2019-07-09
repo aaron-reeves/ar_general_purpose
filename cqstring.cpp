@@ -23,7 +23,7 @@ CQString::CQString( void ):QString() {
 }
 
 
-CQString::CQString( QString str ):QString( str ) {
+CQString::CQString( const QString& str ):QString( str ) {
   // do nothing else
 }
 
@@ -56,7 +56,7 @@ CQString CQString::toString( void ) {
 }
 
 
-int CQString::getInt( QString splitter ) {
+int CQString::getInt( const QString& splitter ) {
   // Split the string at the splitter
   QStringList split = this->split( splitter );
 
@@ -66,7 +66,7 @@ int CQString::getInt( QString splitter ) {
 }
 
 
-double CQString::getDouble( QString splitter ) {
+double CQString::getDouble( const QString& splitter ) {
   // Split the string at the splitter
   QStringList split = this->split( splitter );
 

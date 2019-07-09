@@ -16,21 +16,19 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QDebug>
 
 CQStringList::CQStringList() {
-  _isAutoDelete = false;
+  _ownsObjects = false;
 }
 
 
 CQStringList::~CQStringList() {
-  if( _isAutoDelete ) {
-    while (!this->isEmpty()) {
-      delete this->takeFirst();
-    }
+  if( _ownsObjects ) {
+    qDeleteAll( *this );
   }
 }
 
 
-void CQStringList::setAutoDelete( bool val ) {
-  _isAutoDelete = val;
+void CQStringList::setOwnsObjects( bool val ) {
+  _ownsObjects = val;
 }
 
 
@@ -41,7 +39,7 @@ This function is used to determine whether the list contains the specified strin
 @param str the QString that the list will be searched for
 @return true if str is found in the list, false if it is not.
 */
-bool CQStringList::contains( const QString str ) {
+bool CQStringList::contains( const QString& str ) {
     QString* member;
     bool match = false;
     int i;
@@ -70,10 +68,10 @@ Splits a string (str) into pieces and adds the pieces to this string list.  The 
 @param str the string to explode
 @param splitter the character indicating where to break the string
 */
-void CQStringList::explode( QString str, QChar splitter ) {
-  QString* s = NULL;
-  int unsigned i;
-  int unsigned len =  str.length();
+void CQStringList::explode( const QString& str, QChar splitter ) {
+  QString* s = nullptr;
+  int i;
+  int len =  str.length();
   QChar c = QChar();
   QChar prevc = QChar();
   bool inQuotes = false;

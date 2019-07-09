@@ -52,7 +52,7 @@ unsigned long int
 sprng_as_get (void *dummy)
 {
   if( dummy ) {} // Avoid a compiler warning.
-  return isprng ();
+  return (unsigned long int)( isprng () );
 }
 
 

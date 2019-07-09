@@ -4,7 +4,7 @@
 // CLookupTable
 //-----------------------------------------------------------------------------
 CLookupTable::CLookupTable() {
-  _db = NULL;
+  _db = nullptr;
 }
 
 
@@ -28,17 +28,13 @@ CLookupTable::CLookupTable(
 
   if( fillFromDb ) {
     QString qStr =
-      QString( "SELECT \"%1\", \"%2\" FROM \"%3\" ORDER BY \"%1\"" )
-      .arg( _idField )
-      .arg( _valueField )
-      .arg( _tableName )
-    ;
+      QStringLiteral( "SELECT \"%1\", \"%2\" FROM \"%3\" ORDER BY \"%1\"" ).arg( _idField, _valueField, _tableName );
     QSqlQuery query( *_db );
     int idx;
 
     if( !query.exec( qStr ) ) {
       _error = true;
-      _errorMessage = QString( "Query failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "Query failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text());
     }
     else {
       while( query.next() ) {
@@ -102,7 +98,7 @@ int CLookupTable::findValue( const QString& value ) const {
 
 
 // Does the key exist in the map?
-bool CLookupTable::hasKey( const int& key ) const {
+bool CLookupTable::hasKey( const int key ) const {
   // Remember: It's backwards!
   return( _map.containsValue( key ) );
 }
@@ -132,7 +128,7 @@ int CLookupTable::findOrAddValue( const QString& value ) {
 }
 
 
-bool CLookupTable::populateDatabase( const bool& insertRecords ) {
+bool CLookupTable::populateDatabase( const bool insertRecords ) {
   int i;
   QVariantList ids, vals;
   QSqlQuery query( *_db );
@@ -147,13 +143,11 @@ bool CLookupTable::populateDatabase( const bool& insertRecords ) {
 
   if( indexField() == valueField() ) {
     if( !query.prepare(
-        QString( "INSERT INTO \"%1\" ( \"%2\" ) SELECT ? WHERE NOT EXISTS ( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" )
-        .arg( _tableName )
-        .arg( _valueField )
+        QStringLiteral( "INSERT INTO \"%1\" ( \"%2\" ) SELECT ? WHERE NOT EXISTS ( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" ).arg( _tableName, _valueField )
       )
     ) {
       _error = true;
-      _errorMessage = QString( "CLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;
@@ -163,14 +157,12 @@ bool CLookupTable::populateDatabase( const bool& insertRecords ) {
   }
   else {
     if( !query.prepare(
-        QString( "INSERT INTO \"%1\" ( \"%2\", \"%3\" ) SELECT ?, ? WHERE NOT EXISTS( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" )
-        .arg( _tableName )
-        .arg( _idField )
-        .arg( _valueField )
+        QStringLiteral( "INSERT INTO \"%1\" ( \"%2\", \"%3\" ) SELECT ?, ? WHERE NOT EXISTS( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" )
+        .arg( _tableName,_idField, _valueField )
       )
     ) {
       _error = true;
-      _errorMessage = QString( "CLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;
@@ -183,7 +175,7 @@ bool CLookupTable::populateDatabase( const bool& insertRecords ) {
   if( insertRecords && !_error ) {
     if( !query.execBatch() ) {
       _error = true;
-      _errorMessage = QString( "CLookupTable query execution failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CLookupTable query execution failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;
@@ -212,7 +204,7 @@ void CLookupTable::debug() {
 // CStringIndexedLookupTable
 //-----------------------------------------------------------------------------
 CStringIndexedLookupTable::CStringIndexedLookupTable() {
-  _db = NULL;
+  _db = nullptr;
 }
 
 CStringIndexedLookupTable::CStringIndexedLookupTable(
@@ -234,16 +226,12 @@ CStringIndexedLookupTable::CStringIndexedLookupTable(
 
   if( fillFromDb ) {
     QString qStr =
-      QString( "SELECT \"%1\", \"%2\" FROM \"%3\" ORDER BY \"%1\"" )
-      .arg( _idField )
-      .arg( _valueField )
-      .arg( _tableName )
-    ;
+      QStringLiteral( "SELECT \"%1\", \"%2\" FROM \"%3\" ORDER BY \"%1\"" ).arg( _idField, _valueField, _tableName );
     QSqlQuery query( *_db );
 
     if( !query.exec( qStr ) ) {
       _error = true;
-      _errorMessage = QString( "Query failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "Query failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       while( query.next() ) {
@@ -334,7 +322,7 @@ QString CStringIndexedLookupTable::findOrAddValue( const QString& value, const Q
 }
 
 
-bool CStringIndexedLookupTable::populateDatabase( const bool& insertRecords ) {
+bool CStringIndexedLookupTable::populateDatabase( const bool insertRecords ) {
   int i;
   QString id;
   QVariantList ids, vals;
@@ -350,13 +338,11 @@ bool CStringIndexedLookupTable::populateDatabase( const bool& insertRecords ) {
 
   if( indexField() == valueField() ) {
     if( !query.prepare(
-        QString( "INSERT INTO \"%1\" ( \"%2\" ) SELECT ? WHERE NOT EXISTS ( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" )
-        .arg( _tableName )
-        .arg( _valueField )
+        QStringLiteral( "INSERT INTO \"%1\" ( \"%2\" ) SELECT ? WHERE NOT EXISTS ( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" ).arg( _tableName, _valueField )
       )
     ) {
       _error = true;
-      _errorMessage = QString( "CStringIndexedLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CStringIndexedLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;
@@ -366,14 +352,11 @@ bool CStringIndexedLookupTable::populateDatabase( const bool& insertRecords ) {
   }
   else {
     if( !query.prepare(
-        QString( "INSERT INTO \"%1\" ( \"%2\", \"%3\" ) SELECT ?, ? WHERE NOT EXISTS( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" )
-        .arg( _tableName )
-        .arg( _idField )
-        .arg( _valueField )
+        QStringLiteral( "INSERT INTO \"%1\" ( \"%2\", \"%3\" ) SELECT ?, ? WHERE NOT EXISTS( SELECT \"%2\" FROM \"%1\" WHERE \"%2\" = ? )" ).arg( _tableName, _idField, _valueField )
       )
     ) {
       _error = true;
-      _errorMessage = QString( "CStringIndexedLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CStringIndexedLookupTable query preparation failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;
@@ -386,7 +369,7 @@ bool CStringIndexedLookupTable::populateDatabase( const bool& insertRecords ) {
   if( insertRecords && !_error ) {
     if( !query.execBatch() ) {
       _error = true;
-      _errorMessage = QString( "CStringIndexedLookupTable query execution failed: %1, %2" ).arg( query.lastQuery() ).arg( query.lastError().text());
+      _errorMessage = QStringLiteral( "CStringIndexedLookupTable query execution failed: %1, %2" ).arg( query.lastQuery(), query.lastError().text() );
     }
     else {
       _error = false;

@@ -6,7 +6,7 @@
  
 #include <ar_general_purpose/logbrowserdialog.h>
  
-LogBrowser::LogBrowser(QObject *parent) : QObject(parent) {
+LogBrowser::LogBrowser(QObject *parent /* = nullptr */) : QObject( parent ) {
   qRegisterMetaType<QtMsgType>("QtMsgType");
   browserDialog = new LogBrowserDialog;
   connect(this, SIGNAL(sendMessage(QtMsgType,QString)), browserDialog, SLOT(outputMessage(QtMsgType,QString)), Qt::QueuedConnection);

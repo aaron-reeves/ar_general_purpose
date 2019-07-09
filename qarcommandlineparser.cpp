@@ -728,7 +728,7 @@ bool QARCommandLineParser::addValue( const QString& name, const QString& value )
 QStringList QARCommandLineParser::values(const QString &optionName) const
 {
     d->checkParsed("values");
-    const NameHash_t::const_iterator it = d->nameHash.find(optionName);
+    const NameHash_t::iterator it = d->nameHash.find(optionName);
     if (it != d->nameHash.end()) {
         const int optionOffset = *it;
         QStringList values = d->optionValuesHash.value(optionOffset);
@@ -754,7 +754,7 @@ QStringList QARCommandLineParser::values(const QString &optionName) const
 */
 bool QARCommandLineParser::isSet(const QCommandLineOption &option) const
 {
-    return isSet(option.names().first());
+    return isSet(option.names().constFirst());
 }
 
 /*!
@@ -772,7 +772,7 @@ bool QARCommandLineParser::isSet(const QCommandLineOption &option) const
 */
 QString QARCommandLineParser::value(const QCommandLineOption &option) const
 {
-    return value(option.names().first());
+    return value(option.names().constFirst());
 }
 
 /*!
@@ -790,7 +790,7 @@ QString QARCommandLineParser::value(const QCommandLineOption &option) const
 */
 QStringList QARCommandLineParser::values(const QCommandLineOption &option) const
 {
-    return values(option.names().first());
+    return values(option.names().constFirst());
 }
 
 /*!

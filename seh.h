@@ -40,13 +40,15 @@
     - Renamed macros to use all caps (2008-03-17) 
 *******************************************************************************/
 
-#ifndef __FV_SEH_H__
-#define __FV_SEH_H__
+#ifndef FV_SEH_H
+#define FV_SEH_H
 
 #include <windows.h> // AR Commented out 7/20/11, due to conflict with Qt 4.1.4 "qatomic.h"
 #include <excpt.h>
 #include <setjmp.h>
 //#include "defs.hpp"
+
+#include <QtCore>
 
 //NAMESPACE_BEGIN(PU)
 //NAMESPACE_BEGIN(SEH)
@@ -65,6 +67,7 @@ class __SEH_HANDLER
 {
 public:
     __SEH_HANDLER() { }
+    virtual ~__SEH_HANDLER() { }
     static EXCEPTION_DISPOSITION ExceptionRouter(PEXCEPTION_RECORD pRecord, 
                                                  __SEH_EXCEPTION_REGISTRATION* pReg,
                                                  PCONTEXT pContext,
@@ -77,10 +80,13 @@ public:
     
     jmp_buf context;
     EXCEPTION_RECORD excRecord;
-    CONTEXT excContext;    
+    CONTEXT excContext;
+
+  private:
+    Q_DISABLE_COPY(__SEH_HANDLER)
 };
 
-#define __SEH_TRY                                                 \
+#define SEH_TRY                                                        \
 {                                                                      \
     __SEH_EXCEPTION_REGISTRATION _lseh_er;                             \
     __SEH_HANDLER _lseh_handler;                                       \
@@ -96,13 +102,13 @@ public:
             break;                                                     \
         }                                                              \
 
-#define __SEH_FINALLY                                                 \
+#define SEH_FINALLY                                                    \
         break;                                                         \
     }                                                                  \
     while(true) {
     
 
-#define __SEH_EXCEPT(rec, ctx)                                         \
+#define SEH_EXCEPT(rec, ctx)                                           \
         break;                                                         \
     }                                                                  \
     PEXCEPTION_RECORD rec = &_lseh_handler.excRecord;                  \
@@ -111,7 +117,7 @@ public:
     asm volatile ("movl %0, %%fs:0" : : "r" (_lseh_er.prev));          \
     if(_lseh_setjmp_res != 0)
     
-#define __SEH_END }
+#define SEH_END }
 
 //NAMESPACE_END(SEH)
 //NAMESPACE_END(PU)

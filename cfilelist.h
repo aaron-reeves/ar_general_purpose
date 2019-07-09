@@ -166,11 +166,8 @@ class CFileList : public QList<CPathString> {
 
         /**
         Destroys the file list.  Pointers to list elements (CPathStrings) are NOT deleted.
-
-        Eventually, it might be nice to parameterize the destructor, so that the list may
-        be emptied and all elements deleted as well, but it hasn't been an issue yet.
         */
-        virtual ~CFileList();
+        ~CFileList();
 
         /**
         Returns a list of all of the directories that contain the files in 'this' list.  For example, if
@@ -201,7 +198,7 @@ class CFileList : public QList<CPathString> {
         /**
         Combines the contents of this list and the contents of subList.
         */
-        void merge( CFileList subList );
+        void merge(const CFileList& subList );
 
         void append( const QString& file ) { QList<CPathString>::append( CPathString( file ) ); }
 

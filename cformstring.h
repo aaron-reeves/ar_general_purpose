@@ -30,28 +30,28 @@ See http://docs.rinet.ru:8083/CGI_Programming/ch22.htm.
 class CFormString : public QString  {
   public:
     /** Creates a new CFormString from a standard QString. */
-    CFormString( QString str, bool isEncoded = false );
+    CFormString( const QString& str, const bool isEncoded = false );
     
     /** Create an empty CQFormString. */
-    CFormString( bool isEncoded = false  );
+    CFormString( const bool isEncoded = false  );
     
     /** Creates a new CFormString from a char*. */
-    CFormString( const char* charString, bool isEncoded = false );
+    CFormString( const char* charString, const bool isEncoded = false );
     
     //virtual ~CFormString();
     
     
     /** Encodes this string according to'x-www-form-urlencoded' rules. */
-    void urlEncode( bool encodeSpaces = false );
+    void urlEncode( const bool encodeSpaces = false );
     
     /** Decodes this string according to'x-www-form-urlencoded' rules. */
-    void urlDecode( void );
+    void urlDecode();
     
     /** Indicates whether this string is in its encoded state (true) or its decoded state (false). */
-    inline bool isEncoded( void ) { return isEncoded_p; };
+    inline bool isEncoded() { return isEncoded_p; }
     
     /** Indicates whether this string is in its encoded state (false) or its decoded state (true). */
-    inline bool isDecoded( void ) { return !isEncoded_p; };
+    inline bool isDecoded() { return !isEncoded_p; }
     
   protected:
     /** Replaces every instance of a single character with a different character.  

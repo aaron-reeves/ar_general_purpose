@@ -70,7 +70,7 @@ sources.
 
 /* Size of atomic reads. */
 #define BUFFER_SIZE (16 * 1024)
-#define SAFE_READ_ERROR ((size_t) -1)
+#define SAFE_READ_ERROR (size_t() -1)
 
 
 size_t safe_read (int fd, char *buf, unsigned int count) {
@@ -84,13 +84,13 @@ size_t safe_read (int fd, char *buf, unsigned int count) {
     ssize_t result = read (fd, buf, count);
 
   if (0 <= result)
-    return result;
+    return size_t( result );
   else if (IS_EINTR (errno))
     continue;
   else if (errno == EINVAL && BUGGY_READ_MAXIMUM < count)
     count = BUGGY_READ_MAXIMUM;
   else
-    return result;
+    return size_t( result );
   }
 }
 
@@ -117,7 +117,7 @@ unsigned long long linesInFile( const char* filename, bool& ok ) {
    /* Use a separate loop when counting only lines or lines and bytes --
    but not chars or words.  */
     while( 0 < ( bytes_read = safe_read ( fd, buf, BUFFER_SIZE ) ) ) {
-      register char *p = buf;
+      char *p = buf;
 
       if (bytes_read == SAFE_READ_ERROR) {
         //error (0, errno, "%s", file);
@@ -125,7 +125,7 @@ unsigned long long linesInFile( const char* filename, bool& ok ) {
         break;
       }
 
-      while ((p = (char*)memchr (p, '\n', (buf + bytes_read) - p))) {
+      while ((p = static_cast<char*>(memchr (p, '\n', size_t((buf + bytes_read) - p))))) {
         ++p;
         ++nLines;
       }

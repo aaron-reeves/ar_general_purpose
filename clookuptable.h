@@ -51,13 +51,13 @@ class CLookupTable {
     int findOrAddValue( const QString& value );
 
     // Does the key exist in the map?
-    bool hasKey( const int& key ) const;
+    bool hasKey(const int key ) const;
 
     // Does the value exist in the map?
     bool hasValue( const QString& val ) const;
 
     // Adds any new values with their associated IDs to the database
-    bool populateDatabase(const bool& insertRecords );
+    bool populateDatabase(const bool insertRecords );
 
     // Properties
     QString tableName( void ) { return _tableName; }
@@ -131,7 +131,7 @@ class CStringIndexedLookupTable {
     QString findOrAddValue( const QString& value, const QString& index );
 
     // Adds any new values with their associated IDs to the database
-    bool populateDatabase( const bool& insertRecords );
+    bool populateDatabase( const bool insertRecords );
 
     // Properties
     QString tableName( void ) { return _tableName; }

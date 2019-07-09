@@ -32,13 +32,13 @@ QDoubleVector::~QDoubleVector( void ){
   
 
 void QDoubleVector::append( double val ){
-  ((DoubleVector*)this)->append( val );
+  static_cast<DoubleVector*>(this)->append( val );
   _sorted = false;  
 }
 
 
 void QDoubleVector::resize( const int newSize ){
-  ((DoubleVector*)this)->resize( newSize );
+  static_cast<DoubleVector*>(this)->resize( newSize );
   _sorted = false;
 }  
  
@@ -54,17 +54,17 @@ bool QDoubleVector::isEmpty( void ) {
 
 
 void QDoubleVector::sort( void ) {
-  qSort( *this );
+  std::sort( this->begin(), this->end() );
   _sorted = true;
 }
 
 
 QString QDoubleVector::asColString( void ){
   int i;
-  QString result = "";
+  QString result = QString();
   
   for( i = 0; i < this->size(); ++i ) {
-    result.append( QString( "%1" ).arg( this->at(i) ) );
+    result.append( QStringLiteral( "%1" ).arg( this->at(i) ) );
     
     if( i < (this->size() - 1) )
       result.append( "\r\n" );
@@ -76,10 +76,10 @@ QString QDoubleVector::asColString( void ){
 
 QString QDoubleVector::asRowString( QChar delimiter /* = ',' */ ){
   int i;
-  QString result = "";
+  QString result = QString();
   
   for( i = 0; i < this->size(); ++i ) {
-    result.append( QString( "%1" ).arg( this->at(i) ) );
+    result.append( QStringLiteral( "%1" ).arg( this->at(i) ) );
     
     if( i < (this->size() - 1) )
       result.append( delimiter );
@@ -218,7 +218,7 @@ double QDoubleVector::quantileSorted( const double quant ){
 
   n = this->count();
   index = quant * ( n - 1 );
-  lhs = (int)trunc( index );
+  lhs = int( trunc( index ) );
   delta = index - lhs;
   
   if( 0 == n ) {

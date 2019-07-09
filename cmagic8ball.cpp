@@ -14,7 +14,7 @@ CMagic8Ball::CMagic8Ball( const double proportion ) {
 CMagic8Ball::CMagic8Ball( const QString& parameters ) {
   _type = Undefined;
   _error = true;
-  _errorMsg = "Magic8Ball style is undefined.";
+  _errorMsg = QStringLiteral("Magic8Ball style is undefined.");
 
   QString numberStr;
   QString proportionStr;
@@ -22,19 +22,19 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
 
   QStringList params = CSV::parseLine( parameters );
 
-  foreach( QString param, params ) {
+  for( const QString& param : params ) {
     QStringList indivParam = CSV::parseLine( param, '=' );
     if( 2 == indivParam.count() ) {
-      if( 0 == indivParam.at(0).compare( "number", Qt::CaseInsensitive ) )
+      if( 0 == indivParam.at(0).compare( QLatin1String("number"), Qt::CaseInsensitive ) )
         numberStr = indivParam.at(1);
 
-      if( 0 == indivParam.at(0).compare( "proportion", Qt::CaseInsensitive ) )
+      if( 0 == indivParam.at(0).compare( QLatin1String("proportion"), Qt::CaseInsensitive ) )
         proportionStr = indivParam.at(1);
 
-      if( 0 == indivParam.at(0).compare( "percentage", Qt::CaseInsensitive ) )
+      if( 0 == indivParam.at(0).compare( QLatin1String("percentage"), Qt::CaseInsensitive ) )
         percentageStr = indivParam.at(1);
 
-      if( 0 == indivParam.at(0).compare( "percent", Qt::CaseInsensitive ) )
+      if( 0 == indivParam.at(0).compare( QLatin1String("percent"), Qt::CaseInsensitive ) )
         percentageStr = indivParam.at(1);
     }
   }
@@ -49,11 +49,11 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
 
   if( 0 == nParams ) {
     _error = true;
-    _errorMsg = "Missing parameter: please specify number, proportion, or percentage.";
+    _errorMsg = QStringLiteral("Missing parameter: please specify number, proportion, or percentage.");
   }
   else if( 1 != nParams ) {
     _error = true;
-    _errorMsg = "Too many parameters: please specify one of number, proportion, or percentage.";
+    _errorMsg = QStringLiteral("Too many parameters: please specify one of number, proportion, or percentage.");
   }
 
   bool ok;
@@ -62,7 +62,7 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
     _number = numberStr.toInt( &ok );
     if( !ok ) {
       _error = true;
-      _errorMsg = QString( "Bad parameter: Number format (%1) is incorrect." ).arg( numberStr );
+      _errorMsg = QStringLiteral( "Bad parameter: Number format (%1) is incorrect." ).arg( numberStr );
     }
     else {
       setNumberType( _number );
@@ -73,7 +73,7 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
     _proportion = proportionStr.toDouble( &ok );
     if( !ok ) {
       _error = true;
-      _errorMsg = QString( "Bad parameter: Proportion format (%1) is incorrect." ).arg( proportionStr );
+      _errorMsg = QStringLiteral( "Bad parameter: Proportion format (%1) is incorrect." ).arg( proportionStr );
     }
     else {
       setProportionType( _proportion );
@@ -81,11 +81,11 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
   }
 
   else if( !percentageStr.isEmpty() ) {
-    percentageStr.replace( "%", "" );
+    percentageStr.replace( '%', QString() );
     _proportion = percentageStr.toDouble( &ok );
     if( !ok ) {
       _error = true;
-      _errorMsg = QString( "Bad parameter: Proportion format (%1) is incorrect." ).arg( proportionStr );
+      _errorMsg = QStringLiteral( "Bad parameter: Proportion format (%1) is incorrect." ).arg( proportionStr );
     }
     else {
       _proportion = ( _proportion / 100.0 );
@@ -96,7 +96,7 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
 
 
 CMagic8Ball::~CMagic8Ball() {
-  if( NULL != _rng )
+  if( nullptr != _rng )
     RAN_free_generator( _rng );
 }
 
@@ -105,7 +105,7 @@ void CMagic8Ball::setNumberType( const int number ) {
   _type = Number;
   _number = number;
 
-  _rng = NULL;
+  _rng = nullptr;
 
   _error = false;
   _errorMsg = QString();
@@ -124,22 +124,25 @@ void CMagic8Ball::setProportionType( const double proportion ) {
 
 
 bool CMagic8Ball::answer( const int number ) {
+  bool result;
   double ran;
 
   switch( _type ) {
     case Number:
-      return( _number >= number );
+      result = ( _number >= number );
       break;
 
     case Proportion:
       ran = RAN_num( _rng );
-      return( _proportion > ran );
+      result = ( _proportion > ran );
       break;
 
     default:
       _error = true;
-      _errorMsg = "Magic8Ball type is unspecified.";
-      return false;
+      _errorMsg = QStringLiteral("Magic8Ball type is unspecified.");
+      result =  false;
       break;
   }
+
+  return result;
 }

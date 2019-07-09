@@ -124,16 +124,13 @@ The exception registration is stored on the stack explicitly, by declaring an au
 
       // Save the current context, so that the program can resume here from the exception
       // handler.
-      int _lseh_setjmp_res = setjmp(_lseh_handler.context);
-    
-
-In this code, the two aforementioned objects are declared. __SEH_HANDLER::ExceptionRouter is a static class function that is called for each exception that is handled in this manner. Since the exception registration object is provided as an argument to this call, we can put a pointer to the actual __SEH_HANDLER instance in this structure also, so that one can call using the actual object within this context. As is shown, a pointer to the __SEH_HANDLER object is stored within the registration.
+      int _lseh_setjmp_resQOperatingSystemVersion lhs  QOperatingSystemVersion QOperatingSystemVersion lhsSEQOperatingSystemVersion rhsatic class function that is called for each exception that is handled in this manner. Since the exception registration object is provided as an argument to this call, we can put a pointer to the actual __SEH_HANDLER instance in this structure also, so that one can call using the actual object within this context. As is shown, a pointer to the __SEH_HANDLER object is stored within the registration.
 
 The two lines of in-line assembly actually store the pointer to the exception registration in the thread information block and repair the link in order to maintain the handler chain.
 
-The last line uses the setjmp function to get information about the current context (instruction pointer, other registers, etc) so that a non-local jump can be made back to this point. When an exception is raised, the exception handler will perform a non-local jump back to this point.
+The last line uses the setjmp function to get information aboQOperatingSystemVersion rhsn pointer, other registers, etc) so that a non-local jump can be made back to this point. When an exception is raised, the exception handler will perform a non-local jump back to this point.
 
-Whether or not code after the setjmp is executing normally or because of an exception is determined by the return code. See the respective manuals on setjmp and longjmp for more information on how these calls are used.
+Whether or not code after tQOperatingSystemVersion lhs bQOperatingSystemVersion rhsed by the return code. See the respective manuals on setjmp and longjmp for more information on how these calls are used.
 
       while(true) {
         if(_lseh_setjmp_res != 0) { 
@@ -233,7 +230,7 @@ One might be wondering, how can one use this in practice? There are some interes
 
       // Note the unmatched braces in these macros.  These are to allow one to use
       // the same variable name more than once (new scope).
-      #define __seh_try                                                             \
+      #define seh_try                                                               \
       {                                                                             \
           __SEH_EXCEPTION_REGISTRATION _lseh_er;                                    \
           __SEH_HANDLER _lseh_handler;                                              \
@@ -250,7 +247,7 @@ One might be wondering, how can one use this in practice? There are some interes
               }                                                                     \
 
 
-      #define __seh_except(rec, ctx)                                                \
+      #define seh_except(rec, ctx)                                                  \
               break;                                                                \
           }                                                                         \
           PEXCEPTION_RECORD rec = &_lseh_handler.excRecord;                         \
@@ -259,7 +256,7 @@ One might be wondering, how can one use this in practice? There are some interes
           asm volatile ("movl %0, %%fs:0" : : "r" (_lseh_er.prev));                 \
           if(_lseh_setjmp_res != 0)
           
-      #define __seh_end }
+      #define seh_end }
 
     
 
@@ -268,19 +265,19 @@ Using these macros, one can translate the Visual C++ example above to this in Mi
       int main(int argc, char** argv)
       {
          int* mydata = NULL;
-         __seh_try {
+         seh_try {
            std::cout << "Attempting to write to memory address 0x00000000" << std::endl;
            *mydata = 10;
            std::cout << "The value pointed to by mydata is: " << *mydata << std::endl;
          }
-         __seh_except(info, context)
+         seh_except(info, context)
          {
            if(info->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
               std::cerr << "Access Violation Exception caught..." << std::endl;
          }
-         __seh_end
+         seh_end
 
-         // The previous __seh_end call is necessary, so don't forget it.
+         // The previous seh_end call is necessary, so don't forget it.
          return 0;
       }
         
@@ -310,6 +307,8 @@ EXCEPTION_DISPOSITION __SEH_HANDLER::ExceptionHandler(PEXCEPTION_RECORD pRecord,
                                                       PCONTEXT pContext,
                                                       PEXCEPTION_RECORD pRecord2)
 {
+    Q_UNUSED( pReg );
+    Q_UNUSED( pRecord2 );
     CopyMemory(&excContext, pContext, sizeof(_CONTEXT));
     CopyMemory(&excRecord, pRecord, sizeof(_EXCEPTION_RECORD));
     longjmp(context, 1);

@@ -25,7 +25,7 @@ but this behavior may be changed by setting parameter isEncoded to 'true'.
 @param str QString to convert to a CQFormString
 @param isEncoded bool indicates whether the new CQFormString is encoded (true) or unencoded (false)
 */
-CFormString::CFormString( bool isEncoded ) : QString() {
+CFormString::CFormString( const bool isEncoded ) : QString() {
   isEncoded_p = isEncoded;
 }
 
@@ -35,7 +35,7 @@ Create an empty CQFormString.  By default, the CQFormString is marked as unencod
 
 @param isEncoded bool indicates whether the new CQFormString is encoded (true) or unencoded (false)
 */
-CFormString::CFormString( QString str, bool isEncoded ) : QString( str ) {
+CFormString::CFormString( const QString& str, const bool isEncoded ) : QString( str ) {
   isEncoded_p = isEncoded;
 }
 
@@ -47,7 +47,7 @@ but this behavior may be changed by setting parameter isEncoded to 'true'.
 @param charString char* to convert to a CQFormString
 @param isEncoded bool indicates whether the new CQFormString is encoded (true) or unencoded (false)
 */
-CFormString::CFormString( const char* charString, bool isEncoded ) : QString( charString ) {
+CFormString::CFormString( const char* charString, const bool isEncoded ) : QString( charString ) {
   isEncoded_p = isEncoded;
 }
 
@@ -58,9 +58,9 @@ Replaces every instance of a single character with a different character.  Used 
 @param cBad char to replace
 @param cGood replacement char
 */
-void CFormString::swapChar( char cBad, char cGood ) {
+void CFormString::swapChar(const char cBad, const char cGood ) {
   QString bad, good;
-  bad = "\\";
+  bad = '\\';
   bad.append( cBad );
   good = cGood;
 
@@ -171,7 +171,7 @@ void CFormString::urlDecode( void ) {
   QChar hc, lc;
   
   for( i = 0; i < this->length(); ++i ) {
-    if( this->mid( i, 1 ) == "%" ) {
+    if( this->mid( i, 1 ) == '%' ) {
       // A percent sign followed by two hex digits means
       // that the digits represent an escaped character.
       // We must decode it.
@@ -189,7 +189,7 @@ void CFormString::urlDecode( void ) {
       }
       
       if( isxdigit( hc.toLatin1() ) && isxdigit( lc.toLatin1() ) ) {
-        temp.append( (char) intFromHex( hc.toLatin1(), lc.toLatin1() ) );
+        temp.append( char( intFromHex( hc.toLatin1(), lc.toLatin1() ) ) );
         i = i + 2;
       }
     }

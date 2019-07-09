@@ -13,7 +13,7 @@ class LogBrowserDialog : public QDialog
     Q_OBJECT
  
 public:
-    LogBrowserDialog(QWidget *parent = 0);
+    LogBrowserDialog(QWidget *parent = nullptr );
     ~LogBrowserDialog();
  
 public slots:
