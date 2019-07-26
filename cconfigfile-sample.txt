@@ -1,4 +1,4 @@
-## Sample configuration file for use with CConfigFile
+## Sample configuration file for use with CConfigFile 
 ##===================================================
 ## This sample file illustrates syntax and possible options for use with
 ## the class CConfigFile, which is implemented in cconfigfile.h/cpp.
