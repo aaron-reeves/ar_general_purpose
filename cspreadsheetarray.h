@@ -63,7 +63,7 @@ class CSpreadsheetCell {
     void setValue( const QVariant& value ) { _value = value; }
     const QVariant value() const { return _value; }
 
-    void debug();
+    void debug( const int c = 0, const int r = 0 );
 
   protected:
     void assign( const CSpreadsheetCell& other );
@@ -153,7 +153,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     void assign( const CSpreadsheet& other );
 
-    static QVariant processCellXls( xls::xlsCell* cellValue, QString& msg, CSpreadsheetWorkBook* wb );
+    static QVariant processCellXls( xls::xlsCell* cellValue, const bool displayVerboseOutput, QString& msg, CSpreadsheetWorkBook* wb );
 
     // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
     static QDate xlsDate( const int val, const bool is1904DateSystem );

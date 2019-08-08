@@ -77,7 +77,9 @@ void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
   _isPartOfMergedCol = other._isPartOfMergedCol;
   _originCell = other._originCell;
 
-  // FIXME: Is this right?
+  #ifdef FIXME
+    qDebug() << "FIXME: Is this right?";
+  #endif
   _linkedCells = other._linkedCells;
 }
 
@@ -94,19 +96,29 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
   return result;
 }
 
-void CSpreadsheetCell::debug() {
+void CSpreadsheetCell::debug( const int c /* = 0 */, const int r /* = 0 */ ) {
   QString originStr;
 
   if( nullptr != this->_originCell ) {
     originStr = this->_originCell->value().toString();
   }
 
-  qDb() /*<< "C" << c << "R" << r*/ << QString::number( qlonglong( this ), 16 )
-           << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
-           << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
-           << "Value" << this->value().toString()
-           << "nLinked" << this->_linkedCells.count()
-           << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
+  if( c != 0 ) {
+    qDb() << "C" << c << "R" << r << QString::number( qlonglong( this ), 16 )
+             << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
+             << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
+             << "Value" << this->value().toString()
+             << "nLinked" << this->_linkedCells.count()
+             << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
+  }
+  else {
+    qDb() /*<< "C" << c << "R" << r*/ << QString::number( qlonglong( this ), 16 )
+             << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
+             << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
+             << "Value" << this->value().toString()
+             << "nLinked" << this->_linkedCells.count()
+             << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
+  }
 }
 
 
@@ -553,7 +565,14 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
-  // FIXME: This does not account for merged cells.
+  #ifdef FIXME
+    qDebug() << "FIXME: This does not account for merged cells.";
+    /* See xlsxworksheet.h:
+      bool mergeCells(const CellRange &range, const Format &format=Format());
+      bool unmergeCells(const CellRange &range);
+      QList<CellRange> mergedCells() const;
+    */
+  #endif
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
 
@@ -572,6 +591,9 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
     flagMergedCells();
   }
 
+  if( displayVerboseOutput )
+    cout << "Worksheet has been read successfully." << endl;
+
   return true;
 }
 
@@ -588,6 +610,11 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
+  if( displayVerboseOutput )
+    cout << QStringLiteral( "Cell range: rows( %1, %2 ), columns (%3, %4)" )
+      .arg( QString::number( 1 ), QString::number( pWS->rows.lastrow + 1 ), QString::number( 1 ), QString::number( pWS->rows.lastcol ) )
+    << endl;
+
   for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
     for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
 
@@ -602,7 +629,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       else {
         QString msg;
 
-        QVariant val = processCellXls( cell, msg, _wb );
+        QVariant val = processCellXls( cell, displayVerboseOutput, msg, _wb );
 
         CSpreadsheetCell ssCell( val, cell->colspan, cell->rowspan );
         this->setValue( cellCol, cellRow, ssCell );
@@ -623,11 +650,14 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
     flagMergedCells();
   }
 
+  if( displayVerboseOutput )
+    cout << "Worksheet has been read successfully." << endl;
+
   return true;
 }
 
 
-QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpreadsheetWorkBook* wb ) {
+QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, const bool displayVerboseOutput, QString& msg, CSpreadsheetWorkBook* wb ) {
   QVariant val;
 
   // Display the value of the cell (either numeric or string)
@@ -635,16 +665,18 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
 
   // Deal with numbers
   //------------------
-  msg =
-    QStringLiteral( "Row: CELLROW, Col: CELLCOL, id: %1, row: %2, col, %3, xf: %4, l: %5, d: %6, str: %7\n" )
-    .arg( QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
-    .arg( cell->row )
-    .arg( cell->col )
-    .arg( cell->xf )
-    .arg( cell->l )
-    .arg( cell->d )
-    .arg( cell->str )
-  ;
+  if( displayVerboseOutput ) {
+    msg =
+      QStringLiteral( "Row: CELLROW, Col: CELLCOL, id: %1, row: %2, col, %3, xf: %4, l: %5, d: %6, str: %7\n" )
+      .arg( QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) )
+      .arg( cell->row )
+      .arg( cell->col )
+      .arg( cell->xf )
+      .arg( cell->l )
+      .arg( cell->d )
+      .arg( cell->str )
+    ;
+  }
 
   // XLS_RECORD_RK = 0x027E
   // XLS_RECORD_NUMBER = 0x203
@@ -662,7 +694,10 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
     else {
       val = cell->d;
     }
-    msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+
+    if( displayVerboseOutput ) {
+      msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+    }
   }
 
   // Deal with formulas
@@ -672,7 +707,9 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   else if ( (XLS_RECORD_FORMULA == cell->id) || (XLS_RECORD_FORMULA_ALT == cell->id) ) {
     if (cell->l == 0) { // its a number
       val = cell->d;
-      msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+      if( displayVerboseOutput ) {
+        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula numeric): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+      }
     }
     else {
       if (!strcmp( cell->str, "bool")) { // its boolean, and test cell->d
@@ -682,15 +719,21 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
         else {
           val = false;
         }
-        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        if( displayVerboseOutput ) {
+          msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula boolean): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        }
       }
       else if (!strcmp( cell->str, "error" ) ) { // formula is in error
         val = "*error*";
-        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        if( displayVerboseOutput ) {
+          msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula error): %1, ID: %2" ).arg( val.toString(), QStringLiteral( "%1" ).arg( cell->id, 0, 16 ).toUpper().prepend( "0x" ) ) );
+        }
       }
       else { // ... cell->str is valid as the result of a string formula.
         val = QStringLiteral( "%1" ).arg( cell->str );
-        msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
+        if( displayVerboseOutput ) {
+          msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (formula string): %1" ).arg( val.toString() ) );
+        }
       }
     }
   }
@@ -712,16 +755,22 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, QString& msg, CSpread
   //------------------
   else if( nullptr != cell->str ) {
      val = QStringLiteral( "%1" ).arg( cell->str );
-     msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
+     if( displayVerboseOutput ) {
+      msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, Value (string): %1" ).arg( val.toString() ) );
+     }
   }
 
   // Deal with 'empty' cells
   //------------------------
   else {
-    msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, (Empty cell)" ) );
+    if( displayVerboseOutput ) {
+      msg.append( QStringLiteral( "Row: CELLROW, Col: CELLCOL, (Empty cell)" ) );
+    }
   }
 
-  msg.append( QStringLiteral( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
+  if( displayVerboseOutput ) {
+    msg.append( QStringLiteral( ", colspan: %1, rowspan %2" ).arg( cell->colspan ).arg( cell->rowspan ) );
+  }
 
   return val;
 }
@@ -1295,7 +1344,9 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QSt
     return result;
   }
 
-  // FIXME: This does not account for merged cells.
+  #ifdef FIXME
+    qDebug() << "FIXME: This does not account for merged cells.";
+  #endif
   for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
 
     QVariant val = _xlsx->read( row, col );
@@ -1331,7 +1382,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXls( const int rowIdx, const int 
     }
     else {
       QString msg;
-      QVariant val = CSpreadsheet::processCellXls( cell, msg, this );
+      QVariant val = CSpreadsheet::processCellXls( cell, false, msg, this );
 
       result.append( val );
     }
