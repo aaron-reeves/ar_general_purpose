@@ -184,6 +184,7 @@ class CSpreadsheetWorkBook {
     bool ok() const { return _ok; }
     bool error() const { return !_ok; }
     QString errorMessage() const { return _errMsg; }
+    QString magicFileTypeDescr() const { return _fileTypeDescr; }
 
     int sheetCount() const { return _sheetNames.count(); }
     bool hasSheet( const int idx );
@@ -221,10 +222,10 @@ class CSpreadsheetWorkBook {
     bool saveAs( const QString& filename );
     QString sourceFileName() const { return _srcFileName; }
 
-    static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, bool* ok = nullptr );
+    static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
 
   protected:
-    void openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput );
+    void openWorkbook();
     SpreadsheetFileFormat guessFileFormat();
 
     bool openXlsWorkbook();
@@ -243,6 +244,7 @@ class CSpreadsheetWorkBook {
 
     bool _ok; // True if the file could be read, etc.
     QString _errMsg;
+    QString _fileTypeDescr;
 
     QXlsx::Document* _xlsx;
     xls::xlsWorkBook* _pWB;

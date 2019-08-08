@@ -1139,27 +1139,44 @@ void CSpreadsheet::appendRow( const QStringList& values ) {
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
-  openWorkbook( fileFormat, fileName, displayVerboseOutput );
+  _srcFileName = fileName;
+  _fileFormat = fileFormat;
+  _displayVerboseOutput = displayVerboseOutput;
+
+  QFileInfo fi( _srcFileName );
+
+  if (!fi.exists() || !fi.isReadable() ) {
+    _errMsg = QStringLiteral("File doesn't exist or is not readable.");
+    _ok = false;
+  }
+  else {
+    openWorkbook();
+  }
 }
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
   _srcFileName = fileName;
+  _displayVerboseOutput = displayVerboseOutput;
 
-  SpreadsheetFileFormat fileFormat = guessFileFormat();
+  QFileInfo fi( _srcFileName );
 
-  openWorkbook( fileFormat, fileName, displayVerboseOutput );
+  if (!fi.exists() || !fi.isReadable() ) {
+    _errMsg = QStringLiteral("File doesn't exist or is not readable.");
+    _ok = false;
+  }
+  else {
+    _fileFormat = guessFileFormat();
+    openWorkbook();
+  }
 }
 
 
-void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput ) {
-  _srcFileName = fileName;
-  _fileFormat = fileFormat;
-  _displayVerboseOutput = displayVerboseOutput;
+void CSpreadsheetWorkBook::openWorkbook() {
   _pWB = nullptr;
   _xlsx = nullptr;
 
-  switch( fileFormat ) {
+  switch( _fileFormat ) {
     case  Format97_2003:
       _ok = openXlsWorkbook();
       break;
@@ -1175,15 +1192,24 @@ void CSpreadsheetWorkBook::openWorkbook( const SpreadsheetFileFormat fileFormat,
 
 
 CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat() {
-  return guessFileFormat( _srcFileName, &_errMsg, &_ok );
+  return guessFileFormat( _srcFileName, &_errMsg, &_fileTypeDescr, &_ok );
 }
 
 
 
-CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat( const QString& fileName, QString* errMsg /* = nullptr */, bool* ok /* = nullptr */ ) {
+CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat(
+  const QString& fileName,
+  QString* errMsg /* = nullptr */,
+  QString* fileTypeDescr /* = nullptr */,
+  bool* ok /* = nullptr */
+ ) {
   SpreadsheetFileFormat fileFormat = FormatUnknown;
   bool error;
   QString fileType = magicFileTypeInfo( fileName, &error );
+
+  if( nullptr != fileTypeDescr ) {
+    *fileTypeDescr = fileType;
+  }
 
   if( error ) {
     if( nullptr != errMsg )
