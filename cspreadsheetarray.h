@@ -27,6 +27,18 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 class CSpreadsheetWorkBook;
 
+class CCellRef {
+  public:
+    CCellRef() { col = -1; row = -1; }
+    CCellRef( const int colNumber, const int rowNumber ) { col = colNumber; row = rowNumber; }
+    CCellRef( const CCellRef& other ) { col = other.col; row = other.row; }
+    CCellRef& operator=( const CCellRef& other ) { col = other.col; row = other.row; return *this; }
+    ~CCellRef() { /* Nothing to do here */ }
+
+    int col;
+    int row;
+};
+
 
 class CSpreadsheetCell {
   friend class CSpreadsheet;
@@ -52,9 +64,9 @@ class CSpreadsheetCell {
 
     // Cells that span multiple rows are part of a merged COLUMN.
     // Cells that span multiple columns are part of a merged ROW.
-    bool isPartOfMergedRow() { return _isPartOfMergedRow; }
-    bool isPartOfMergedCol() { return _isPartOfMergedCol; }
-    bool isPartOfMergedRange() { return ( isPartOfMergedCol() || isPartOfMergedRow() ); }
+    bool isPartOfMergedRow() const { return _isPartOfMergedRow; }
+    bool isPartOfMergedCol() const { return _isPartOfMergedCol; }
+    bool isPartOfMergedRange() const { return ( isPartOfMergedCol() || isPartOfMergedRow() ); }
 
     const QXlsx::CellRange mergedRange( const int col, const int row ) const;
     int colSpan() const { return _colSpan; }
@@ -63,7 +75,7 @@ class CSpreadsheetCell {
     void setValue( const QVariant& value ) { _value = value; }
     const QVariant value() const { return _value; }
 
-    void debug( const int c = 0, const int r = 0 );
+    void debug( const int c = -1, const int r = -1 ) const;
 
   protected:
     void assign( const CSpreadsheetCell& other );
@@ -135,6 +147,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     void appendRow( const QStringList& values );
 
     void debug( const int padding = 10 ) const;
+    void debugVerbose() const;
     void debugMerges();
 
     void setData( const CTwoDArray<QVariant>& data );
@@ -146,7 +159,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
   protected:
     void initialize();
-    void flagMergedCells();
+    void flagMergedCells( const QVector<CCellRef>& mergedCellRefs );
 
     CSpreadsheetWorkBook* _wb;
     bool _hasSpannedCells;

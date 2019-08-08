@@ -96,14 +96,14 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
   return result;
 }
 
-void CSpreadsheetCell::debug( const int c /* = 0 */, const int r /* = 0 */ ) {
+void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) const {
   QString originStr;
 
   if( nullptr != this->_originCell ) {
     originStr = this->_originCell->value().toString();
   }
 
-  if( c != 0 ) {
+  if( c != -1 ) {
     qDb() << "C" << c << "R" << r << QString::number( qlonglong( this ), 16 )
              << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
              << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
@@ -205,6 +205,15 @@ void CSpreadsheet::debug( const int padding /* = 10 */) const {
   }
 
   qDb();
+}
+
+
+void CSpreadsheet::debugVerbose() const {
+  for( int r = 0; r < this->nRows(); ++r ) {
+    for( int c = 0; c < this->nCols(); ++c ) {
+      this->at( c, r).debug( c, r );
+    }
+  }
 }
 
 
@@ -544,7 +553,7 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 }
 
 
-bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
+bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
       cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
@@ -565,14 +574,6 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
-  #ifdef FIXME
-    qDebug() << "FIXME: This does not account for merged cells.";
-    /* See xlsxworksheet.h:
-      bool mergeCells(const CellRange &range, const Format &format=Format());
-      bool unmergeCells(const CellRange &range);
-      QList<CellRange> mergedCells() const;
-    */
-  #endif
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
 
@@ -587,8 +588,34 @@ bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, con
     }
   }
 
-  if( _hasSpannedCells ) {
-    flagMergedCells();
+  // Deal with merged cells
+  QList<QXlsx::CellRange> mergedCells = xlsx->currentWorksheet()->mergedCells();
+
+  QVector<CCellRef> mergedCellRefs;
+
+  if( !mergedCells.isEmpty() ) {
+    _hasSpannedCells = true;
+
+    int originCol, originRow;
+    int rowSpan, colSpan;
+
+    for( int i = 0; i < mergedCells.count(); ++i ) {
+      originRow = mergedCells.at(i).firstRow() - 1;
+      originCol = mergedCells.at(i).firstColumn() - 1;
+
+      rowSpan = mergedCells.at(i).lastRow() - originRow;
+      colSpan = mergedCells.at(i).lastColumn() - originCol;
+
+      this->value( originCol, originRow )._colSpan = colSpan;
+      this->value( originCol, originRow )._rowSpan = rowSpan;
+
+      this->value( originCol, originRow )._isPartOfMergedRow = ( 1 < colSpan );
+      this->value( originCol, originRow )._isPartOfMergedCol = ( 1 < rowSpan );
+
+      mergedCellRefs.append( CCellRef( originCol, originRow ) );
+    }
+
+    flagMergedCells( mergedCellRefs );
   }
 
   if( displayVerboseOutput )
@@ -615,6 +642,8 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       .arg( QString::number( 1 ), QString::number( pWS->rows.lastrow + 1 ), QString::number( 1 ), QString::number( pWS->rows.lastcol ) )
     << endl;
 
+  QVector<CCellRef> mergedCellRefs;
+
   for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
     for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
 
@@ -635,7 +664,9 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         this->setValue( cellCol, cellRow, ssCell );
 
         // Make a note if the cell is merged.
-        _hasSpannedCells = ( _hasSpannedCells || ssCell.hasSpan() );
+        if( ssCell.hasSpan() ) {
+          mergedCellRefs.append( CCellRef( cellCol, cellRow ) );
+        }
 
         if( displayVerboseOutput ) {
           msg.replace( QLatin1String("CELLCOL"), QString::number( cellCol ), Qt::CaseSensitive );
@@ -646,8 +677,9 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
     }
   }
 
-  if( _hasSpannedCells ) {
-    flagMergedCells();
+  if( !mergedCellRefs.isEmpty() ) {
+    _hasSpannedCells = true;
+    flagMergedCells( mergedCellRefs );
   }
 
   if( displayVerboseOutput )
@@ -777,49 +809,45 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, const bool displayVer
 
 
 
-void CSpreadsheet::flagMergedCells() {
+void CSpreadsheet::flagMergedCells( const QVector<CCellRef>& mergedCellRefs ) {
   // Cells that span multiple columns are part of a merged ROW.
   // Cells that span multiple rows are part of a merged COLUMN.
 
-  int firstCol, lastCol, firstRow, lastRow;
+  int c, r, firstCol, lastCol, firstRow, lastRow;
 
-  for( int c = 0; c < this->nCols(); ++c ) {
-    for( int r = 0; r < this->nRows(); ++r ) {
+  for( int i = 0; i < mergedCellRefs.count(); ++i ) {
+    c = mergedCellRefs.at(i).col;
+    r = mergedCellRefs.at(i).row;
 
-      if( this->cell(c, r).hasSpan() ) {
-        firstCol = c;
-        lastCol = firstCol + this->cell( c, r ).colSpan();
-        firstRow = r;
-        lastRow = firstRow + this->cell( c, r ).rowSpan();
+    firstCol = c;
+    lastCol = firstCol + this->cell( c, r ).colSpan();
+    firstRow = r;
+    lastRow = firstRow + this->cell( c, r ).rowSpan();
 
-        for( int cc = firstCol; cc < lastCol; ++cc ) {
-          for( int rr = firstRow; rr < lastRow; ++rr ) {
-            if( this->cell(c, r).hasColSpan() ) {
-              this->at( cc, rr )._isPartOfMergedRow = true;
-              this->at( cc, rr )._originCell = &(this->at( c, r ));
+    for( int cc = firstCol; cc < lastCol; ++cc ) {
+      for( int rr = firstRow; rr < lastRow; ++rr ) {
+        if( this->cell(c, r).hasColSpan() ) {
+          this->at( cc, rr )._isPartOfMergedRow = true;
+          this->at( cc, rr )._originCell = &(this->at( c, r ));
 
-              // Add this cell to _originCell's collection
-              this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
-            }
-
-            if( this->cell(c, r).hasRowSpan() ) {
-              this->at( cc, rr )._isPartOfMergedCol = true;
-              this->at( cc, rr )._originCell = &(this->at( c, r ));
-
-              // Add this cell to _originCell's collection
-              this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
-            }
-          }
+          // Add this cell to _originCell's collection
+          this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
         }
 
-      }
+        if( this->cell(c, r).hasRowSpan() ) {
+          this->at( cc, rr )._isPartOfMergedCol = true;
+          this->at( cc, rr )._originCell = &(this->at( c, r ));
 
-      if( this->at( c, r )._originCell == &(this->at( c, r ) ) ) {
-        // Remove this cell from _originCell's collection
-        this->at( c, r )._originCell->_linkedCells.remove( &(this->at( c, r ) ) );
-        this->at( c, r )._originCell = nullptr;
+          // Add this cell to _originCell's collection
+          this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
+        }
       }
+    }
 
+    if( this->at( c, r )._originCell == &(this->at( c, r ) ) ) {
+      // Remove this cell from _originCell's collection
+      this->at( c, r )._originCell->_linkedCells.remove( &(this->at( c, r ) ) );
+      this->at( c, r )._originCell = nullptr;
     }
   }
 }
@@ -961,6 +989,8 @@ void CSpreadsheet::unmergeColumnsAndRows(
 ) {
   unmergeRows( duplicateValues, rowsWithMergedCells );
   unmergeColumns( duplicateValues, colsWithMergedCells );
+
+  _hasSpannedCells = false;
 }
 
 
