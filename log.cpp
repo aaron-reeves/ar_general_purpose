@@ -19,11 +19,23 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #ifdef QCONCURRENT_USED
   #include <QBasicMutex>
-  static QBasicMutex _mutex;
+  static QBasicMutex _mutex; // Note: NOT recursive, so don't lock muliple times.
 #endif
 
 CAppLog appLog;
 CLockFile lockFile;
+
+void logMsg( const char* msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
+  appLog.logMessage( msg, logLevel );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
+}
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   #ifdef QCONCURRENT_USED
@@ -91,6 +103,11 @@ void logBlank( const LogLevel logLevel /* = LoggingTypical */ ) {
 
 
 #ifdef QSQL_USED
+void logFailedQuery( QSqlQuery* query, const char* description /* = "Query" */ ) {
+  logFailedQuery( query, QString( description ) );
+}
+
+
 void logFailedQuery( QSqlQuery* query, const QString& description /* = "Query" */ ) {
   #ifdef QCONCURRENT_USED
     _mutex.lock();

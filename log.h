@@ -39,6 +39,7 @@ enum LogLevel {
 // The logMsgx functions are thread-safe.
 // Do not call any appLog functions directly from different threads.
 // See below for more details.
+void logMsg( const char* msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
 void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical );
@@ -47,6 +48,7 @@ void logBlank( const LogLevel logLevel = LoggingTypical );
 
 #ifdef QSQL_USED
 // Thread-safe
+void logFailedQuery( QSqlQuery* query, const char* description = "Query" );
 void logFailedQuery( QSqlQuery* query, const QString& description = QStringLiteral("Query") );
 #endif
 
@@ -96,8 +98,11 @@ class CAppLog : public QObject {
     void setWindowsFriendly( const bool val ) { _windowsFriendly = val; }
 
     void logMessageUnique( const QString& message, const LogLevel logLevel );
+    void logMessage( const char* message, const LogLevel logLevel ) { logMessage( QString( message ), logLevel ); }
     void logMessage( QString message, const LogLevel logLevel );
+    void typical( const char* message ) { logMessage( QString( message ), LoggingTypical ); }
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
+    void verbose( const char* message ) { logMessage( QString( message ), LoggingVerbose ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
     const QString fileName() const { return _logFileName; }
