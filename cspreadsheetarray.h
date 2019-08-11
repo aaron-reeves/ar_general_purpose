@@ -142,6 +142,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber );
+    QVariantList rowAsVariantList( const int rowNumber );
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
     bool readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput = false );
@@ -201,6 +202,15 @@ class CSpreadsheetWorkBook {
       Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
     };
 
+    //enum ReadRowBehavior {
+    //  BehaviorUnspecified = 0,
+    //  PreserveRowMerge = 1,
+    //  UnmergeRow = 2,
+    //  UnmergeAndDuplicateRow = 4,
+    //  BlankMergedColValue = 8,
+    //  DuplicateMergedColValue = 16
+    //};
+
     CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput = false );
     CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput = false );
     ~CSpreadsheetWorkBook();
@@ -209,8 +219,9 @@ class CSpreadsheetWorkBook {
     bool readSheet( const QString& sheetName );
     bool readAllSheets();
 
-    QVariantList firstRowFromSheet( const int sheetIdx );
-    QVariantList rowFromSheet( const int rowIdx, const int sheetIdx );
+    // Use CSpreadsheet::rowAsVariantList() instead
+    //QVariantList firstRowFromSheet( const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
+    //QVariantList rowFromSheet( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
 
     bool ok() const { return _ok; }
     bool error() const { return !_ok; }
@@ -251,7 +262,7 @@ class CSpreadsheetWorkBook {
 
     bool save();
     bool saveAs( const QString& filename );
-    QString sourceFileName() const { return _srcFileName; }
+    QString sourcePathName() const { return _srcPathName; }
 
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
 
@@ -262,11 +273,10 @@ class CSpreadsheetWorkBook {
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
 
-    QVariantList rowFromSheetXlsx( const int rowIdx, const QString& sheetName );
-    QVariantList rowFromSheetXls( const int rowIdx, const QString& sheetName );
-    QVariantList rowFromSheetXls( const int rowIdx, const int sheetIdx );
+    //QVariantList rowFromSheetXlsx( const int rowIdx, const QString& sheetName, const ReadRowBehavior behavior );
+    //QVariantList rowFromSheetXls( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior );
 
-    QString _srcFileName;
+    QString _srcPathName;
     SpreadsheetFileFormat _fileFormat;
     bool _displayVerboseOutput;
 

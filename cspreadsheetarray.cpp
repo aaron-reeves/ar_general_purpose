@@ -408,6 +408,17 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
 }
 
 
+QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) {
+  QVariantList list;
+
+  for( int c = 0; c < this->nCols(); ++c ) {
+    list.append( this->at( c, rowNumber).value() );
+  }
+
+  return list;
+}
+
+
 QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
   QStringList list;
 
@@ -1187,11 +1198,11 @@ void CSpreadsheet::appendRow( const QStringList& values ) {
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
-  _srcFileName = fileName;
+  _srcPathName = fileName;
   _fileFormat = fileFormat;
   _displayVerboseOutput = displayVerboseOutput;
 
-  QFileInfo fi( _srcFileName );
+  QFileInfo fi( _srcPathName );
 
   if (!fi.exists() || !fi.isReadable() ) {
     _errMsg = QStringLiteral("File doesn't exist or is not readable.");
@@ -1204,10 +1215,10 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
-  _srcFileName = fileName;
+  _srcPathName = fileName;
   _displayVerboseOutput = displayVerboseOutput;
 
-  QFileInfo fi( _srcFileName );
+  QFileInfo fi( _srcPathName );
 
   if (!fi.exists() || !fi.isReadable() ) {
     _errMsg = QStringLiteral("File doesn't exist or is not readable.");
@@ -1240,7 +1251,7 @@ void CSpreadsheetWorkBook::openWorkbook() {
 
 
 CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileFormat() {
-  return guessFileFormat( _srcFileName, &_errMsg, &_fileTypeDescr, &_ok );
+  return guessFileFormat( _srcPathName, &_errMsg, &_fileTypeDescr, &_ok );
 }
 
 
@@ -1294,7 +1305,7 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
 
 
 bool CSpreadsheetWorkBook::openXlsxWorkbook() {
-  _xlsx = new QXlsx::Document( _srcFileName );
+  _xlsx = new QXlsx::Document( _srcPathName );
 
   for( int i = 0; i < _xlsx->sheetNames().count(); ++i ) {
     _sheetNames.insert( i, _xlsx->sheetNames().at(i) );
@@ -1310,7 +1321,7 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
   // Open workbook, choose standard conversion
   //------------------------------------------
   QString encoding = QStringLiteral("UTF-8"); // "iso-8859-15//TRANSLIT" UTF-8 seems to be the new standard.
-  _pWB = xls::xls_open( _srcFileName.toLatin1().data(), encoding.toLatin1().data() );
+  _pWB = xls::xls_open( _srcPathName.toLatin1().data(), encoding.toLatin1().data() );
 
   if( nullptr == _pWB ) {
     _errMsg = QStringLiteral("Specified file could not be opened.  Wrong format?");
@@ -1397,7 +1408,9 @@ CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
 }
 
 
-QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QString& sheetName ) {
+#ifdef UNDEFINED
+// These functions are now obsolete: their behavior is too inconsistent.
+QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QString& sheetName, const ReadRowBehavior behavior ) {
   QVariantList result;
 
   if( !_xlsx->selectSheet( sheetName ) ) {
@@ -1435,43 +1448,61 @@ QVariantList CSpreadsheetWorkBook::rowFromSheetXlsx( const int rowIdx, const QSt
 }
 
 
-QVariantList CSpreadsheetWorkBook::rowFromSheetXls( const int rowIdx, const int sheetIdx ) {
-  QVariantList result;
-
+QVariantList CSpreadsheetWorkBook::rowFromSheetXls( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior ) {
   // Open and parse the sheet
-  //=========================
+  //-------------------------
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( _pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
 
   // Process the indicated row
-  //==========================
+  //--------------------------
   xlsWORD cellRow, cellCol;
   cellRow = xlsWORD( rowIdx );
+
+  QVector<CCellRef> mergedCellRefs( pWS->rows.lastcol + 1 );
+  QVector<CSpreadsheetCell> cells( pWS->rows.lastcol + 1 );
 
   for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
     xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
 
-    if( !cell || cell->isHidden ) {
+    if( ( nullptr == cell ) || cell->isHidden ) {
       continue;
     }
     else {
       QString msg;
-      QVariant val = CSpreadsheet::processCellXls( cell, false, msg, this );
+      CSpreadsheetCell ssCell( CSpreadsheet::processCellXls( cell, false, msg, this ), cell->colspan, cell->rowspan );
 
-      result.append( val );
+      cells.append( ssCell );
+
+      // Make a note if the cell is merged.
+      if( ssCell.hasSpan() ) {
+        mergedCellRefs.append( CCellRef( cellCol, cellRow ) );
+      }
     }
+  }
+
+  // Deal with merged cells
+  //-----------------------
+  mergedCellRefs.squeeze();
+
+  // Generate the result
+  //--------------------
+  QVariantList result;
+
+  for( int i = 0; i < cells.count(); ++i ) {
+    result.append( cells.at(i).value() );
   }
 
   return result;
 }
 
 
-QVariantList CSpreadsheetWorkBook::firstRowFromSheet( const int sheetIdx ) {
-  return this->rowFromSheet( 0, sheetIdx );
+QVariantList CSpreadsheetWorkBook::firstRowFromSheet( const int sheetIdx, const ReadRowBehavior behavior /* = PreserveRowMerge */ ) {
+  return this->rowFromSheet( 0, sheetIdx, behavior );
 }
 
 
-QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int sheetIdx ) {
+QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior /* = PreserveRowMerge */ ) {
   QVariantList result;
 
   if( !_ok ) {
@@ -1484,12 +1515,17 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
     return result;
   }
 
+  if( !this->readSheet( sheetIdx ) ) {
+    _errMsg = QStringLiteral( "Sheet could not be read: %1" ).arg( sheetIdx );
+    return result;
+  }
+
   switch( _fileFormat ) {
     case Format2007:
-      result = rowFromSheetXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ) );
+      result = rowFromSheetXlsx( rowIdx, _sheetNames.retrieveValue( sheetIdx ), behavior );
       break;
     case Format97_2003:
-      result = rowFromSheetXls( rowIdx, sheetIdx );
+      result = rowFromSheetXls( rowIdx, sheetIdx, behavior );
       break;
     default:
       Q_UNREACHABLE();
@@ -1499,7 +1535,7 @@ QVariantList CSpreadsheetWorkBook::rowFromSheet( const int rowIdx, const int she
 
   return result;
 }
-
+#endif
 
 bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   if( !_ok ) {
@@ -1920,7 +1956,7 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
       _errMsg = QStringLiteral("File could not be written.");
     }
     else {
-      _srcFileName = filename;
+      _srcPathName = filename;
     }
   }
   return _ok;
