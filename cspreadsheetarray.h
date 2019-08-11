@@ -149,6 +149,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
     bool writeXlsx( const QString& fileName );
 
+    bool hasMergedCells() const { return !_mergedCellRefs.isEmpty(); }
     void unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
     void unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
     void unmergeColumnsAndRows( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
@@ -178,10 +179,11 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
   protected:
     void initialize();
-    void flagMergedCells( const QVector<CCellRef>& mergedCellRefs );
+
+    void flagMergedCells();
+    QSet<CCellRef> _mergedCellRefs;
 
     CSpreadsheetWorkBook* _wb;
-    bool _hasSpannedCells;
 
     void assign( const CSpreadsheet& other );
 

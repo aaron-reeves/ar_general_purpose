@@ -161,7 +161,6 @@ CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data ) {
 
 void CSpreadsheet::initialize() {
   _wb = nullptr;
-  _hasSpannedCells = false;
 }
 
 
@@ -187,7 +186,7 @@ CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
 
 void CSpreadsheet::assign( const CSpreadsheet& other ) {
   _wb = other._wb;
-  _hasSpannedCells = other._hasSpannedCells;
+  _mergedCellRefs = other._mergedCellRefs;
 
   for( int r = 0; r < this->nRows(); ++r ) {
     for( int c = 0; c < this->nCols(); ++c ) {
@@ -343,7 +342,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   //    b) Every value in the first row should be a string(?)
   //    c) For all subsequent rows, there cannot be more columns than in the header row.
 
-  if( this->_hasSpannedCells ) {
+  if( this->hasMergedCells() ) {
     result = false;
   }
   else if( containsHeaderRow ) {
@@ -610,11 +609,9 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   // Deal with merged cells
   QList<QXlsx::CellRange> mergedCells = xlsx->currentWorksheet()->mergedCells();
 
-  QVector<CCellRef> mergedCellRefs;
+  _mergedCellRefs.clear();
 
   if( !mergedCells.isEmpty() ) {
-    _hasSpannedCells = true;
-
     int originCol, originRow;
     int rowSpan, colSpan;
 
@@ -631,10 +628,10 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       this->value( originCol, originRow )._isPartOfMergedRow = ( 1 < colSpan );
       this->value( originCol, originRow )._isPartOfMergedCol = ( 1 < rowSpan );
 
-      mergedCellRefs.append( CCellRef( originCol, originRow ) );
+      _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
     }
 
-    flagMergedCells( mergedCellRefs );
+    flagMergedCells();
   }
 
   if( displayVerboseOutput )
@@ -661,7 +658,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       .arg( QString::number( 1 ), QString::number( pWS->rows.lastrow + 1 ), QString::number( 1 ), QString::number( pWS->rows.lastcol ) )
     << endl;
 
-  QVector<CCellRef> mergedCellRefs;
+  _mergedCellRefs.clear();
 
   for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
     for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
@@ -684,7 +681,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
         // Make a note if the cell is merged.
         if( ssCell.hasSpan() ) {
-          mergedCellRefs.append( CCellRef( cellCol, cellRow ) );
+          _mergedCellRefs.insert( CCellRef( cellCol, cellRow ) );
         }
 
         if( displayVerboseOutput ) {
@@ -696,9 +693,8 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
     }
   }
 
-  if( !mergedCellRefs.isEmpty() ) {
-    _hasSpannedCells = true;
-    flagMergedCells( mergedCellRefs );
+  if( this->hasMergedCells() ) {
+    flagMergedCells();
   }
 
   if( displayVerboseOutput )
@@ -828,15 +824,15 @@ QVariant CSpreadsheet::processCellXls( xls::xlsCell* cell, const bool displayVer
 
 
 
-void CSpreadsheet::flagMergedCells( const QVector<CCellRef>& mergedCellRefs ) {
+void CSpreadsheet::flagMergedCells() {
   // Cells that span multiple columns are part of a merged ROW.
   // Cells that span multiple rows are part of a merged COLUMN.
 
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
-  for( int i = 0; i < mergedCellRefs.count(); ++i ) {
-    c = mergedCellRefs.at(i).col;
-    r = mergedCellRefs.at(i).row;
+  foreach( CCellRef ref, _mergedCellRefs ) {
+    c = ref.col;
+    r = ref.row;
 
     firstCol = c;
     lastCol = firstCol + this->cell( c, r ).colSpan();
@@ -898,54 +894,73 @@ void CSpreadsheet::debugMerges() {
 void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells /* = nullptr */) {
   int firstCol, lastCol, firstRow, lastRow;
 
+  QVector<CCellRef> refsToRemove;
+  QVector<CCellRef> refsToAdd;
+
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
-  for( int c = 0; c < this->nCols(); ++c ) {
-    for( int r = 0; r < this->nRows(); ++r ) {
+  foreach( const CCellRef ref, _mergedCellRefs ) {
+    int c = ref.col;
+    int r = ref.row;
 
-      if( this->cell(c, r).hasSpan() ) {
-        firstCol = c;
-        lastCol = firstCol + this->cell( c, r ).colSpan();
-        firstRow = r;
-        lastRow = firstRow + this->cell( c, r ).rowSpan();
+    firstCol = c;
+    lastCol = firstCol + this->cell( c, r ).colSpan();
+    firstRow = r;
+    lastRow = firstRow + this->cell( c, r ).rowSpan();
 
-        if( this->cell(c, r).hasColSpan() ) {
-          if( nullptr != rowsWithMergedCells ) {
-            rowsWithMergedCells->insert( r );
+    if( this->cell(c, r).hasColSpan() ) {
+      if( nullptr != rowsWithMergedCells ) {
+        rowsWithMergedCells->insert( r );
+      }
+
+      for( int cc = firstCol; cc < lastCol; ++cc ) {
+        for( int rr = firstRow; rr < lastRow; ++rr ) {
+          if( c != cc ) {
+            if( duplicateValues )
+              this->at( cc, r )._value = this->at( c, r ).value();
+            else
+              this->at( cc, r )._value = QVariant();
           }
 
-          for( int cc = firstCol; cc < lastCol; ++cc ) {
-            for( int rr = firstRow; rr < lastRow; ++rr ) {
-              if( c != cc ) {
-                if( duplicateValues )
-                  this->at( cc, r )._value = this->at( c, r ).value();
-                else
-                  this->at( cc, r )._value = QVariant();
-              }
+          this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // Should be same rowspan as parent row
+          this->at( cc, rr )._colSpan = 1;
+          this->at( cc, rr )._isPartOfMergedRow = false;
 
-              this->at( cc, r )._rowSpan = this->at( c, r ).rowSpan(); // Should be same rowspan as parent row
-              this->at( cc, rr )._colSpan = 1;
-              this->at( cc, rr )._isPartOfMergedRow = false;
+          if( this->at( cc, r ).hasSpan() ) {
+            refsToAdd.append( CCellRef( cc, r ) );
+          }
+          if( this->at( cc, rr ).hasSpan() ) {
+            refsToAdd.append( CCellRef( cc, rr ) );
+          }
 
-              if( rr == firstRow ) {
-                // Remove this cell from _originCell's collection
-                if( nullptr != this->at( cc, rr )._originCell ) {
-                  this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
-                  this->at( cc, rr )._originCell = nullptr;
-                  this->at( cc, rr )._originCellRef = CCellRef();
-                }
-              }
-              else {
-                this->at( cc, rr )._originCell = &(this->at( cc, r ));
-                this->at( cc, rr )._originCellRef = CCellRef( cc, r );
-                // Add this cell to _originCell's collection
-                this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
-              }
+
+          if( rr == firstRow ) {
+            // Remove this cell from _originCell's collection
+            if( nullptr != this->at( cc, rr )._originCell ) {
+              this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
+              this->at( cc, rr )._originCell = nullptr;
+              this->at( cc, rr )._originCellRef = CCellRef();
             }
+          }
+          else {
+            this->at( cc, rr )._originCell = &(this->at( cc, r ));
+            this->at( cc, rr )._originCellRef = CCellRef( cc, r );
+            // Add this cell to _originCell's collection
+            this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
           }
         }
       }
-
     }
+
+    if( !this->cell(c, r).hasSpan() ) {
+      refsToRemove.append( ref );
+    }
+  }
+
+  foreach( const CCellRef ref, refsToRemove ) {
+    _mergedCellRefs.remove( ref );
+  }
+  foreach( const CCellRef ref, refsToAdd ) {
+    _mergedCellRefs.insert( ref );
   }
 }
 
@@ -954,56 +969,73 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithM
 void CSpreadsheet::unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells /* = nullptr */ ) {
   int firstCol, lastCol, firstRow, lastRow;
 
+  QVector<CCellRef> refsToRemove;
+  QVector<CCellRef> refsToAdd;
+
   // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
-  for( int c = 0; c < this->nCols(); ++c ) {
-    for( int r = 0; r < this->nRows(); ++r ) {
+  foreach( const CCellRef ref, _mergedCellRefs ) {
+    int c = ref.col;
+    int r = ref.row;
 
-      if( this->cell(c, r).hasSpan() ) {
-        firstCol = c;
-        lastCol = firstCol + this->cell( c, r ).colSpan();
-        firstRow = r;
-        lastRow = firstRow + this->cell( c, r ).rowSpan();
+    firstCol = c;
+    lastCol = firstCol + this->cell( c, r ).colSpan();
+    firstRow = r;
+    lastRow = firstRow + this->cell( c, r ).rowSpan();
 
-        if( this->cell(c, r).hasRowSpan() ) {
-          if( nullptr != colsWithMergedCells ) {
-            colsWithMergedCells->insert( c );
+    if( this->cell(c, r).hasRowSpan() ) {
+      if( nullptr != colsWithMergedCells ) {
+        colsWithMergedCells->insert( c );
+      }
+
+      for( int cc = firstCol; cc < lastCol; ++cc ) {
+        for( int rr = firstRow; rr < lastRow; ++rr ) {
+
+          if( rr != r ) {
+            if( duplicateValues )
+              this->at( c, rr )._value = this->at( c, r ).value();
+            else
+              this->at( c, rr )._value = QVariant();
           }
 
-          for( int cc = firstCol; cc < lastCol; ++cc ) {
-            for( int rr = firstRow; rr < lastRow; ++rr ) {
+          this->at( c, rr )._colSpan = this->at( c, r ).colSpan(); // Should be same colspan as parent row
+          this->at( cc, rr )._rowSpan = 1;
+          this->at( cc, rr )._isPartOfMergedCol = false;
 
-              if( rr != r ) {
-                if( duplicateValues )
-                  this->at( c, rr )._value = this->at( c, r ).value();
-                else
-                  this->at( c, rr )._value = QVariant();
-              }
+          if( this->at( c, rr ).hasSpan() ) {
+            refsToAdd.append( CCellRef( c, rr ) );
+          }
+          if( this->at( cc, rr ).hasSpan() ) {
+            refsToAdd.append( CCellRef( cc, rr ) );
+          }
 
-              this->at( c, rr )._colSpan = this->at( c, r ).colSpan(); // Should be same colspan as parent row
-              this->at( cc, rr )._rowSpan = 1;
-              this->at( cc, rr )._isPartOfMergedCol = false;
-
-              if( cc == firstCol ) {
-                // Remove this cell from _originCell's collection
-                if( nullptr != this->at( cc, rr )._originCell ) {
-                  this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
-                  this->at( cc, rr )._originCell = nullptr;
-                  this->at( cc, rr )._originCellRef = CCellRef();
-                }
-              }
-              else {
-                // Add this cell to _originCell's collection
-                this->at( cc, rr )._originCell = &(this->at( c, rr ));
-                this->at( cc, rr )._originCellRef = CCellRef( c, rr );
-                this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
-              }
-
+          if( cc == firstCol ) {
+            // Remove this cell from _originCell's collection
+            if( nullptr != this->at( cc, rr )._originCell ) {
+              this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
+              this->at( cc, rr )._originCell = nullptr;
+              this->at( cc, rr )._originCellRef = CCellRef();
             }
+          }
+          else {
+            // Add this cell to _originCell's collection
+            this->at( cc, rr )._originCell = &(this->at( c, rr ));
+            this->at( cc, rr )._originCellRef = CCellRef( c, rr );
+            this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
           }
         }
       }
-
     }
+
+    if( !this->cell(c, r).hasSpan() ) {
+      refsToRemove.append( ref );
+    }
+  }
+
+  foreach( const CCellRef ref, refsToRemove ) {
+    _mergedCellRefs.remove( ref );
+  }
+  foreach( const CCellRef ref, refsToAdd ) {
+    _mergedCellRefs.insert( ref );
   }
 }
 
@@ -1015,8 +1047,6 @@ void CSpreadsheet::unmergeColumnsAndRows(
 ) {
   unmergeRows( duplicateValues, rowsWithMergedCells );
   unmergeColumns( duplicateValues, colsWithMergedCells );
-
-  _hasSpannedCells = false;
 }
 
 
@@ -1029,7 +1059,9 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
   else
     parentCell = this->at( c, r )._originCell;
 
-  foreach( CCellRef cellRef, parentCell->_linkedCellRefs ) {
+  QVector<CCellRef> refsToRemove;
+
+  foreach( const CCellRef cellRef, parentCell->_linkedCellRefs ) {
     CSpreadsheetCell* cell = &(this->at( cellRef.col, cellRef.row ) );
 
     if( cell != parentCell ) {
@@ -1045,6 +1077,8 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
     cell->_rowSpan = 1;
     cell->_originCell = nullptr;
     cell->_originCellRef = CCellRef();
+
+    refsToRemove.append( cellRef );
   }
 
   parentCell->_isPartOfMergedCol = false;
@@ -1052,6 +1086,14 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
   parentCell->_colSpan = 1;
   parentCell->_rowSpan = 1;
   parentCell->_linkedCellRefs.clear();
+
+  refsToRemove.append( CCellRef( c, r ) );
+
+  foreach( const CCellRef ref, refsToRemove ) {
+    if( _mergedCellRefs.contains( ref ) ) {
+      _mergedCellRefs.remove( ref );
+    }
+  }
 }
 
 
