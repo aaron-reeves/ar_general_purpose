@@ -75,12 +75,11 @@ void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
   _rowSpan = other._rowSpan;
   _isPartOfMergedRow = other._isPartOfMergedRow;
   _isPartOfMergedCol = other._isPartOfMergedCol;
-  _originCell = other._originCell;
 
-  #ifdef FIXME
-    qDebug() << "FIXME: Is this right?";
-  #endif
-  _linkedCells = other._linkedCells;
+  _originCell = nullptr; // WARNING: This must be set by the spreadsheet, using _originCellRef!
+
+  _originCellRef = other._originCellRef;
+  _linkedCellRefs = other._linkedCellRefs;
 }
 
 
@@ -108,7 +107,7 @@ void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) c
              << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
              << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
              << "Value" << this->value().toString()
-             << "nLinked" << this->_linkedCells.count()
+             << "nLinked" << this->_linkedCellRefs.count()
              << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
   }
   else {
@@ -116,7 +115,7 @@ void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) c
              << "MergeC" << this->isPartOfMergedCol() << "MergeR" << this->isPartOfMergedRow()
              << "ColSpan" << this->colSpan() << "RowSpan" << this->rowSpan()
              << "Value" << this->value().toString()
-             << "nLinked" << this->_linkedCells.count()
+             << "nLinked" << this->_linkedCellRefs.count()
              << "OrigC" << QString::number( qlonglong( this->_originCell ), 16 ) << "OrigCVal" << originStr;
   }
 }
@@ -167,6 +166,7 @@ void CSpreadsheet::initialize() {
 
 
 CSpreadsheet::~CSpreadsheet() {
+  //qDebug() << endl << endl << "----- DESTROYING CSpreadsheet" << endl << endl;
   // Do nothing else
 }
 
@@ -188,6 +188,14 @@ CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
 void CSpreadsheet::assign( const CSpreadsheet& other ) {
   _wb = other._wb;
   _hasSpannedCells = other._hasSpannedCells;
+
+  for( int r = 0; r < this->nRows(); ++r ) {
+    for( int c = 0; c < this->nCols(); ++c ) {
+      if( !this->cell(c, r)._originCellRef.isNull() ) {
+        this->cell(c, r)._originCell = &( this->cell( this->cell(c, r)._originCellRef ) );
+      }
+    }
+  }
 }
 
 
@@ -829,25 +837,28 @@ void CSpreadsheet::flagMergedCells( const QVector<CCellRef>& mergedCellRefs ) {
         if( this->cell(c, r).hasColSpan() ) {
           this->at( cc, rr )._isPartOfMergedRow = true;
           this->at( cc, rr )._originCell = &(this->at( c, r ));
+          this->at( cc, rr )._originCellRef = CCellRef( c, r );
 
           // Add this cell to _originCell's collection
-          this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
+          this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
         }
 
         if( this->cell(c, r).hasRowSpan() ) {
           this->at( cc, rr )._isPartOfMergedCol = true;
           this->at( cc, rr )._originCell = &(this->at( c, r ));
+          this->at( cc, rr )._originCellRef = CCellRef( c, r );
 
           // Add this cell to _originCell's collection
-          this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr ) ) );
+          this->at( cc, rr )._originCell->_linkedCellRefs.insert(CCellRef( cc, rr ) );
         }
       }
     }
 
     if( this->at( c, r )._originCell == &(this->at( c, r ) ) ) {
       // Remove this cell from _originCell's collection
-      this->at( c, r )._originCell->_linkedCells.remove( &(this->at( c, r ) ) );
+      this->at( c, r )._originCell->_linkedCellRefs.remove( CCellRef( c, r ) );
       this->at( c, r )._originCell = nullptr;
+      this->at( c, r )._originCellRef = CCellRef();
     }
   }
 }
@@ -866,7 +877,7 @@ void CSpreadsheet::debugMerges() {
                << "MergeC" << this->at( c, r ).isPartOfMergedCol() << "MergeR" << this->at( c, r ).isPartOfMergedRow()
                << "ColSpan" << this->at( c, r ).colSpan() << "RowSpan" << this->at( c, r ).rowSpan()
                << "Value" << this->at( c, r ).value().toString()
-               << "nLinked" << this->at( c, r )._linkedCells.count()
+               << "nLinked" << this->at( c, r )._linkedCellRefs.count()
                << "OrigC" << QString::number( qlonglong( this->at( c, r )._originCell ), 16 ) << "OrigCVal" << originStr;
     }
   }
@@ -907,14 +918,16 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithM
               if( rr == firstRow ) {
                 // Remove this cell from _originCell's collection
                 if( nullptr != this->at( cc, rr )._originCell ) {
-                  this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
+                  this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
                   this->at( cc, rr )._originCell = nullptr;
+                  this->at( cc, rr )._originCellRef = CCellRef();
                 }
               }
               else {
                 this->at( cc, rr )._originCell = &(this->at( cc, r ));
+                this->at( cc, rr )._originCellRef = CCellRef( cc, r );
                 // Add this cell to _originCell's collection
-                this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr )) );
+                this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
               }
             }
           }
@@ -962,14 +975,16 @@ void CSpreadsheet::unmergeColumns( const bool duplicateValues, QSet<int>* colsWi
               if( cc == firstCol ) {
                 // Remove this cell from _originCell's collection
                 if( nullptr != this->at( cc, rr )._originCell ) {
-                  this->at( cc, rr )._originCell->_linkedCells.remove( &(this->at( cc, rr ) ) );
+                  this->at( cc, rr )._originCell->_linkedCellRefs.remove( CCellRef( cc, rr ) );
                   this->at( cc, rr )._originCell = nullptr;
+                  this->at( cc, rr )._originCellRef = CCellRef();
                 }
               }
               else {
                 // Add this cell to _originCell's collection
                 this->at( cc, rr )._originCell = &(this->at( c, rr ));
-                this->at( cc, rr )._originCell->_linkedCells.insert( &(this->at( cc, rr )) );
+                this->at( cc, rr )._originCellRef = CCellRef( c, rr );
+                this->at( cc, rr )._originCell->_linkedCellRefs.insert( CCellRef( cc, rr ) );
               }
 
             }
@@ -1003,7 +1018,9 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
   else
     parentCell = this->at( c, r )._originCell;
 
-  foreach( CSpreadsheetCell* cell, parentCell->_linkedCells ) {
+  foreach( CCellRef cellRef, parentCell->_linkedCellRefs ) {
+    CSpreadsheetCell* cell = &(this->at( cellRef.col, cellRef.row ) );
+
     if( cell != parentCell ) {
       if( duplicateValues )
         cell->_value = parentCell->value();
@@ -1016,13 +1033,14 @@ void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateV
     cell->_colSpan = 1;
     cell->_rowSpan = 1;
     cell->_originCell = nullptr;
+    cell->_originCellRef = CCellRef();
   }
 
   parentCell->_isPartOfMergedCol = false;
   parentCell->_isPartOfMergedRow = false;
   parentCell->_colSpan = 1;
   parentCell->_rowSpan = 1;
-  parentCell->_linkedCells.clear();
+  parentCell->_linkedCellRefs.clear();
 }
 
 

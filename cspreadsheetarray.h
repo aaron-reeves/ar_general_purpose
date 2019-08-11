@@ -35,19 +35,30 @@ class CCellRef {
     CCellRef& operator=( const CCellRef& other ) { col = other.col; row = other.row; return *this; }
     ~CCellRef() { /* Nothing to do here */ }
 
+    bool isNull() const { return( (-1 == col) && (-1 == row) ); }
+
     int col;
     int row;
 };
 
+inline bool operator== (const CCellRef& k1, const CCellRef& k2 ) {
+  return ( (k1.col == k2.col) && (k1.row == k2.row) );
+}
+
+inline uint qHash( const CCellRef& key ) {
+  return qHash( QPair<int,int>( key.col, key.row ) );
+}
+
 
 class CSpreadsheetCell {
   friend class CSpreadsheet;
+  friend class CTwoDArray<CSpreadsheetCell>;
+  friend class QVector<CSpreadsheetCell>;
+
   public:
     CSpreadsheetCell();
     CSpreadsheetCell( const QVariant& val );
     CSpreadsheetCell( const QVariant& val, const int colSpan, const int rowSpan );
-    CSpreadsheetCell( const CSpreadsheetCell& other );
-    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
     ~CSpreadsheetCell();
 
     bool isNull() const { return this->value().isNull(); }
@@ -78,6 +89,10 @@ class CSpreadsheetCell {
     void debug( const int c = -1, const int r = -1 ) const;
 
   protected:
+    // Long story short, these are protected, because _originCell is a pointer which can only be set by CSpreadsheet.
+    CSpreadsheetCell( const CSpreadsheetCell& other );
+    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
+
     void assign( const CSpreadsheetCell& other );
 
     QVariant _value;
@@ -94,8 +109,9 @@ class CSpreadsheetCell {
     // That's what this pointer is for.
     // It will be set by CSpreadsheet.flagMergedCells() and changed as needed by other CSpreadsheet merge/unmerge functions.
     CSpreadsheetCell* _originCell;
+    CCellRef _originCellRef;
 
-    QSet<CSpreadsheetCell*> _linkedCells;
+    QSet<CCellRef> _linkedCellRefs;
 };
 
 
@@ -115,6 +131,8 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     CSpreadsheetCell& cell( const int c, const int r ) { return this->value( c, r ); }
     const CSpreadsheetCell& cell( const int c, const int r ) const { return this->value( c, r ); }
+    CSpreadsheetCell& cell( const CCellRef& cellRef ) { return this->value( cellRef.col, cellRef.row ); }
+    const CSpreadsheetCell& cell( const CCellRef& cellRef ) const { return this->value( cellRef.col, cellRef.row ); }
 
     QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
     QVariant cellValue( const QString& cellLabel ) const;
