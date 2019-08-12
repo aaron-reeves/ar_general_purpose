@@ -30,6 +30,7 @@ class CTwoDArray {
 
     // Sizing
     //-------
+    void clear() { _data.clear(); _nRows = 0; _nCols = 0; }
     void setSize( const int nCols, const int nRows ); // This currently assumes that the object is empty.
     void setSize( const int nCols, const int nRows, const T defaultVal ); // This currently assumes that the object is empty.
     void fill( const T val ); // Will overwrite existing data
