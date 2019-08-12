@@ -84,9 +84,73 @@ int testRows( CSpreadsheetWorkBook* wb ) {
 }
 
 
+int xlInfo( CSpreadsheetWorkBook* wb ) {
+  cout << endl;
+  cout << "File name                  : " << QFileInfo( wb->sourcePathName() ).fileName() << endl;
+  cout << "File format                : " << wb->fileFormatAsString() << endl;
+
+  QString msg = wb->magicFileTypeDescr();
+  if( 60 > msg.length() ) {
+    cout << "Magic file description     : " << msg << endl;
+  }
+  else {
+    QStringList msgList = msg.split( ',' );
+     cout << "Magic file description     : " << endl;
+    for( int j = 0; j < msgList.count(); ++j ) {
+      cout << "  " << msgList.at(j).trimmed() << endl;
+    }
+
+    //msg = prettyPrint( msg, 50, false, false, 2 );
+    //cout << "Magic file description   : " << endl;
+    //cout << msg;
+  }
+
+  cout << "1904 date system            : " << boolToText( wb->isXls1904DateSystem() ) << endl;
+  cout << "Number of sheets            : " << wb->sheetCount() << endl;
+  cout << "----------------------------- " << endl;
+
+  for( int i = 0; i < wb->sheetCount(); ++i ) {
+    cout << "  Sheet name                : " << wb->sheetName(i) << endl;
+    cout << "    Sheet is empty          : " << boolToText( wb->sheet(i).isEmpty() ) << endl;
+
+    if( !wb->sheet(i).isEmpty() ) {
+      cout << "    Sheet dimensions        : " << wb->sheet(i).nCols() << " cols x " << wb->sheet(i).nRows() << " rows" << endl;
+      cout << "    Has empty rows          : " << boolToText( wb->sheet(i).hasEmptyRows() ) << endl;
+      cout << "    Has empty columns       : " << boolToText( wb->sheet(i).hasEmptyColumns() ) << endl;
+      cout << "    Sheet is tidy           : " << boolToText( wb->sheet(i).isTidy( true ) ) << endl;
+      cout << "    Number of merged ranges : " << wb->sheet(i).mergedRangeCount() << endl;
+
+      QStringList firstRow = wb->sheet(i).rowAsStringList(0);
+      QString msg;
+      for( int j = 0; j < firstRow.count(); ++j ) {
+        msg.append( QStringLiteral( "'%1', " ).arg( firstRow.at(j) ) );
+      }
+      if( !msg.isEmpty() ) {
+        msg = msg.left( msg.length() - 2 );
+      }
+
+      if( 60 > msg.length() ) {
+        cout << "    First row               : " << msg << endl;
+      }
+      else {
+        msg = prettyPrint( msg, 50, true, true, 4 );
+        cout << "    First row               : " << endl;
+        cout << msg;
+      }
+    }
+
+    cout << endl;
+  }
+
+  cout << endl;
+
+  return 0;
+}
+
+
 int main( int argc, char* argv[] ) {
   if( argc < 2 ) {
-    qDebug() << "Missing file name parameter.";
+    cout << "Missing file name parameter." << endl;
     return -1;
   }
 
@@ -97,13 +161,15 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  if( !wb.readSheet(0) ) {
-    qDebug() << "Sheet read failed:" << wb.errorMessage();
+  if( !wb.readAllSheets() ) {
+    cout << "Sheet read failed:" << wb.errorMessage() << endl;
     return -1;
   }
 
-  return unmergeFiles( &wb );
+  //return unmergeFiles( &wb );
   //return testRows( &wb );
+
+  return xlInfo( &wb );
 }
 
 
