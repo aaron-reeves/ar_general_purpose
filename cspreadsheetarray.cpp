@@ -342,7 +342,12 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   //    b) Every value in the first row should be a string(?)
   //    c) For all subsequent rows, there cannot be more columns than in the header row.
 
-  if( this->hasMergedCells() ) {
+  if( this->isEmpty() ) {
+    // An empty sheet can be tidy if it does not contain a header row.
+    // If an empty sheet should have contained a header row, then it isn't tidy.
+    return !containsHeaderRow;
+  }
+  else if( this->hasMergedCells() ) {
     result = false;
   }
   else if( containsHeaderRow ) {
@@ -379,27 +384,29 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
 
     // Check all subsequent rows
     //--------------------------
-    for( int r = 1; r < this->nRows(); ++r ) {
-      QStringList data;
-      for( int c = 0; c < this->nCols(); ++c ) {
-        data.append( this->at( c, r ).value().toString() );
-      }
-
-      bool ok = false;
-      while( !ok && !data.isEmpty() ) {
-        if( 0 < data.last().trimmed().length() ) {
-          ok = true;
+    if( 1 < this->nRows() ) {
+      for( int r = 1; r < this->nRows(); ++r ) {
+        QStringList data;
+        for( int c = 0; c < this->nCols(); ++c ) {
+          data.append( this->at( c, r ).value().toString() );
         }
-        else {
-          data.removeLast();
+
+        bool ok = false;
+        while( !ok && !data.isEmpty() ) {
+          if( 0 < data.last().trimmed().length() ) {
+            ok = true;
+          }
+          else {
+            data.removeLast();
+          }
         }
-      }
 
-      if( data.length() > headers.length() ) {
-        result = false;
-        break;
-      }
+        if( data.length() > headers.length() ) {
+          result = false;
+          break;
+        }
 
+      }
     }
   }
 
@@ -604,6 +611,16 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       CSpreadsheetCell ssCell( val, 0, 0 );
       this->setValue( col - 1, row - 1, ssCell );
     }
+  }
+
+  // Empty spreadsheets of this type report that they have a single cell, but the cell value is null.
+  // If that's the case, make sure that the data structure really is empty.
+  if( ( 1 == this->nCols() ) && ( 1 == this->nRows() ) && this->cellValue( 0, 0 ).isNull() ) {
+    if( displayVerboseOutput )
+      cout << "Worksheet is empty, read successfully." << endl;
+
+    this->clear();
+    return true;
   }
 
   // Deal with merged cells
@@ -1419,6 +1436,24 @@ CSpreadsheetWorkBook::~CSpreadsheetWorkBook() {
 }
 
 
+QString CSpreadsheetWorkBook::fileFormatAsString() const {
+  return fileFormatAsString( _fileFormat );
+}
+
+
+QString CSpreadsheetWorkBook::fileFormatAsString( const SpreadsheetFileFormat fmt ) {
+  QString result;
+
+  switch( fmt ) {
+    case FormatUnknown: result = QStringLiteral( "Format unknown" ); break;
+    case Format2007   : result = QStringLiteral( "Microsoft Excel 2007 or later (xlsx)" ); break;
+    case Format97_2003: result = QStringLiteral( "Microsoft Excel 97 - 2003 (xls, BIFF5 or BIFF8)" ); break;
+  }
+
+  return result;
+}
+
+
 bool CSpreadsheetWorkBook::hasSheet( const int idx ) {
   return _sheetNames.containsKey( idx );
 }
@@ -1646,7 +1681,7 @@ bool CSpreadsheetWorkBook::readAllSheets() {
 }
 
 
-bool CSpreadsheetWorkBook::isXls1904DateSystem() {
+bool CSpreadsheetWorkBook::isXls1904DateSystem() const {
   if( Format97_2003 != _fileFormat )
     return false;
   else
@@ -1654,7 +1689,7 @@ bool CSpreadsheetWorkBook::isXls1904DateSystem() {
 }
 
 
-bool CSpreadsheetWorkBook::isXlsDate(const int xf, const double d ) {
+bool CSpreadsheetWorkBook::isXlsDate(const int xf, const double d ) const {
   if( Format97_2003 != _fileFormat ) {
     return false;
   }
@@ -1701,7 +1736,7 @@ bool CSpreadsheetWorkBook::isXlsDate(const int xf, const double d ) {
 }
 
 
-bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) {
+bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) const {
   if( Format97_2003 != _fileFormat ) {
     return false;
   }
@@ -1734,7 +1769,7 @@ bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) {
 }
 
 
-bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) {
+bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) const {
   Q_UNUSED( d );
 
   if( Format97_2003 != _fileFormat ) {

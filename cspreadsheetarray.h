@@ -150,6 +150,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool writeXlsx( const QString& fileName );
 
     bool hasMergedCells() const { return !_mergedCellRefs.isEmpty(); }
+    int mergedRangeCount() const { return _mergedCellRefs.count(); }
     void unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
     void unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
     void unmergeColumnsAndRows( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
@@ -229,6 +230,9 @@ class CSpreadsheetWorkBook {
     bool error() const { return !_ok; }
     QString errorMessage() const { return _errMsg; }
     QString magicFileTypeDescr() const { return _fileTypeDescr; }
+    SpreadsheetFileFormat fileFormat() const { return _fileFormat; }
+    QString fileFormatAsString() const;
+    static QString fileFormatAsString( const SpreadsheetFileFormat fmt );
 
     int sheetCount() const { return _sheetNames.count(); }
     bool hasSheet( const int idx );
@@ -238,10 +242,10 @@ class CSpreadsheetWorkBook {
     CSpreadsheet& sheet( const int idx );
     CSpreadsheet& sheet( const QString& sheetName );
 
-    bool isXls1904DateSystem();
-    bool isXlsDate( const int xf, const double d );
-    bool isXlsTime( const int xf, const double d );
-    bool isXlsDateTime( const int xf, const double d );
+    bool isXls1904DateSystem() const;
+    bool isXlsDate( const int xf, const double d ) const;
+    bool isXlsTime( const int xf, const double d ) const;
+    bool isXlsDateTime( const int xf, const double d ) const;
 
 
     // Functions for manipulating and writing workbooks
