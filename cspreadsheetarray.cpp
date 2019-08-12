@@ -1442,11 +1442,12 @@ QString CSpreadsheetWorkBook::sheetName( const int idx ) {
 }
 
 CSpreadsheet& CSpreadsheetWorkBook::sheet( const int idx ) {
+  readSheet( idx );
   return _sheets[idx];
 }
 
 CSpreadsheet& CSpreadsheetWorkBook::sheet( const QString& sheetName ) {
-  return _sheets[ _sheetNames.retrieveKey( sheetName ) ];
+  return sheet( _sheetNames.retrieveKey( sheetName ) );
 }
 
 
