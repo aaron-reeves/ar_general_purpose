@@ -611,6 +611,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       CSpreadsheetCell ssCell( val, 0, 0 );
       this->setValue( col - 1, row - 1, ssCell );
     }
+    QCoreApplication::processEvents();
   }
 
   // Empty spreadsheets of this type report that they have a single cell, but the cell value is null.
@@ -648,6 +649,8 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
     }
 
+    QCoreApplication::processEvents();
+
     flagMergedCells();
   }
 
@@ -663,6 +666,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   //=========================
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
+  QCoreApplication::processEvents();
 
   // Process all cells of the sheet
   //===============================
@@ -708,6 +712,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         }
       }
     }
+    QCoreApplication::processEvents();
   }
 
   if( this->hasMergedCells() ) {
