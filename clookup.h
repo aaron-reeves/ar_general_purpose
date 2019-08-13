@@ -102,7 +102,7 @@ class CLookup {
 
       void debug() {
         int i;
-        qDebug() << QString( "Forward:" );
+        qDebug() << "Forward:";
         for( i = 0; i < _forwardMap.count(); ++i )
           qDebug() << "  " << _forwardMap.keys().at(i) << _forwardMap.values().at(i);
         qDebug() << "Backward:";
