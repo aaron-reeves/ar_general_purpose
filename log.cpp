@@ -138,10 +138,17 @@ CAppLog::CAppLog() : QObject() {
 }
 
 
-CAppLog::CAppLog(const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */, QObject* parent /* = nullptr */ ) : QObject( parent ) {
+CAppLog::CAppLog(
+    const QString& fileName,
+    const LogLevel logLevel,
+    const FileFrequency freq /* = OneFile */,
+    const bool userSpacerLine /* = true */,
+    QObject* parent /* = nullptr */
+) : QObject( parent ) {
   initialize();
+  _useSpacerLine = userSpacerLine;
 
-  openLog( fileName, logLevel, freq );  
+  openLog( fileName, logLevel, freq );
 }
 
 
@@ -166,6 +173,8 @@ void CAppLog::initialize() {
   _windowsFriendly = false;
 
   _useMessageList = false;
+
+  _useSpacerLine = true;
 
   setLogLevel( LoggingPending );
 }
@@ -258,7 +267,7 @@ void CAppLog::setLogLevel( const LogLevel logLevel ) {
       }
       else {
         // FIXME: For the moment, fail silently.
-        //qDebug() << "Log file is not open!";  
+        //qDb() << "Log file is not open!";
       }
     }
   }
@@ -273,15 +282,19 @@ bool CAppLog::openLog() {
 
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      if( _windowsFriendly )
-        *_logTextStream << "\r\n" << ::flush;
-      else
-        *_logTextStream << ::endl << ::flush;
-      //qDebug() << "Log file is open.";
+
+      if( _useSpacerLine ) {
+        if( _windowsFriendly )
+          *_logTextStream << "\r\n" << ::flush;
+        else
+          *_logTextStream << ::endl << ::flush;
+      }
+
+      //qDb() << "Log file is open.";
       return true;
     }
     else {
-      //qDebug() << "Log file did not open!";
+      //qDb() << "Log file did not open!";
       delete _logFile;
       _logFile = nullptr;
       _logTextStream = nullptr;
@@ -399,7 +412,7 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   }
 
   if( _useStderr ) {
-    qDebug() << "          (log)" << message;
+    qDb() << "          (log)" << message;
   }
 
   if( _consoleEcho ) {

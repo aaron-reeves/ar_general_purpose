@@ -82,7 +82,13 @@ class CAppLog : public QObject {
     CAppLog();
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile, QObject* parent = nullptr );
+    CAppLog(
+      const QString& fileName,
+      const LogLevel logLevel,
+      const FileFrequency freq = OneFile,
+      const bool userSpacerLine = true,
+      QObject* parent = nullptr
+    );
     
     bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     void closeLog();
@@ -96,6 +102,7 @@ class CAppLog : public QObject {
     void setAutoTruncate( const bool val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool val ) { _consoleEcho = val; }
     void setWindowsFriendly( const bool val ) { _windowsFriendly = val; }
+    void setUseSpacerLine( const bool val ) { _useSpacerLine = val; }
 
     void logMessageUnique( const QString& message, const LogLevel logLevel );
     void logMessage( const char* message, const LogLevel logLevel ) { logMessage( QString( message ), logLevel ); }
@@ -154,6 +161,8 @@ class CAppLog : public QObject {
 
     bool _useMessageList;
     QStringList _messageList;
+
+    bool _useSpacerLine;
 };
 
 
