@@ -324,7 +324,7 @@ int CConfigFile::fillBlock( CConfigBlock* block, const QStringList& strList ) {
     lineParts = strList.at(i).split( QStringLiteral("<-") );
 
     if( 2 != lineParts.count() ) {
-      qDebug() << "Wrong number of line parts:" << lineParts;
+      qDb() << "Wrong number of line parts:" << lineParts;
       result = ConfigReturnCode::BadConfiguration;
     }
     else {
@@ -332,7 +332,7 @@ int CConfigFile::fillBlock( CConfigBlock* block, const QStringList& strList ) {
       val = lineParts.at(1).trimmed();
 
      if( block->contains( key ) ) {
-       qDebug() << "Duplicated block key";
+       qDb() << "Duplicated block key";
        result = ConfigReturnCode::BadConfiguration;
      }
      else

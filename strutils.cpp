@@ -17,6 +17,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstringlist.h>
 #include <qdebug.h>
 
+#include <ar_general_purpose/qcout.h>
+
 QStringList regularExpressionMatches( const QString& pattern, const QString& subject ) {
   QStringList matches;
 
@@ -279,14 +281,11 @@ QString leftPaddedStr( QString toPad, const int places, const QChar padChar /* =
       toPad = toPad.left( places - 1 );
     }
 
-    //qDebug() << places << str.length() << (places - str.length());
-
     origStrLen = toPad.length();
 
     if( origStrLen < places ) {
       for( i = 0; i < places - origStrLen; ++i ) {
         toPad.prepend( padChar );
-        //qDebug() << i << toPad;
       }
     }
 
@@ -304,7 +303,7 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* 
     int origStrLen;
 
     if( toPad.length() > places )
-      qDebug() << toPad << places << toPad.length() << (places - toPad.length());
+      qDb() << toPad << places << toPad.length() << (places - toPad.length());
 
     //Q_ASSERT( toPad.length() <= places );
 
@@ -366,11 +365,8 @@ QString findAndReplace( const QString& str3, const QString& str2, QString str1 )
     test4 = ( str1.trimmed() == str3 );
 
     if( test1 || test2 || test3 || test4 ) {
-      qDebug() << "Passed a test";
       str1.remove( pos, str3.length() + 1 );
-      qDebug() << str1;
       str1.insert( pos, str2 );
-      qDebug() << str1;
       pos = str1.indexOf( str3, 0 );
     }
     else {
@@ -448,8 +444,6 @@ QString splitNear( const int pos, QString& str, const int maxLenAdd, const bool 
     return result;
   }
 
-  //qDebug() << "TEST2";
-
   // Test 2: is there a suitable white space or punctuation mark for breaking the string?
   for( i = pos - 1; i > 0; --i ) {
     ch = tmp.at( i );
@@ -457,13 +451,10 @@ QString splitNear( const int pos, QString& str, const int maxLenAdd, const bool 
     if( ch.isSpace() || ( ch.isPunct() && usePunct ) ) {  // Split here!
       result = tmp.left( i ).trimmed();
       str = tmp.right( tmp.length() - i ).trimmed();
-      //qDebug() << QString( "RESULT: %1" ).arg( result );
-      //qDebug() << QString( "STR: %1" ).arg( str );
       return result;
     }
   }
 
-  //qDebug() << "---TEST3";
   // If we get this far, the string is longer than the max
   // and contains no white spaces or suitable punctuation marks
   // before the requested position.
@@ -475,9 +466,7 @@ QString splitNear( const int pos, QString& str, const int maxLenAdd, const bool 
 
   if( forceBreak ) {
     result = tmp.left( pos ).trimmed();
-    //qDebug() << QString( "Result is %1" ).arg( result );
     str = tmp.right( tmp.length() - pos ).trimmed();
-    //qDebug() << QString( "str is %1" ).arg( str );
   }
   else {
     for( i = 0; i < tmp.length(); ++i ) {
@@ -508,8 +497,6 @@ QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen, con
   tenPct = int ( prefLineLen / 10 );
   maxLen = prefLineLen + tenPct;
 
-  //qDebug() << srcStr;
-
   // First, split the source string at specified line breaks.
   srcLines = srcStr.split( '\n' );
 
@@ -520,14 +507,12 @@ QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen, con
     do {
       if( str.length() <= maxLen ) {
         destLines.append( str );
-        //qDebug() << QString( "SHRTSTR: %1" ).arg( str );
         str = QString();
         break;
       }
       else {
         str2 = splitNear( prefLineLen, str, tenPct, usePunct, forceBreak );
         destLines.append( str2 );
-        //qDebug() << QString( "LOOPING: %1" ).arg( str2 );
       }
     } while( ( str.length() > maxLen ) || ( str2 == str ) );
 
@@ -619,16 +604,14 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
 
   re = patternsToMatch.takeAt(0);
 
-  if( debug ) qDebug() << "fullLine (before processing):" << fullLine;
-  if( debug ) qDebug() << QStringLiteral( "Expression %1:" ).arg( counter ) << re.pattern();
+  if( debug ) qDb() << "fullLine (before processing):" << fullLine;
+  if( debug ) qDb() << QStringLiteral( "Expression %1:" ).arg( counter ) << re.pattern();
 
   // Start with the entire line, and eliminate characters one at a time until the pattern matches the new string.
   i = 0;
   prevMatchFound = false;
   while( i <= fullLine.length() ) {
     newPart = fullLine.left( fullLine.length() - i );
-
-    //if( debug ) qDebug() << "newPart (1):" << newPart;
 
     if( re.exactMatch( newPart) ) {
       // We found a match.  Keep going until we run out of it.
@@ -645,15 +628,11 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
     ++i;
   }
 
-  //if( debug ) qDebug() << "Initial match:" << newPart;
-
   // Now, read forward again one character at a time for as long as the pattern matches the new string.
   prevMatchFound = false;
   i = newPart.length();
   while( i <= fullLine.length() ) {
     newPart = fullLine.left(i);
-
-    //if( debug ) qDebug() << "newPart(2):" << newPart;
 
     if( !re.exactMatch( newPart ) ) {
       if( prevMatchFound ) {
@@ -673,21 +652,14 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
 
   newPart = fullLine.left(i);
   if( re.exactMatch( newPart ) ) {
-    if( debug ) qDebug() << "MATCH FOUND:" << newPart << endl;
+    if( debug ) qDb() << "MATCH FOUND:" << newPart << endl;
 
     newList.append( newPart );
-    //if( debug ) qDebug() << "Remaining line (before snip):" << fullLine.right( fullLine.length() - newPart.length() );
-
-    //if( debug ) qDebug() << fullLine.length() << newPart.length();
-
     fullLine = fullLine.right( fullLine.length() - newPart.length() );
 
     // If there was a match, we may now have a leading comma.  Lop it off, if present.
     if( fullLine[0] == QChar( ',' ) )
-    //if( !fullLine.isEmpty() && !newPart.isEmpty() )
       fullLine = fullLine.right( fullLine.length() - 1 );
-
-    //if( debug ) qDebug() << "Remaining line:" << fullLine;
 
     if( 0 < patternsToMatch.count() ) { // Is there more to do?
       success = reprocessCsv( fullLine, patternsToMatch, newList, nExpectedParts - 1, nTotalParts );
@@ -696,14 +668,13 @@ bool reprocessCsv( QString fullLine, QList<QRegExp> patternsToMatch, QStringList
       if( fullLine.isEmpty() )
         success = true;
       else {
-        if( debug ) qDebug() << "There are bits left of the string:" << fullLine;
+        if( debug ) qDb() << "There are bits left of the string:" << fullLine;
         success = false;
       }
     }
   }
   else {
     // There is nothing more we can do.
-    //qDebug() << "Failure trigger: 1";
     success = false;
     //newList.clear();
   }
@@ -730,8 +701,6 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
   while( i < fullLine.length() ) {
     newPart = fullLine.left(i);
 
-    //qDebug() << "newPart:" << newPart;
-
     if( !re.exactMatch( newPart ) ) {
       if( prevMatchFound ) {
         // We've read one character too many.
@@ -750,7 +719,6 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
 
   newPart = fullLine.left(i);
   if( re.exactMatch( newPart ) ) {
-    //qDebug() << "MATCH FOUND:" << newPart;
 
     newList.append( newPart );
     fullLine = fullLine.right( fullLine.length() - newPart.length() - 1 );// The -1 eliminates what is now a leading comma.
@@ -762,14 +730,12 @@ bool reprocessCsv_v1( QString fullLine, QList<QRegExp> patternsToMatch, QStringL
       if( fullLine.isEmpty() )
         success = true;
       else {
-        //qDebug() << "There are bits left of the string:" << fullLine;
         success = false;
       }
     }
   }
   else {
     // There is nothing more we can do.
-    //qDebug() << "Failure trigger: 1";
     success = false;
     //newList.clear();
   }
@@ -993,7 +959,6 @@ QString stringListListTableRow( const QString& label, const int len ) {
 
 void stringListListAsTable( const QList<QStringList>& rows, QTextStream* stream, const bool useHeader ) {
   if(( nullptr == stream) ) {
-    //qDebug() << "No stream in printTableFormat()";
     return;
   }
 

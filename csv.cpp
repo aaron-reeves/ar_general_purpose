@@ -18,6 +18,7 @@ Original code (class qCSV) believed to be by Shaun Case, Animal Population Healt
 #include <QDebug>
 
 #include <ar_general_purpose/strutils.h>
+#include <ar_general_purpose/qcout.h>
 
 QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',' */ ) {
   enum State {Normal, Quote} state = Normal;
@@ -29,8 +30,6 @@ QStringList CSV::parseLine( const QString& string, const QChar delimiter /* = ',
     temp = string.trimmed();
   else
     temp = string;
-
-  //qDebug() << "String size:" << temp.size();
 
   for (int i = 0; i < temp.size(); i++) {
     QChar current = temp.at(i);
@@ -476,30 +475,30 @@ QCsv::~QCsv() {
 
 
 void QCsv::debug( int nLines /* = 0 */ ) {
-  qDebug() << "qCSV contents:";
+  qDb() << "qCSV contents:";
 
-  qDebug() << "numFields:" << this->fieldCount();
-  qDebug() << "numFieldNames:" << this->fieldNames().count();
-  qDebug() << "numRows:" << this->rowCount();
-  qDebug() << "error code:" << this->error();
-  qDebug() << "error message:" << this->errorMsg();
+  qDb() << "numFields:" << this->fieldCount();
+  qDb() << "numFieldNames:" << this->fieldNames().count();
+  qDb() << "numRows:" << this->rowCount();
+  qDb() << "error code:" << this->error();
+  qDb() << "error message:" << this->errorMsg();
 
-  qDebug() << this->fieldNames().join( _delimiter ).prepend( "  " );
+  qDb() << this->fieldNames().join( _delimiter ).prepend( "  " );
 
   if( this->rowCount() > 0 ) {
     if( LineByLine == _mode )
-      qDebug() << "(There is nothing to display)";
+      qDb() << "(There is nothing to display)";
     else {
       if( (1 > nLines) || ( _data.count() < nLines ) )
         nLines = _data.count();
 
       for( int i = 0; i < nLines; ++i ) {
-        qDebug() << _data.at(i).join( _delimiter ).prepend( "  " );
+        qDb() << _data.at(i).join( _delimiter ).prepend( "  " );
       }
     }
   }
   else {
-    qDebug() << "(Nothing can be displayed)";
+    qDb() << "(Nothing can be displayed)";
   }
 }
 
@@ -1368,7 +1367,6 @@ QString QCsv::readLine() {
     nQuotes = nQuotes + tmp.count( '\"' );
   } while( 0 != nQuotes%2 );
 
-  //qDebug() << "Result: " << result;
   return result;
 }
 
@@ -1454,7 +1452,6 @@ int QCsv::readNext() {
     }
 
     if( 0 != fieldCount() && ( fieldList.count() != fieldCount() ) ) {
-      //qDebug() << "Error!";
       _error = ERROR_INVALID_FIELD_COUNT;
       _errorMsg = QStringLiteral( "Line %1: %2 fields expected, but %3 fields encountered.  Please check your file format." )
         .arg( QString::number( _currentRowNumber ), QString::number( fieldCount() ), QString::number( fieldList.count() ) )
