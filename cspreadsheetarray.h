@@ -21,6 +21,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/ctwodarray.h>
 #include <ar_general_purpose/creverselookupmap.h>
 #include <ar_general_purpose/csv.h>
+#include <ar_general_purpose/qcout.h>
 
 #include <xls.h>
 
@@ -36,6 +37,8 @@ class CCellRef {
     ~CCellRef() { /* Nothing to do here */ }
 
     bool isNull() const { return( (-1 == col) && (-1 == row) ); }
+
+    void debug() const { qDb() << "col:" << col << ", row:" << row; }
 
     int col;
     int row;
@@ -127,7 +130,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     CSpreadsheet( const CSpreadsheet& other );
     CSpreadsheet& operator=( const CSpreadsheet& other );
 
-    ~CSpreadsheet();
+    ~CSpreadsheet() override;
 
     CSpreadsheetCell& cell( const int c, const int r ) { return this->value( c, r ); }
     const CSpreadsheetCell& cell( const int c, const int r ) const { return this->value( c, r ); }
@@ -163,6 +166,8 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     bool hasEmptyRows();
     void removeEmptyColumns( const bool excludeHeaderRow = false );
     void removeEmptyRows();
+    void removeRow( const int rowIdx ) override;
+    void removeColumn( const int colIdx ) override;
 
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
@@ -182,6 +187,7 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
     void initialize();
 
     void flagMergedCells();
+    void unflagMergedCells();
     QSet<CCellRef> _mergedCellRefs;
 
     CSpreadsheetWorkBook* _wb;
@@ -226,6 +232,9 @@ class CSpreadsheetWorkBook {
     //QVariantList firstRowFromSheet( const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
     //QVariantList rowFromSheet( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
 
+    bool isReadable() const { return _isReadable; }
+    bool isWritable() const { return _isWritable; }
+    bool isOpen() const { return _isOpen; }
     bool ok() const { return _ok; }
     bool error() const { return !_ok; }
     QString errorMessage() const { return _errMsg; }
@@ -273,6 +282,8 @@ class CSpreadsheetWorkBook {
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
 
   protected:
+    void initialize();
+
     void openWorkbook();
     SpreadsheetFileFormat guessFileFormat();
 
@@ -292,6 +303,9 @@ class CSpreadsheetWorkBook {
     bool _ok; // True if the file could be read, etc.
     QString _errMsg;
     QString _fileTypeDescr;
+    bool _isReadable;
+    bool _isWritable;
+    bool _isOpen;
 
     QXlsx::Document* _xlsx;
     xls::xlsWorkBook* _pWB;
@@ -314,8 +328,8 @@ class CSpreadsheetWorkBook {
     // nearest minute, and time zones/daylight savings time are ignored completely.
     // (The time zone was when/where a spreadsheet was created can't be determined.)
     //---------------------------------------------------------------------------------
-    QHash<int, int> _xlsXFs; // key = xf index, value = format index
-    QHash<int, QString> _xlsFormats; // key = format index, value = string format
+    QHash<int, int> _xlXFs; // key = xf index, value = format index
+    QHash<int, QString> _xlFormats; // key = format index, value = string format
     bool _xlsIs1904;
     //---------------------------------------------------------------------------------
 
