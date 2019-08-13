@@ -26,7 +26,7 @@ class CTwoDArray {
     CTwoDArray& operator= ( const CTwoDArray& other );
     void assign( const CTwoDArray& other );
 
-    ~CTwoDArray();
+    virtual ~CTwoDArray();
 
     // Sizing
     //-------
@@ -48,10 +48,10 @@ class CTwoDArray {
 
     void append( const CTwoDArray<T> array );
 
-    void removeRow( const int rowIdx );
+    virtual void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
 
-    void removeColumn( const int colIdx );
+    virtual void removeColumn( const int colIdx );
     void removeColumn( const QString& colName );
 
     // Basic setter and getters
