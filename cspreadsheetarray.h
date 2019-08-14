@@ -192,6 +192,9 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void operationError();
     void operationComplete();
 
+  protected slots:
+    void terminateProcess();
+
   protected:
     void initialize();
 
@@ -209,6 +212,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     static QDate xlsDate( const int val, const bool is1904DateSystem );
     static QTime xlsTime( const double d );
     static QDateTime xlsDateTime( const double d, const bool is1904DateSystem );
+
+    bool _terminated;
 };
 
 
@@ -317,6 +322,11 @@ class CSpreadsheetWorkBook : public QObject {
     void fileSaveError();
     void fileSaveComplete();
 
+    void sigTerminateProcess();
+
+  protected slots:
+    void terminateProcess();
+
   protected:
     void initialize();
 
@@ -345,6 +355,8 @@ class CSpreadsheetWorkBook : public QObject {
 
     QXlsx::Document* _xlsx;
     xls::xlsWorkBook* _pWB;
+
+    bool _terminated;
 
     //---------------------------------------------------------------------------------
     // It's not straightforward in old Excel files to distinguish dates and times from

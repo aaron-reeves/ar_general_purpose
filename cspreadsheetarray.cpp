@@ -165,6 +165,13 @@ CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data, QObject* parent ) 
 
 void CSpreadsheet::initialize() {
   _wb = nullptr;
+
+  _terminated = false;
+}
+
+
+void CSpreadsheet::terminateProcess() {
+  _terminated = true;
 }
 
 
@@ -583,7 +590,9 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 }
 
 
-bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {  
+bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
+  _terminated = false;
+
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
       cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
@@ -626,6 +635,10 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
     emit operationProgress( row );
     QCoreApplication::processEvents();
+
+    if( _terminated ) {
+      break;
+    }
   }
 
   // Empty spreadsheets of this type report that they have a single cell, but the cell value is null.
@@ -642,6 +655,10 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
   emit operationComplete();
   QCoreApplication::processEvents();
+
+  if( _terminated ) {
+    return true;
+  }
 
   // Deal with merged cells
   QList<QXlsx::CellRange> mergedCells = xlsx->currentWorksheet()->mergedCells();
@@ -676,6 +693,9 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
     emit operationComplete();
     QCoreApplication::processEvents();
+    if( _terminated ) {
+      return true;
+    }
 
     flagMergedCells();
   }
@@ -683,12 +703,13 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   if( displayVerboseOutput )
     cout << "Worksheet has been read successfully." << endl;
 
-
   return true;
 }
 
 
 bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput /* = false */ ) {
+  _terminated = false;
+
   // Open and parse the sheet
   //=========================
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
@@ -745,6 +766,13 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
     emit operationProgress( row );
     QCoreApplication::processEvents();
+    if( _terminated ) {
+      break;
+    }
+  }
+
+  if( _terminated ) {
+    return true;
   }
 
   if( this->hasMergedCells() ) {
@@ -931,6 +959,9 @@ void CSpreadsheet::flagMergedCells() {
 
     emit operationProgress( i );
     QCoreApplication::processEvents();
+    if( _terminated ) {
+      break;
+    }
 
     ++i;
   }
@@ -1453,6 +1484,15 @@ void CSpreadsheetWorkBook::initialize() {
 
   _ok = true;
   _errMsg = QString();
+
+  _terminated = false;
+}
+
+
+void CSpreadsheetWorkBook::terminateProcess() {
+  _terminated = true;
+
+  emit sigTerminateProcess();
 }
 
 
@@ -1814,6 +1854,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   connect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
   connect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   connect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
+  connect( this, SIGNAL( sigTerminateProcess() ), &sheet, SLOT( terminateProcess() ) );
 
   switch( _fileFormat ) {
     case Format2007:
@@ -1836,6 +1877,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   disconnect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
   disconnect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   disconnect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
+  disconnect( this, SIGNAL( sigTerminateProcess() ), &sheet, SLOT( terminateProcess() ) );
 
   return _ok;
 }
