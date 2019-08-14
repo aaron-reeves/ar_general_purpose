@@ -608,7 +608,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
-  emit sheetReadStart( cellRange.lastRow() + 1 );
+  emit operationStart( QStringLiteral("ReadRowsInSheet"), cellRange.lastRow() + 1 );
   QCoreApplication::processEvents();
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
@@ -624,7 +624,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       this->setValue( col - 1, row - 1, ssCell );
     }
 
-    emit sheetNRowsRead( row );
+    emit operationProgress( row );
     QCoreApplication::processEvents();
   }
 
@@ -635,12 +635,12 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       cout << "Worksheet is empty, read successfully." << endl;
 
     this->clear();
-    emit sheetReadComplete();
+    emit operationComplete();
     QCoreApplication::processEvents();
     return true;
   }
 
-  emit sheetReadComplete();
+  emit operationComplete();
   QCoreApplication::processEvents();
 
   // Deal with merged cells
@@ -699,7 +699,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   //===============================
   xlsWORD row, col;
 
-  emit sheetReadStart( pWS->rows.lastrow + 1 );
+  emit operationStart( QStringLiteral("ReadRowsInSheet"), pWS->rows.lastrow + 1 );
   QCoreApplication::processEvents();
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
@@ -743,7 +743,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       }
     }
 
-    emit sheetNRowsRead( row );
+    emit operationProgress( row );
     QCoreApplication::processEvents();
   }
 
@@ -754,7 +754,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   if( displayVerboseOutput )
     cout << "Worksheet has been read successfully." << endl;
 
-  emit sheetReadComplete();
+  emit operationComplete();
   QCoreApplication::processEvents();
 
   return true;
@@ -1805,14 +1805,14 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
     return true;
   }
 
-  emit sheetReadStart( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
+  emit sheetReadName( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
   QCoreApplication::processEvents();
 
   CSpreadsheet sheet( this );
 
-  connect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetReadStart( int ) ) );
-  connect( &sheet, SIGNAL( sheetNRowsRead( int ) ), this, SIGNAL( sheetNRowsRead( int ) ) );
-  connect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
+  connect( &sheet, SIGNAL( operationStart( QString, int ) ), this, SIGNAL( operationStart( QString, int ) ) );
+  connect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
+  connect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   connect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
 
   connect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );
@@ -1836,9 +1836,9 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   if( _ok )
     _sheets.insert( sheetIdx, sheet );
 
-  disconnect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetReadStart( int ) ) );
-  disconnect( &sheet, SIGNAL( sheetNRowsRead( int ) ), this, SIGNAL( sheetNRowsRead( int ) ) );
-  disconnect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
+  disconnect( &sheet, SIGNAL( operationStart( QString, int ) ), this, SIGNAL( operationStart( QString, int ) ) );
+  disconnect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
+  disconnect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   disconnect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
 
   disconnect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );

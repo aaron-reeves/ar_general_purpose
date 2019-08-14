@@ -187,10 +187,10 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
 
   signals:
-    void sheetReadStart( const int nRows );
-    void sheetNRowsRead( const int rowIdx );
+    void operationStart( const QString& operation, const int nRows );
+    void operationProgress( const int rowIdx );
     void sheetReadError();
-    void sheetReadComplete();
+    void operationComplete();
 
     void sheetMergedRangesStart( const int nRanges );
     void sheetNRangesHandled( const int idx );
@@ -310,11 +310,11 @@ class CSpreadsheetWorkBook : public QObject {
     void readFileStart( int nSheets );
     void readFileComplete();
 
-    void sheetReadStart( const QString& sheetName, const int sheetIdx );
-    void sheetReadStart( const int nRows );
-    void sheetNRowsRead( const int rowIdx );
+    void sheetReadName( const QString& sheetName, const int sheetIdx );
+    void operationStart( const QString& operation, const int nRows );
+    void operationProgress( const int rowIdx );
     void sheetReadError();
-    void sheetReadComplete();
+    void operationComplete();
 
     void sheetMergedRangesStart( const int nRanges );
     void sheetNRangesHandled( const int idx );
