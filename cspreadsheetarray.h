@@ -192,6 +192,10 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void sheetReadError();
     void sheetReadComplete();
 
+    void sheetMergedRangesStart( const int nRanges );
+    void sheetNRangesHandled( const int idx );
+    void sheetMergedRangesComplete();
+
   protected:
     void initialize();
 
@@ -311,6 +315,10 @@ class CSpreadsheetWorkBook : public QObject {
     void sheetNRecordsRead( const int rowIdx );
     void sheetReadError();
     void sheetReadComplete();
+
+    void sheetMergedRangesStart( const int nRanges );
+    void sheetNRangesHandled( const int idx );
+    void sheetMergedRangesComplete();
 
     void fileSaveStart();
     void fileSaveError();

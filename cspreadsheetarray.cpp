@@ -588,6 +588,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
     if( displayVerboseOutput )
       cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
     emit sheetReadError();
+    QCoreApplication::processEvents();
     return false;
   }
   if( displayVerboseOutput )
@@ -597,6 +598,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     cout << "Cell range is out of bounds." << endl;
     emit sheetReadError();
+    QCoreApplication::processEvents();
     return false;
   }
   if( displayVerboseOutput )
@@ -607,6 +609,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
   emit sheetReadStart( cellRange.lastRow() + 1 );
+  QCoreApplication::processEvents();
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
@@ -633,8 +636,12 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
     this->clear();
     emit sheetReadComplete();
+    QCoreApplication::processEvents();
     return true;
   }
+
+  emit sheetReadComplete();
+  QCoreApplication::processEvents();
 
   // Deal with merged cells
   QList<QXlsx::CellRange> mergedCells = xlsx->currentWorksheet()->mergedCells();
@@ -642,6 +649,9 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   _mergedCellRefs.clear();
 
   if( !mergedCells.isEmpty() ) {
+    emit sheetMergedRangesStart( mergedCells.count() );
+    QCoreApplication::processEvents();
+
     int originCol, originRow;
     int rowSpan, colSpan;
 
@@ -659,8 +669,12 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       this->value( originCol, originRow )._isPartOfMergedCol = ( 1 < rowSpan );
 
       _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
+
+      emit sheetNRangesHandled( i );
+      QCoreApplication::processEvents();
     }
 
+    emit sheetMergedRangesComplete();
     QCoreApplication::processEvents();
 
     flagMergedCells();
@@ -669,7 +683,6 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   if( displayVerboseOutput )
     cout << "Worksheet has been read successfully." << endl;
 
-  emit sheetReadComplete();
 
   return true;
 }
@@ -687,6 +700,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
   xlsWORD row, col;
 
   emit sheetReadStart( pWS->rows.lastrow + 1 );
+  QCoreApplication::processEvents();
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
@@ -741,6 +755,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
     cout << "Worksheet has been read successfully." << endl;
 
   emit sheetReadComplete();
+  QCoreApplication::processEvents();
 
   return true;
 }
@@ -872,6 +887,10 @@ void CSpreadsheet::flagMergedCells() {
 
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
+  emit sheetMergedRangesStart( _mergedCellRefs.count() );
+  QCoreApplication::processEvents();
+
+  int i = 0;
   foreach( CCellRef ref, _mergedCellRefs ) {
     c = ref.col;
     r = ref.row;
@@ -909,7 +928,15 @@ void CSpreadsheet::flagMergedCells() {
       this->at( c, r )._originCell = nullptr;
       this->at( c, r )._originCellRef = CCellRef();
     }
+
+    emit sheetNRangesHandled( i );
+    QCoreApplication::processEvents();
+
+    ++i;
   }
+
+  emit sheetMergedRangesComplete();
+  QCoreApplication::processEvents();
 }
 
 void CSpreadsheet::unflagMergedCells() {
@@ -1779,13 +1806,18 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   }
 
   emit sheetReadStart( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
+  QCoreApplication::processEvents();
 
   CSpreadsheet sheet( this );
 
   connect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
-  connect( &sheet, SIGNAL( sheetNRecordsRead( int )        ), this, SIGNAL( sheetNRecordsRead( int )          ) );
-  connect( &sheet, SIGNAL( sheetReadComplete()   ), this, SIGNAL( sheetReadComplete()     ) );
-  connect( &sheet, SIGNAL( sheetReadError()      ), this, SIGNAL( sheetReadError()        ) );
+  connect( &sheet, SIGNAL( sheetNRecordsRead( int ) ), this, SIGNAL( sheetNRecordsRead( int ) ) );
+  connect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
+  connect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
+
+  connect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );
+  connect( &sheet, SIGNAL( sheetNRangesHandled( int ) )   , this, SIGNAL( sheetNRangesHandled( int ) )    );
+  connect( &sheet, SIGNAL( sheetMergedRangesComplete() )  , this, SIGNAL( sheetMergedRangesComplete() )   );
 
   switch( _fileFormat ) {
     case Format2007:
@@ -1805,9 +1837,13 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
     _sheets.insert( sheetIdx, sheet );
 
   disconnect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
-  disconnect( &sheet, SIGNAL( sheetNRecordsRead( int )        ), this, SIGNAL( sheetNRecordsRead( int )          ) );
-  disconnect( &sheet, SIGNAL( sheetReadComplete()   ), this, SIGNAL( sheetReadComplete()     ) );
-  disconnect( &sheet, SIGNAL( sheetReadError()      ), this, SIGNAL( sheetReadError()        ) );
+  disconnect( &sheet, SIGNAL( sheetNRecordsRead( int ) ), this, SIGNAL( sheetNRecordsRead( int ) ) );
+  disconnect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
+  disconnect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
+
+  disconnect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );
+  disconnect( &sheet, SIGNAL( sheetNRangesHandled( int ) )   , this, SIGNAL( sheetNRangesHandled( int ) )    );
+  disconnect( &sheet, SIGNAL( sheetMergedRangesComplete() )  , this, SIGNAL( sheetMergedRangesComplete() )   );
 
   return _ok;
 }
@@ -1831,6 +1867,7 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileStart( _sheetNames.count() );
+  QCoreApplication::processEvents();
 
   bool result = true;
   for( int i = 0; i < _sheetNames.count(); ++i ) {
@@ -1838,6 +1875,7 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileComplete();
+  QCoreApplication::processEvents();
 
   return result;
 }
@@ -2226,9 +2264,11 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     _ok = false;
     _errMsg = QStringLiteral("Cannot save workbook: is it not writable.");
     emit fileSaveError();
+    QCoreApplication::processEvents();
   }
   else {
     emit fileSaveStart();
+    QCoreApplication::processEvents();
 
     _ok = true; // Until shown otherwise
     _errMsg = QString();
@@ -2253,6 +2293,7 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     }
 
     emit fileSaveComplete();
+    QCoreApplication::processEvents();
   }
 
   return _ok;
