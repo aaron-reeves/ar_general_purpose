@@ -624,7 +624,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       this->setValue( col - 1, row - 1, ssCell );
     }
 
-    emit sheetNRecordsRead( row );
+    emit sheetNRowsRead( row );
     QCoreApplication::processEvents();
   }
 
@@ -743,7 +743,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
       }
     }
 
-    emit sheetNRecordsRead( row );
+    emit sheetNRowsRead( row );
     QCoreApplication::processEvents();
   }
 
@@ -1810,8 +1810,8 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
   CSpreadsheet sheet( this );
 
-  connect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
-  connect( &sheet, SIGNAL( sheetNRecordsRead( int ) ), this, SIGNAL( sheetNRecordsRead( int ) ) );
+  connect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetReadStart( int ) ) );
+  connect( &sheet, SIGNAL( sheetNRowsRead( int ) ), this, SIGNAL( sheetNRowsRead( int ) ) );
   connect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
   connect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
 
@@ -1836,8 +1836,8 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   if( _ok )
     _sheets.insert( sheetIdx, sheet );
 
-  disconnect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
-  disconnect( &sheet, SIGNAL( sheetNRecordsRead( int ) ), this, SIGNAL( sheetNRecordsRead( int ) ) );
+  disconnect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetReadStart( int ) ) );
+  disconnect( &sheet, SIGNAL( sheetNRowsRead( int ) ), this, SIGNAL( sheetNRowsRead( int ) ) );
   disconnect( &sheet, SIGNAL( sheetReadComplete() ), this, SIGNAL( sheetReadComplete() ) );
   disconnect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
 

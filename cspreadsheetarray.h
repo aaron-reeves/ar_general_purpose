@@ -188,7 +188,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
   signals:
     void sheetReadStart( const int nRows );
-    void sheetNRecordsRead( const int rowIdx );
+    void sheetNRowsRead( const int rowIdx );
     void sheetReadError();
     void sheetReadComplete();
 
@@ -311,8 +311,8 @@ class CSpreadsheetWorkBook : public QObject {
     void readFileComplete();
 
     void sheetReadStart( const QString& sheetName, const int sheetIdx );
-    void sheetNRowsToRead( const int nRows );
-    void sheetNRecordsRead( const int rowIdx );
+    void sheetReadStart( const int nRows );
+    void sheetNRowsRead( const int rowIdx );
     void sheetReadError();
     void sheetReadComplete();
 
