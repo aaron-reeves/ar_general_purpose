@@ -121,23 +121,25 @@ void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) c
 }
 
 
-CSpreadsheet::CSpreadsheet() : CTwoDArray<CSpreadsheetCell>() {
+CSpreadsheet::CSpreadsheet( QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
 }
 
 
-CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb ) : CTwoDArray<CSpreadsheetCell>() {
+CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
   _wb = wb;
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
   initialize();
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent )
+  : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows )
+{
   initialize();
 
   for( int c = 0; c < nCols; ++c ) {
@@ -148,12 +150,14 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& de
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal ) : CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent )
+  : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal )
+{
   initialize();
 }
 
 
-CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data ) {
+CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data, QObject* parent ) : QObject( parent ) {
   initialize();
   setData( data );
 }
@@ -169,7 +173,7 @@ CSpreadsheet::~CSpreadsheet() {
 }
 
 
-CSpreadsheet::CSpreadsheet( const CSpreadsheet& other ) : CTwoDArray<CSpreadsheetCell>( other ) {
+CSpreadsheet::CSpreadsheet( const CSpreadsheet& other ) : QObject( nullptr ), CTwoDArray<CSpreadsheetCell>( other ) {
   assign( other );
 }
 
@@ -185,6 +189,8 @@ CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
 
 void CSpreadsheet::assign( const CSpreadsheet& other ) {
   _wb = other._wb;
+  setParent( nullptr );
+
   _mergedCellRefs = other._mergedCellRefs;
 
   for( int r = 0; r < this->nRows(); ++r ) {
@@ -577,10 +583,11 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 }
 
 
-bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
+bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {  
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
       cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
+    emit sheetReadError();
     return false;
   }
   if( displayVerboseOutput )
@@ -589,6 +596,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   QXlsx::CellRange cellRange = xlsx->dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     cout << "Cell range is out of bounds." << endl;
+    emit sheetReadError();
     return false;
   }
   if( displayVerboseOutput )
@@ -597,6 +605,8 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
     << endl;
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
+
+  emit sheetReadStart( cellRange.lastRow() + 1 );
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
@@ -610,6 +620,8 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       CSpreadsheetCell ssCell( val, 0, 0 );
       this->setValue( col - 1, row - 1, ssCell );
     }
+
+    emit sheetNRecordsRead( row );
     QCoreApplication::processEvents();
   }
 
@@ -620,6 +632,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
       cout << "Worksheet is empty, read successfully." << endl;
 
     this->clear();
+    emit sheetReadComplete();
     return true;
   }
 
@@ -656,6 +669,8 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   if( displayVerboseOutput )
     cout << "Worksheet has been read successfully." << endl;
 
+  emit sheetReadComplete();
+
   return true;
 }
 
@@ -669,7 +684,9 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   // Process all cells of the sheet
   //===============================
-  xlsWORD cellRow, cellCol;
+  xlsWORD row, col;
+
+  emit sheetReadStart( pWS->rows.lastrow + 1 );
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
@@ -680,10 +697,10 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   _mergedCellRefs.clear();
 
-  for( cellRow=0; cellRow <= pWS->rows.lastrow; ++cellRow ) {
-    for( cellCol=0; cellCol < pWS->rows.lastcol; ++cellCol ) {
+  for( row = 0; row <= pWS->rows.lastrow; ++row ) {
+    for( col = 0; col < pWS->rows.lastcol; ++col ) {
 
-      xls::xlsCell* cell = xls::xls_cell( pWS, cellRow, cellCol );
+      xls::xlsCell* cell = xls::xls_cell( pWS, row, col );
 
       if( !cell ) {
         continue;
@@ -697,20 +714,22 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         QVariant val = processCellXls( cell, displayVerboseOutput, msg, _wb );
 
         CSpreadsheetCell ssCell( val, cell->colspan, cell->rowspan );
-        this->setValue( cellCol, cellRow, ssCell );
+        this->setValue( col, row, ssCell );
 
         // Make a note if the cell is merged.
         if( ssCell.hasSpan() ) {
-          _mergedCellRefs.insert( CCellRef( cellCol, cellRow ) );
+          _mergedCellRefs.insert( CCellRef( col, row ) );
         }
 
         if( displayVerboseOutput ) {
-          msg.replace( QLatin1String("CELLCOL"), QString::number( cellCol ), Qt::CaseSensitive );
-          msg.replace( QLatin1String("CELLROW"), QString::number( cellRow ), Qt::CaseSensitive );
+          msg.replace( QLatin1String("CELLCOL"), QString::number( col ), Qt::CaseSensitive );
+          msg.replace( QLatin1String("CELLROW"), QString::number( row ), Qt::CaseSensitive );
           cout << msg << endl;
         }
       }
     }
+
+    emit sheetNRecordsRead( row );
     QCoreApplication::processEvents();
   }
 
@@ -720,6 +739,8 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
 
   if( displayVerboseOutput )
     cout << "Worksheet has been read successfully." << endl;
+
+  emit sheetReadComplete();
 
   return true;
 }
@@ -1343,7 +1364,12 @@ void CSpreadsheet::appendRow( const QStringList& values ) {
 }
 
 
-CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
+CSpreadsheetWorkBook::CSpreadsheetWorkBook(
+  const SpreadsheetFileFormat fileFormat,
+  const QString& fileName,
+  const bool displayVerboseOutput /* = false */,
+  QObject* parent /* = nullptr */
+) : QObject( parent ) {
   initialize();
 
   _srcPathName = fileName;
@@ -1364,7 +1390,11 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook( const SpreadsheetFileFormat fileForm
 }
 
 
-CSpreadsheetWorkBook::CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput /* = false */ ) {
+CSpreadsheetWorkBook::CSpreadsheetWorkBook(
+  const QString& fileName,
+  const bool displayVerboseOutput /* = false */,
+  QObject* parent /* = nullptr */
+) : QObject( parent ) {
   initialize();
 
   _srcPathName = fileName;
@@ -1748,7 +1778,14 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
     return true;
   }
 
+  emit sheetReadStart( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
+
   CSpreadsheet sheet( this );
+
+  connect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
+  connect( &sheet, SIGNAL( sheetNRecordsRead( int )        ), this, SIGNAL( sheetNRecordsRead( int )          ) );
+  connect( &sheet, SIGNAL( sheetReadComplete()   ), this, SIGNAL( sheetReadComplete()     ) );
+  connect( &sheet, SIGNAL( sheetReadError()      ), this, SIGNAL( sheetReadError()        ) );
 
   switch( _fileFormat ) {
     case Format2007:
@@ -1766,6 +1803,11 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
   if( _ok )
     _sheets.insert( sheetIdx, sheet );
+
+  disconnect( &sheet, SIGNAL( sheetReadStart( int ) ), this, SIGNAL( sheetNRowsToRead( int ) ) );
+  disconnect( &sheet, SIGNAL( sheetNRecordsRead( int )        ), this, SIGNAL( sheetNRecordsRead( int )          ) );
+  disconnect( &sheet, SIGNAL( sheetReadComplete()   ), this, SIGNAL( sheetReadComplete()     ) );
+  disconnect( &sheet, SIGNAL( sheetReadError()      ), this, SIGNAL( sheetReadError()        ) );
 
   return _ok;
 }
@@ -1788,10 +1830,14 @@ bool CSpreadsheetWorkBook::readAllSheets() {
     return false;
   }
 
+  emit readFileStart( _sheetNames.count() );
+
   bool result = true;
   for( int i = 0; i < _sheetNames.count(); ++i ) {
     result = ( result && readSheet( i ) );
   }
+
+  emit readFileComplete();
 
   return result;
 }
@@ -2179,8 +2225,11 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
   if( !isWritable ) {
     _ok = false;
     _errMsg = QStringLiteral("Cannot save workbook: is it not writable.");
+    emit fileSaveError();
   }
   else {
+    emit fileSaveStart();
+
     _ok = true; // Until shown otherwise
     _errMsg = QString();
 
@@ -2202,6 +2251,8 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     if( _ok ) {
       _isReadable = true;
     }
+
+    emit fileSaveComplete();
   }
 
   return _ok;

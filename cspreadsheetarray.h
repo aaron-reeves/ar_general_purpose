@@ -118,15 +118,18 @@ class CSpreadsheetCell {
 };
 
 
-class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
+class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
+  Q_OBJECT
+
   friend class CSpreadsheetWorkBook;
+
   public:
-    CSpreadsheet();
-    CSpreadsheet( CSpreadsheetWorkBook* wb );
-    CSpreadsheet( const int nCols, const int nRows );
-    CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal );
-    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal );
-    CSpreadsheet( const CTwoDArray<QVariant>& data );
+    CSpreadsheet( QObject* parent = nullptr );
+    CSpreadsheet( CSpreadsheetWorkBook* wb, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent = nullptr );
+    CSpreadsheet( const CTwoDArray<QVariant>& data, QObject* parent = nullptr );
     CSpreadsheet( const CSpreadsheet& other );
     CSpreadsheet& operator=( const CSpreadsheet& other );
 
@@ -183,6 +186,12 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 
     static QDateTime adjustDateTime( const QDateTime& val ) { return val.toUTC().addSecs( 3 ); }
 
+  signals:
+    void sheetReadStart( const int nRows );
+    void sheetNRecordsRead( const int rowIdx );
+    void sheetReadError();
+    void sheetReadComplete();
+
   protected:
     void initialize();
 
@@ -203,7 +212,8 @@ class CSpreadsheet : public CTwoDArray<CSpreadsheetCell> {
 };
 
 
-class CSpreadsheetWorkBook {
+class CSpreadsheetWorkBook : public QObject {
+  Q_OBJECT
   public:
     enum  SpreadsheetFileFormat {
       FormatUnknown,
@@ -220,8 +230,19 @@ class CSpreadsheetWorkBook {
     //  DuplicateMergedColValue = 16
     //};
 
-    CSpreadsheetWorkBook( const SpreadsheetFileFormat fileFormat, const QString& fileName, const bool displayVerboseOutput = false );
-    CSpreadsheetWorkBook( const QString& fileName, const bool displayVerboseOutput = false );
+    CSpreadsheetWorkBook(
+      const SpreadsheetFileFormat fileFormat,
+      const QString& fileName,
+      const bool displayVerboseOutput = false,
+      QObject* parent = nullptr
+    );
+
+    CSpreadsheetWorkBook(
+      const QString& fileName,
+      const bool displayVerboseOutput = false,
+      QObject* parent = nullptr
+    );
+
     ~CSpreadsheetWorkBook();
 
     bool readSheet( const int sheetIdx );
@@ -280,6 +301,20 @@ class CSpreadsheetWorkBook {
     QString sourcePathName() const { return _srcPathName; }
 
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
+
+  signals:
+    void readFileStart( int nSheets );
+    void readFileComplete();
+
+    void sheetReadStart( const QString& sheetName, const int sheetIdx );
+    void sheetNRowsToRead( const int nRows );
+    void sheetNRecordsRead( const int rowIdx );
+    void sheetReadError();
+    void sheetReadComplete();
+
+    void fileSaveStart();
+    void fileSaveError();
+    void fileSaveComplete();
 
   protected:
     void initialize();
