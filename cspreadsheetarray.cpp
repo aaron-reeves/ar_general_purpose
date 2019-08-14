@@ -587,7 +587,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
       cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
-    emit sheetReadError();
+    emit operationError();
     QCoreApplication::processEvents();
     return false;
   }
@@ -597,7 +597,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   QXlsx::CellRange cellRange = xlsx->dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     cout << "Cell range is out of bounds." << endl;
-    emit sheetReadError();
+    emit operationError();
     QCoreApplication::processEvents();
     return false;
   }
@@ -649,7 +649,7 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
   _mergedCellRefs.clear();
 
   if( !mergedCells.isEmpty() ) {
-    emit sheetMergedRangesStart( mergedCells.count() );
+    emit operationStart( QStringLiteral("HandleRangesInSheet"), mergedCells.count() );
     QCoreApplication::processEvents();
 
     int originCol, originRow;
@@ -670,11 +670,11 @@ bool CSpreadsheet::readXlsx( const QString& sheetName, QXlsx::Document* xlsx, co
 
       _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
 
-      emit sheetNRangesHandled( i );
+      emit operationProgress( i );
       QCoreApplication::processEvents();
     }
 
-    emit sheetMergedRangesComplete();
+    emit operationComplete();
     QCoreApplication::processEvents();
 
     flagMergedCells();
@@ -887,7 +887,7 @@ void CSpreadsheet::flagMergedCells() {
 
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
-  emit sheetMergedRangesStart( _mergedCellRefs.count() );
+  emit operationStart( QStringLiteral("HandleRangesInSheet"), _mergedCellRefs.count() );
   QCoreApplication::processEvents();
 
   int i = 0;
@@ -929,13 +929,13 @@ void CSpreadsheet::flagMergedCells() {
       this->at( c, r )._originCellRef = CCellRef();
     }
 
-    emit sheetNRangesHandled( i );
+    emit operationProgress( i );
     QCoreApplication::processEvents();
 
     ++i;
   }
 
-  emit sheetMergedRangesComplete();
+  emit operationComplete();
   QCoreApplication::processEvents();
 }
 
@@ -1813,11 +1813,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   connect( &sheet, SIGNAL( operationStart( QString, int ) ), this, SIGNAL( operationStart( QString, int ) ) );
   connect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
   connect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
-  connect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
-
-  connect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );
-  connect( &sheet, SIGNAL( sheetNRangesHandled( int ) )   , this, SIGNAL( sheetNRangesHandled( int ) )    );
-  connect( &sheet, SIGNAL( sheetMergedRangesComplete() )  , this, SIGNAL( sheetMergedRangesComplete() )   );
+  connect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
 
   switch( _fileFormat ) {
     case Format2007:
@@ -1839,11 +1835,7 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   disconnect( &sheet, SIGNAL( operationStart( QString, int ) ), this, SIGNAL( operationStart( QString, int ) ) );
   disconnect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
   disconnect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
-  disconnect( &sheet, SIGNAL( sheetReadError() ), this, SIGNAL( sheetReadError() ) );
-
-  disconnect( &sheet, SIGNAL( sheetMergedRangesStart( int ) ), this, SIGNAL( sheetMergedRangesStart( int ) ) );
-  disconnect( &sheet, SIGNAL( sheetNRangesHandled( int ) )   , this, SIGNAL( sheetNRangesHandled( int ) )    );
-  disconnect( &sheet, SIGNAL( sheetMergedRangesComplete() )  , this, SIGNAL( sheetMergedRangesComplete() )   );
+  disconnect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
 
   return _ok;
 }

@@ -189,12 +189,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
   signals:
     void operationStart( const QString& operation, const int nRows );
     void operationProgress( const int rowIdx );
-    void sheetReadError();
+    void operationError();
     void operationComplete();
-
-    void sheetMergedRangesStart( const int nRanges );
-    void sheetNRangesHandled( const int idx );
-    void sheetMergedRangesComplete();
 
   protected:
     void initialize();
@@ -311,14 +307,11 @@ class CSpreadsheetWorkBook : public QObject {
     void readFileComplete();
 
     void sheetReadName( const QString& sheetName, const int sheetIdx );
+
     void operationStart( const QString& operation, const int nRows );
     void operationProgress( const int rowIdx );
-    void sheetReadError();
+    void operationError();
     void operationComplete();
-
-    void sheetMergedRangesStart( const int nRanges );
-    void sheetNRangesHandled( const int idx );
-    void sheetMergedRangesComplete();
 
     void fileSaveStart();
     void fileSaveError();
