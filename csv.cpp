@@ -221,7 +221,7 @@ bool CSV::write( const QList<QStringList>& data, const QString &filename, const 
     out.setCodec(codec.toLatin1());
 
   foreach (const QStringList &line, data) {
-    QString output = writeLine( line, delimiter );
+    QString output = writeLine( line, delimiter, OriginalCase );
     out << output << "\r\n";
   }
 
@@ -1135,25 +1135,6 @@ int QCsv::rowCount() const {
 }
 
 
-QStringList QCsv::writeLine( const QStringList& line ) {
-  clearError();
-
-  QStringList output;
-
-  output.clear();
-  foreach (QString value, line) {
-    value.replace(QLatin1String("\""), QLatin1String("\"\""));
-
-    if (value.contains(QRegExp(",|\r\n")))
-      output << ("\"" + value + "\"");
-    else
-      output << value;
-  }
-
-  return output;
-}
-
-
 bool QCsv::writeFile( const QString &filename, const QString &codec ) {
   clearError();
 
@@ -1174,14 +1155,14 @@ bool QCsv::writeFile( const QString &filename, const QString &codec ) {
     for( int i = 0; i < _fieldNames.count(); ++i ) {
       header.append( _fieldNames.at(i) );
     }
-    output = writeLine( header );
-    out << output.join(',') << "\r\n";
+    output = CSV::csvStringList( header, this->delimiter(), CSV::OriginalCase );
+    out << output.join( this->delimiter() ) << "\r\n";
   }
 
   // Then write the data.
   foreach (const QStringList &line, _data) {
-    output = writeLine( line );
-    out << output.join(',') << "\r\n";
+    output = CSV::csvStringList( line, this->delimiter(), CSV::OriginalCase );
+    out << output.join( this->delimiter() ) << "\r\n";
   }
 
 
