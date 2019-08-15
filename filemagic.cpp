@@ -16,10 +16,17 @@ enum CheckFileTypes {
 QString setMagicPath( bool* error, QString* errorMessage ) {
   QString magicFile;
 
-  if( QFile::exists( QStringLiteral("C:/libs/C_libs/bin/magic") ) )
-    magicFile = QStringLiteral("C:/libs/C_libs/bin/magic");
-  else if( QFile::exists(  QStringLiteral( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
+  QString myLibPath;
+  #ifdef MINGW64
+    myLibPath = QStringLiteral("C:/libs/C_libs-x64/bin/magic");
+  #else
+    myLibPath = QStringLiteral("C:/libs/C_libs/bin/magic");
+  #endif
+
+  if( QFile::exists( QStringLiteral( "%1/magic" ).arg( QCoreApplication::applicationDirPath() ) ) )
     magicFile = QStringLiteral( "%1/magic" ).arg( QCoreApplication::applicationDirPath() );
+  else if( QFile::exists( myLibPath ) )
+    magicFile = myLibPath;
   else if( QFile::exists( QStringLiteral("/usr/share/file/magic") ) )
     magicFile = QStringLiteral("/usr/share/file/magic");
   else if( QFile::exists( QStringLiteral("/etc/magic") ) )
@@ -41,7 +48,12 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
   QString magicFile = setMagicPath( error, errorMessage );
 
   if( magicFile.isEmpty() ) {
-    return QString();
+    if( nullptr != error )
+      *error = true;
+    if( nullptr != errorMessage )
+      *errorMessage = QStringLiteral( "magicFile is empty" );
+
+    return QLatin1String("");
   }
 
   // Set up magic
@@ -141,6 +153,7 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
             ( fileTypeInfo.startsWith( QLatin1String("Zip archive data") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
             || ( 0 == fileTypeInfo.compare( QLatin1String("Microsoft Excel 2007+") ) )
             || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
+            || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xls"), Qt::CaseInsensitive ) )
           );
         break;
       case CHECKXLS:
