@@ -52,6 +52,7 @@ bool strIsNumber( const QString& str );
 int strToInt(const QString& str, const int defaultVal );
 double strToDouble( const QString& str, const double defaultVal );
 
+bool isNullOrEmpty( const QVariant& v );
 
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );

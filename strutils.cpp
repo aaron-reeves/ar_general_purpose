@@ -258,6 +258,16 @@ double strToDouble( const QString& str, const double defaultVal ) {
 }
 
 
+bool isNullOrEmpty( const QVariant& v ) {
+  if( v.isNull() )
+    return true;
+  else if( ( QVariant::String == v.type() ) && v.toString().isEmpty() )
+    return true;
+  else
+    return false;
+}
+
+
 QString paddedInt( int toPad, const int places, const QChar padChar /* = '0' */ ) {
   QString str;
 
