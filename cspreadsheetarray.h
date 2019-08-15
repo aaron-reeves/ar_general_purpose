@@ -151,8 +151,20 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     QVariantList rowAsVariantList( const int rowNumber );
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
-    bool readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput = false );
-    bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
+    bool readXls(
+      const int sheetIdx,
+      xls::xlsWorkBook* pWB
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
+    bool readXlsx(
+      const QString& sheetName,
+      QXlsx::Document* xlsx
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
 
@@ -209,7 +221,14 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     void assign( const CSpreadsheet& other );
 
-    static QVariant processCellXls( xls::xlsCell* cellValue, const bool displayVerboseOutput, QString& msg, CSpreadsheetWorkBook* wb );
+    static QVariant processCellXls(
+      xls::xlsCell* cellValue,
+      CSpreadsheetWorkBook* wb
+      #ifdef DEBUG
+        , QString& msg
+        , const bool displayVerboseOutput = false
+      #endif
+    );
 
     // Convert numbers derived from old-fashioned Excel spreadsheets to Qt objects
     static QDate xlsDate( const int val, const bool is1904DateSystem );
@@ -243,14 +262,18 @@ class CSpreadsheetWorkBook : public QObject {
     CSpreadsheetWorkBook(
       const SpreadsheetFileFormat fileFormat,
       const QString& fileName,
-      const bool displayVerboseOutput = false,
       QObject* parent = nullptr
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
     );
 
     CSpreadsheetWorkBook(
       const QString& fileName,
-      const bool displayVerboseOutput = false,
       QObject* parent = nullptr
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
     );
 
     ~CSpreadsheetWorkBook();
@@ -346,7 +369,10 @@ class CSpreadsheetWorkBook : public QObject {
 
     QString _srcPathName;
     SpreadsheetFileFormat _fileFormat;
-    bool _displayVerboseOutput;
+
+    #ifdef DEBUG
+      bool _displayVerboseOutput;
+    #endif
 
     QHash<int, CSpreadsheet> _sheets; // Sheets don't have to be read consecutively.  Key is the sheet index, value is the sheet itself.
     CReverseLookupMap<int, QString> _sheetNames;
