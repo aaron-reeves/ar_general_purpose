@@ -121,6 +121,7 @@ class CAppLog : public QObject {
     void startMessageList() { _useMessageList = true; }
     void stopMessageList() { _useMessageList = false; }
     void clearMessageList() { _messageList.clear(); }
+    void clearUniqueMessageLists() { _messagesUniqueTypical.clear(); _messagesUniqueVerbose.clear(); }
 
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
