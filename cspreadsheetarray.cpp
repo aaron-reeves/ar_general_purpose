@@ -451,6 +451,56 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
 }
 
 
+bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderRow /* = true */, const QChar delimiter /* = ',' */ ) {
+  _errMsg = QString();
+
+  if( this->isEmpty() ) {
+    qDebug() << "is empty";
+    _errMsg = QStringLiteral("Specified worksheet is empty.");
+    return false;
+  }
+  else if( !this->isTidy( containsHeaderRow ) ) {
+    qDebug() << "Not tidy";
+    _errMsg = QStringLiteral("Specified worksheet does not have a tidy CSV format.");
+    return false;
+  }
+  else {
+    QCsv csv = this->asCsv( containsHeaderRow, delimiter );
+    return csv.writeFile( fileName );
+
+    //QFile file( fileName );
+    //if( !file.open( QIODevice::WriteOnly ) ) {
+    //  _errMsg = QStringLiteral("Could not open file for writing.");
+    //  return false;
+    //}
+    //
+    //// Determine how many empty columns to trim from the right end of the sheet
+    ////-------------------------------------------------------------------------
+    //QStringList firstRow = this->rowAsStringList(0);
+    //
+    //bool ok = false;
+    //while( !ok ) {
+    //  if( 0 < firstRow.last().trimmed().length() ) {
+    //    ok = true;
+    //  }
+    //  else {
+    //    firstRow.removeLast();
+    //  }
+    //}
+    //
+    //// Write the file
+    ////---------------
+    //QTextStream out( &file );
+    //for( int i = 0; i < this->nRows(); ++i ) {
+    //  out << CSV::writeLine( this->rowAsStringList(i).mid( 0, firstRow.length() ), delimiter, CSV::OriginalCase ) << endl;
+    //}
+    //
+    //file.close();
+    //return true;
+  }
+}
+
+
 QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /* = ',' */ ) {
   QCsv csv;
 
@@ -466,6 +516,8 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
     QStringList firstRow;
     QList<QStringList> data;
 
+    // Determine how many empty columns to trim from the right end of the sheet
+    //-------------------------------------------------------------------------
     firstRow = this->rowAsStringList( 0 );
 
     bool ok = false;
@@ -478,6 +530,8 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
       }
     }
 
+    // Build the csv object
+    //----------------------
     for( int i = 1; i < this->nRows(); ++i ) {
       QStringList tmp = this->rowAsStringList( i );
       data.append( tmp.mid( 0, firstRow.length() ) );
@@ -515,7 +569,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 }
 
 
-bool CSpreadsheet::writeXlsx( const QString& fileName ) {
+bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull ) {
   QXlsx::Document xlsx;
 
   QXlsx::Format format;
@@ -524,7 +578,13 @@ bool CSpreadsheet::writeXlsx( const QString& fileName ) {
 
   for( int c = 0; c < this->nCols(); ++c ) {
     for( int r = 0; r < this->nRows(); ++r ) {
-      xlsx.write( r+1, c+1, this->value( c, r ).value() );
+      QVariant tmp;
+
+      if( !treatEmptyStringsAsNull || !isNullOrEmpty( this->value( c, r ).value() ) ) {
+        tmp = this->value( c, r ).value();
+      }
+
+      xlsx.write( r+1, c+1, tmp );
 
       if( this->value(c, r).hasSpan() ) {
         xlsx.mergeCells( this->value(c, r).mergedRange(c, r), format );
@@ -2108,7 +2168,7 @@ bool CSpreadsheetWorkBook::deleteSheet( const QString& sheetName ) {
 }
 
 
-bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data ) {
+bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull ) {
   if( !_isWritable ) {
     _ok = false;
     _errMsg = QStringLiteral("Selected workbook cannot be written. Do you have appropriate permissions?");
@@ -2126,7 +2186,7 @@ bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVar
       _errMsg = QStringLiteral( "Sheet does not exist: %1" ).arg( sheetIdx );
     }
     else {
-      _ok = this->writeSheet( _sheetNames.retrieveValue( sheetIdx ), data );
+      _ok = this->writeSheet( _sheetNames.retrieveValue( sheetIdx ), data, treatEmptyStringsAsNull );
     }
   }
 
@@ -2134,7 +2194,7 @@ bool CSpreadsheetWorkBook::writeSheet( const int sheetIdx, const CTwoDArray<QVar
 }
 
 
-bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data ) {
+bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull ) {
   if( !_isWritable ) {
     _ok = false;
     _errMsg = QStringLiteral("Selected workbook cannot be written. Do you have appropriate permissions?");
@@ -2190,7 +2250,12 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
 
         for( int row = 0; row < data.nRows(); ++row ) {
           for( int col = 0; col < data.nCols(); ++col ) {
-            _ok = _xlsx->write( row + rowOffset, col + colOffset, data.at( col, row ) );
+            QVariant tmp;
+
+            if( !treatEmptyStringsAsNull || !isNullOrEmpty( data.at( col, row ) ) ) {
+              tmp = data.at( col, row );
+            }
+            _ok = _xlsx->write( row + rowOffset, col + colOffset, tmp );
             if( !_ok ) {
               break;
             }

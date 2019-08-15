@@ -153,7 +153,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     bool readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const bool displayVerboseOutput = false );
     bool readXlsx( const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput = false );
-    bool writeXlsx( const QString& fileName );
+    bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
+    bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
 
     bool hasMergedCells() const { return !_mergedCellRefs.isEmpty(); }
     int mergedRangeCount() const { return _mergedCellRefs.count(); }
@@ -174,6 +175,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
+
+    QString errorMessage() const { return _errMsg; }
 
     void debug( const int padding = 10 ) const;
     void debugVerbose() const;
@@ -212,6 +215,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     static QDate xlsDate( const int val, const bool is1904DateSystem );
     static QTime xlsTime( const double d );
     static QDateTime xlsDateTime( const double d, const bool is1904DateSystem );
+
+    QString _errMsg;
 
     bool _terminated;
 };
@@ -289,8 +294,8 @@ class CSpreadsheetWorkBook : public QObject {
     bool deleteSheet( const int sheetIdx );
     bool deleteSheet( const QString& sheetName );
 
-    bool writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data );
-    bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data );
+    bool writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull );
+    bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull );
 
     // Consider writing these functions some day...
     //bool writeSheet( const int sheetIdx, QCsv* data );
