@@ -64,7 +64,7 @@ sources.
 
 #if defined(_WIN32) || defined(WIN32)
   #define SET_BINARY(_f) do {if (!isatty(_f)) setmode (_f, O_BINARY);} while (0)
-  typedef int ssize_t;
+  typedef int sssize_t;
 #endif
 //-----------------------------------------------------
 
@@ -81,7 +81,7 @@ size_t safe_read (int fd, char *buf, unsigned int count) {
   enum { BUGGY_READ_MAXIMUM = INT_MAX & ~8191 };
 
   for(;;) {
-    ssize_t result = read (fd, buf, count);
+    sssize_t result = read (fd, buf, count);
 
   if (0 <= result)
     return result;
