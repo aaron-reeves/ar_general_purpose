@@ -43,7 +43,7 @@ void showSampleHelpMessage() {
   list.append( "  describe <tablename>:", "Describes all tables, excluding system tables." );
 
   // Display the message.
-  printHelpList( list );
+  list.printHelpList();
 }
 
 
@@ -96,7 +96,7 @@ void CHelpItemList::append( const CHelpItemList& otherList ) {
 }
 
 
-void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 */, const int extraPadding /* = 0 */ ) {
+void CHelpItemList::printHelpList( const int breakAtColumn /* = 55 */, const int extraPadding /* = 0 */ ) const {
   int i, j;
   int maxPart1Len = 0;
   int nPadding;
@@ -105,9 +105,9 @@ void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 *
 
   // Ignore any first part with a length over 20 characters,
   // since such items will span both columns anyway.
-  for( i = 0; i < list.count(); ++i ) {
-    if( 20 > list.at(i).part1().length() )
-      maxPart1Len = std::max( maxPart1Len, list.at(i).part1().length() );
+  for( i = 0; i < this->count(); ++i ) {
+    if( 20 > this->at(i).part1().length() )
+      maxPart1Len = std::max( maxPart1Len, this->at(i).part1().length() );
   }
 
   if( 20 < maxPart1Len )
@@ -115,14 +115,14 @@ void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 *
 
   nPadding = maxPart1Len + 1;
 
-  for( i = 0; i < list.count(); ++i ) {
-    if( 0 == list.at(i).part1().length() )
-      cout << prettyPrint( list.at(i).part2(), 75 );
+  for( i = 0; i < this->count(); ++i ) {
+    if( 0 == this->at(i).part1().length() )
+      cout << prettyPrint( this->at(i).part2(), 75 );
     else {
 
       // Make bulleted lists look cool.
-      if( list.at(i).part2().startsWith( '-' ) ) {
-        QStringList tmpLines = prettyPrintedList( list.at(i).part2(), (breakAtColumn - 2), false, true, nPadding + 2 );
+      if( this->at(i).part2().startsWith( '-' ) ) {
+        QStringList tmpLines = prettyPrintedList( this->at(i).part2(), (breakAtColumn - 2), false, true, nPadding + 2 );
         lines.clear();
         lines.append( tmpLines.at(0) );
         for( int k = 1; k < tmpLines.count(); ++k ) {
@@ -130,11 +130,11 @@ void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 *
         }
       }
       else {
-        lines = prettyPrintedList( list.at(i).part2(), breakAtColumn, false, true, nPadding );
+        lines = prettyPrintedList( this->at(i).part2(), breakAtColumn, false, true, nPadding );
       }
 
-      if( list.at(i).part1().length() > maxPart1Len ) {
-        cout << list.at(i).part1() << endl;
+      if( this->at(i).part1().length() > maxPart1Len ) {
+        cout << this->at(i).part1() << endl;
         for( j = 0; j < lines.count(); ++j ) {
           for( int k = 0; k < extraPadding; ++k )
             cout << " ";
@@ -142,8 +142,8 @@ void printHelpList( const CHelpItemList& list, const int breakAtColumn /* = 55 *
         }
       }
       else {
-        line0 = lines.at(0).right( lines.at(0).length() - (list.at(i).part1().length() + 1) );
-        cout << list.at(i).part1() << " " << line0 << endl;
+        line0 = lines.at(0).right( lines.at(0).length() - (this->at(i).part1().length() + 1) );
+        cout << this->at(i).part1() << " " << line0 << endl;
         for( j = 1; j < lines.count(); ++j )
           cout << lines.at(j) << endl;
       }

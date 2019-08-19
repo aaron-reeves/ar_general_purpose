@@ -57,7 +57,7 @@ Public License as published by the Free Software Foundation; either version 2 of
  *   list.append( "  ", "- Maggie" );
  *
  *   // Display the message.
- *   printHelpList( list );
+ *   list.printHelpList();
  * }
  *
  */
@@ -83,9 +83,10 @@ class CHelpItemList : public QVector<CHelpItem> {
     void append( const QString& part1, const QString& part2 );
     void append( const CHelpItemList& otherList );
     void append();
+
+    void printHelpList( const int breakAtColumn = 55, const int extraPadding = 0 ) const;
 };
 
-void printHelpList( const CHelpItemList& list, const int breakAtColumn = 55, const int extraPadding = 0 );
 
 void showSampleHelpMessage();
 
