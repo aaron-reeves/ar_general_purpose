@@ -124,6 +124,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <qstringlist.h>
 #include <qhash.h>
 
+#include "qarcommandlineoption.h"
+
 
 // the command line parser class
 class CCmdLine {
@@ -131,6 +133,9 @@ class CCmdLine {
     CCmdLine();
     CCmdLine( int argc, char** argv, bool clearArgs = true );
     CCmdLine( const QString& fileName ); 
+    CCmdLine( const CCmdLine& other ) { assign( other ); }
+    CCmdLine& operator=( const CCmdLine& other ) { assign( other ); return *this; }
+    ~CCmdLine() { /* Nothing to do here */ }
   
     /* Parses the command line into switches and arguments. Returns number of switches found. */
     int splitLine( const int argc, char** argv, bool clearArgs = true );
@@ -142,56 +147,60 @@ class CCmdLine {
     int processList( QStringList list );
     
     /* How many switches are there? */
-    int switchCount() { return _hash.count(); }
-    bool hasSwitches() { return 0 < _hash.count(); }
+    int switchCount() const { return _arguments.count(); }
+    bool hasSwitches() const { return 0 < _arguments.count(); }
 
     /* Was the switch found on the command line? */
-    bool hasSwitch( const char* pSwitch ) { return hasSwitch( QString( pSwitch ) ); }
-    bool hasSwitch( const QString& pSwitch );
-    bool hasSwitch( const QStringList& pSwitches );
+    bool hasSwitch( const char* pSwitch ) const { return hasSwitch( QString( pSwitch ) ); }
+    bool hasSwitch( const QString& pSwitch ) const;
+    bool hasSwitch( const QStringList& pSwitches ) const;
+    bool isSet( const QString& pSwitch) const { return hasSwitch( pSwitch ); }
+    bool isSet( const char* pSwitch ) const { return hasSwitch( QString( pSwitch ) ); }
 
-    bool isAmbiguous( const QStringList& pSwitches );
+    bool isAmbiguous( const QStringList& pSwitches ) const;
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
-    QString safeArgument( const char* pSwitch, const int iIdx, const char* pDefault ) { return safeArgument( QString( pSwitch ), iIdx, QString( pDefault ) ); }
-    QString safeArgument( const char* pSwitch, const int iIdx, const QString& pDefault ) { return safeArgument( QString( pSwitch ), iIdx, pDefault ); }
-    QString safeArgument( const QString& pSwitch, const int iIdx, const QString& pDefault );
-    QString safeArgument( const char* pSwitch, const  char* name, const char* pDefault ) { return safeArgument( QString( pSwitch ), QString( name ), QString( pDefault ) ); }
-    QString safeArgument( const char* pSwitch, const  char* name, const QString& pDefault ) { return safeArgument( QString( pSwitch ), QString( name ), pDefault ); }
-    QString safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault );
+    QString safeArgument( const char* pSwitch, const int iIdx, const char* pDefault ) const { return safeArgument( QString( pSwitch ), iIdx, QString( pDefault ) ); }
+    QString safeArgument( const char* pSwitch, const int iIdx, const QString& pDefault ) const { return safeArgument( QString( pSwitch ), iIdx, pDefault ); }
+    QString safeArgument( const QString& pSwitch, const int iIdx, const QString& pDefault ) const;
+    QString safeArgument( const char* pSwitch, const  char* name, const char* pDefault ) const { return safeArgument( QString( pSwitch ), QString( name ), QString( pDefault ) ); }
+    QString safeArgument( const char* pSwitch, const  char* name, const QString& pDefault ) const { return safeArgument( QString( pSwitch ), QString( name ), pDefault ); }
+    QString safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault ) const;
     
     /* Fetch an argument associated with a switch. Throw an exception if not found. */
-    QString argument( const char* pSwitch, const int iIdx) { return argument( QString( pSwitch ), iIdx ); }
-    QString argument( const QString& pSwitch, const int iIdx);
-    QString argument( const char* pSwitch, const char* name ) { return argument( QString( pSwitch ), QString( name ) ); }
-    QString argument( const QString& pSwitch, const QString& name );
+    QString argument( const char* pSwitch, const int iIdx) const { return argument( QString( pSwitch ), iIdx ); }
+    QString argument( const QString& pSwitch, const int iIdx) const;
+    QString argument( const char* pSwitch, const char* name ) const { return argument( QString( pSwitch ), QString( name ) ); }
+    QString argument( const QString& pSwitch, const QString& name ) const;
+    QString value( const char* pSwitch, const int iIdx = 0 ) const { return argument( QString( pSwitch ), iIdx ); }
+     QString value( const QString& pSwitch, const int iIdx = 0 ) const { return argument( pSwitch, iIdx ); }
 
     QString argument( const QStringList& pSwitches, int iIdx );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
-    int argumentCount(const char* pSwitch )  { return argumentCount( QString( pSwitch ) ); }
-    int argumentCount(const QString& pSwitch );
-    int argumentCount( const QStringList& pSwitches );
+    int argumentCount(const char* pSwitch ) const { return argumentCount( QString( pSwitch ) ); }
+    int argumentCount(const QString& pSwitch ) const;
+    int argumentCount( const QStringList& pSwitches ) const;
 
-    bool pair( const char* str1, const char* str2 ) { return pair( QString( str1 ), QString( str2 ) ); }
+    bool pair( const char* str1, const char* str2 )  { return pair( QString( str1 ), QString( str2 ) ); }
     bool pair( const QString& str1, const QString& str2 );
 
     /* Returns true if any of the following switches is present: -h, --help, -? */
-    bool hasHelp();
+    bool hasHelp() const;
 
     /* Returns true if any of the following switches is present: -v, --version */
-    bool hasVersion();
+    bool hasVersion() const;
 
     /* Returns a list of arguments associated with a switch. */
-    QStringList arguments( const char* pSwitch ) { return arguments( QString( pSwitch ) ); }
-    QStringList arguments( const QString& pSwitch );
+    QStringList arguments( const char* pSwitch ) const { return arguments( QString( pSwitch ) ); }
+    QStringList arguments( const QString& pSwitch ) const;
 
     /* Returns the original string that contained switches and arguments. Useful for logging. */
-    QString asString();
-    QString asString( const char* pSwitch ) { return asString( QString( pSwitch ) ); }
-    QString asString( const QString& pSwitch );
+    QString asString() const;
+    QString asString( const char* pSwitch ) const { return asString( QString( pSwitch ) ); }
+    QString asString( const QString& pSwitch ) const;
 
-    void debug( void );
+    void debug() const;
     
     /* 
     Useful inherited functions:
@@ -203,13 +212,56 @@ class CCmdLine {
     void clear( void );
     */
   protected:
-    QHash<QString, QStringList> _hash;
+    void assign( const CCmdLine& other );
 
     /* Test a parameter to see if it's a switch (form "-x"). */
     bool isSwitch( const QString& pParam );
 
+    QString formatArg( QString arg ) const;
+
+    QHash<QString, QStringList> _arguments;
 
     QString _originalString;
+};
+
+
+typedef void (*DisplayMessageFn)();
+
+class CCmdLineWithQOptions : public CCmdLine {
+  public:
+    CCmdLineWithQOptions() : CCmdLine() { initialize(); }
+    CCmdLineWithQOptions( int argc, char** argv, bool clearArgs = true ) : CCmdLine( argc, argv, clearArgs ) { initialize(); }
+    CCmdLineWithQOptions( const QString& fileName ) : CCmdLine( fileName ) { initialize(); }
+    CCmdLineWithQOptions( const CCmdLineWithQOptions& other ) : CCmdLine( other ) { assign( other ); }
+    CCmdLineWithQOptions& operator=( const CCmdLineWithQOptions& other ) { assign( other ); return *this; }
+    ~CCmdLineWithQOptions() { /* Nothing else to do here */ }
+
+    void setSingleDashWordOptionMode( const int dummy ) const { Q_UNUSED( dummy ); }
+
+    void addHelpOption( DisplayMessageFn helpFn = nullptr );
+    void addVersionOption( DisplayMessageFn versionFn = nullptr );
+
+    void addOption( const QARCommandLineOption& opt );
+
+    bool process( const QCoreApplication& app );
+
+    void showHelp() const;
+    void showVersion() const;
+
+  protected:
+    void initialize();
+    void assign( const CCmdLineWithQOptions& other );
+
+    void generatePairs();
+
+    QSet<QString> _acceptedArgNames;
+
+    bool _hasHelpOption;
+    DisplayMessageFn _helpFn;
+    bool _hasVersionOption;
+    DisplayMessageFn _versionFn;
+
+    QList<QARCommandLineOption> _optionList;
 };
 
 

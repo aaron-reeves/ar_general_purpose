@@ -54,6 +54,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <ar_general_purpose/qcout.h>
 #include <ar_general_purpose/strutils.h>
+#include <ar_general_purpose/help.h>
 
 CCmdLine::CCmdLine() {
   _originalString = QString();
@@ -69,6 +70,28 @@ CCmdLine::CCmdLine( int argc, char** argv, bool clearArgs /* = true */ ) {
 CCmdLine::CCmdLine( const QString& fileName ) {
   _originalString = QString();
   splitFile( fileName );
+}
+
+
+void CCmdLine::assign( const CCmdLine& other ) {
+  this->_originalString = other._originalString;
+  this->_arguments = other._arguments;
+}
+
+
+QString CCmdLine::formatArg( QString arg ) const {
+  // Strip off any dashes that might be present...
+  while( arg.startsWith( '-' ) ) {
+    arg = arg.right( arg.length() - 1 );
+  }
+
+  // ...then add back the right number.
+  if( 1 == arg.length() )
+    arg.prepend( '-' );
+  else if( 1 < arg.length() )
+    arg.prepend( "--" );
+
+  return arg;
 }
 
 
@@ -152,7 +175,7 @@ int CCmdLine::splitLine( const int argc, char** argv, bool clearArgs /* = true *
 	int i;
 
    if( clearArgs ) {
-    _hash.clear();
+    _arguments.clear();
     _originalString = QString();
   }
 
@@ -169,10 +192,10 @@ int CCmdLine::splitLine( const int argc, char** argv, bool clearArgs /* = true *
   // Process the arguments.
   //-----------------------
   // skip the exe name (start with i = 1)
-  for (i = 1; i < argc; i++) {
+  for( i = 1; i < argc; ++i ) {
      // if it's a switch, start a new CCmdLine
-     if (isSwitch(argv[i])) {
-        curParam = argv[i];
+     if( isSwitch( argv[i] ) ) {
+        curParam = formatArg( argv[i] );
 
          // Clear args between switches to prevent problems
          arg = QString();
@@ -184,7 +207,7 @@ int CCmdLine::splitLine( const int argc, char** argv, bool clearArgs /* = true *
               arg = argv[i + 1];
 
               // skip to next
-              i++;
+              ++i;
            }
            else {
               arg = QString();
@@ -200,16 +223,16 @@ int CCmdLine::splitLine( const int argc, char** argv, bool clearArgs /* = true *
         }
 
         // add the CCmdParam to 'this'
-        _hash.insert(curParam, cmd);
+        _arguments.insert( curParam, cmd );
      }
      else {
         // it's not a new switch, so it must be more stuff for the last switch.
         // ...let's add it.
-        _hash[ curParam ].append( argv[i] );
+        _arguments[ curParam ].append( argv[i] );
      }
   }
 
-  return _hash.count();
+  return _arguments.count();
 }
 
 
@@ -256,12 +279,12 @@ bool CCmdLine::isSwitch( const QString& pParam ) {
    cmdLine.HasSwitch("-a")       true
    cmdLine.HasSwitch("-z")       false
 ------------------------------------------------------*/
-bool CCmdLine::hasSwitch( const QString& pSwitch ) {
-  return _hash.contains( pSwitch );
+bool CCmdLine::hasSwitch( const QString& pSwitch ) const {
+  return _arguments.contains( formatArg( pSwitch ) );
 }
 
 
-bool CCmdLine::hasSwitch( const QStringList& switches ) {
+bool CCmdLine::hasSwitch( const QStringList& switches ) const {
   bool result = false;
 
   for( int i = 0; i < switches.count(); ++i ) {
@@ -275,7 +298,7 @@ bool CCmdLine::hasSwitch( const QStringList& switches ) {
 }
 
 
-bool CCmdLine::isAmbiguous( const QStringList& pSwitches ) {
+bool CCmdLine::isAmbiguous( const QStringList& pSwitches ) const {
   int n = 0;
 
   for( int i = 0; i < pSwitches.count(); ++i ) {
@@ -306,7 +329,7 @@ bool CCmdLine::isAmbiguous( const QStringList& pSwitches ) {
    cmdLine.GetSafeArgument("-b", 0, "zz")    p4
    cmdLine.GetSafeArgument("-b", 1, "zz")    zz
 ------------------------------------------------------*/
-QString CCmdLine::safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) {
+QString CCmdLine::safeArgument( const QString& pSwitch, int iIdx, const QString& pDefault ) const {
   QString sRet;
 
   if( !pDefault.isEmpty() ) {
@@ -325,7 +348,7 @@ QString CCmdLine::safeArgument( const QString& pSwitch, int iIdx, const QString&
 }
 
 
-QString CCmdLine::safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault ) {
+QString CCmdLine::safeArgument( const QString& pSwitch, const QString& name, const QString& pDefault ) const {
   QString sRet;
 
   if( !pDefault.isEmpty() ) {
@@ -359,19 +382,23 @@ QString CCmdLine::safeArgument( const QString& pSwitch, const QString& name, con
    cmdLine.GetArgument("-a", 0)     p1
    cmdLine.GetArgument("-b", 1)     throws (int)0, returns an empty string
 ------------------------------------------------------*/
-QString CCmdLine::argument( const QString& pSwitch, const int iIdx ) {
-  if( this->hasSwitch( pSwitch ) && ( iIdx < this->argumentCount( pSwitch ) ) )
-    return _hash.value( pSwitch ).at( iIdx );
+QString CCmdLine::argument( const QString& pSwitch, const int iIdx ) const {
+  QString arg = formatArg( pSwitch );
+
+  if( this->hasSwitch( arg ) && ( iIdx < this->argumentCount( arg ) ) )
+    return _arguments.value( arg ).at( iIdx );
 
    throw int(0);
 }
 
 
-QString CCmdLine::argument( const QString& pSwitch, const QString& name ) {
-  if( this->hasSwitch( pSwitch ) ) {
-    for( int i = 0; i < this->argumentCount( pSwitch ); ++i ) {
-      if( this->arguments( pSwitch ).at(i).startsWith( name, Qt::CaseInsensitive ) ) {
-        QStringList list = this->arguments( pSwitch ).at(i).split( '=' );
+QString CCmdLine::argument( const QString& pSwitch, const QString& name ) const {
+  QString arg = formatArg( pSwitch );
+
+  if( this->hasSwitch( arg ) ) {
+    for( int i = 0; i < this->argumentCount( arg ); ++i ) {
+      if( this->arguments( arg ).at(i).startsWith( name, Qt::CaseInsensitive ) ) {
+        QStringList list = this->arguments( arg ).at(i).split( '=' );
         if( 2 == list.count() ) {
           return list.at(1);
         }
@@ -408,14 +435,16 @@ QString CCmdLine::argument( const QStringList& pSwitches, int iIdx ) {
 
    returns -1 if the switch was not found
 ------------------------------------------------------*/
-int CCmdLine::argumentCount( const QString& pSwitch ) {
-  if( hasSwitch( pSwitch ) )
-    return _hash.value( pSwitch ).count();
+int CCmdLine::argumentCount( const QString& pSwitch ) const {
+  QString arg = formatArg( pSwitch );
+
+  if( hasSwitch( arg ) )
+    return _arguments.value( arg ).count();
   else
     return -1;
 }
 
-int CCmdLine::argumentCount( const QStringList& pSwitches ) {
+int CCmdLine::argumentCount( const QStringList& pSwitches ) const {
   int result = -1;
 
   for( int i = 0; i < pSwitches.count(); ++i ) {
@@ -429,18 +458,20 @@ int CCmdLine::argumentCount( const QStringList& pSwitches ) {
 }
 
 
-QStringList CCmdLine::arguments(  const QString& pSwitch ) {
+QStringList CCmdLine::arguments( const QString& pSwitch ) const {
+  QString arg = formatArg( pSwitch );
+
   QStringList list;
 
-  if( this->hasSwitch( pSwitch ) )
-    list = _hash.value( pSwitch );
+  if( this->hasSwitch( arg ) )
+    list = _arguments.value( arg );
 
   return list;
 }
 
 
 /* Returns true if any of the following switches is present: -h, --help, -? */
-bool  CCmdLine::hasHelp() {
+bool  CCmdLine::hasHelp() const {
   return(
     this->hasSwitch( QStringLiteral("-h") )
     || this->hasSwitch( QStringLiteral("--help") )
@@ -449,7 +480,7 @@ bool  CCmdLine::hasHelp() {
 }
 
 /* Returns true if any of the following switches is present: -v, --version */
-bool  CCmdLine::hasVersion() {
+bool  CCmdLine::hasVersion() const {
   return(
     this->hasSwitch( QStringLiteral("-v") )
     || this->hasSwitch( QStringLiteral("--version") )
@@ -457,18 +488,20 @@ bool  CCmdLine::hasVersion() {
 }
 
 
-QString CCmdLine::asString(){
+QString CCmdLine::asString() const {
   return this->_originalString;
 }
 
 
-QString CCmdLine::asString( const QString& pSwitch ) {
+QString CCmdLine::asString( const QString& pSwitch ) const {
   QString result;
   QStringList list;
 
-  if( this->hasSwitch( pSwitch ) ) {
-    for( int i = 0; i < this->argumentCount( pSwitch ); ++i ) {
-      list.append( this->argument( pSwitch, i ) );
+  QString arg = formatArg( pSwitch );
+
+  if( this->hasSwitch( arg ) ) {
+    for( int i = 0; i < this->argumentCount( arg ); ++i ) {
+      list.append( this->argument( arg, i ) );
     }
 
     result = list.join( QStringLiteral(" ") );
@@ -478,12 +511,12 @@ QString CCmdLine::asString( const QString& pSwitch ) {
 }
 
 
-void CCmdLine::debug( void ) {
-  QHashIterator<QString, QStringList> it( _hash );
+void CCmdLine::debug() const {
+  QHashIterator<QString, QStringList> it( _arguments );
 
   while( it.hasNext() ) {
     it.next();
-    qDebug() << "Key " << it.key() << " values " << it.value().join( QStringLiteral(", ") );
+    qDebug() << "Key " << formatArg( it.key() ) << " values " << it.value().join( QStringLiteral(", ") );
   }
 }
 
@@ -493,12 +526,206 @@ bool CCmdLine::pair( const QString& str1, const QString& str2 ) {
     return false;
   else {
     if( this->hasSwitch( str1 ) )
-      _hash.insert( str2, _hash.value( str1 ) );
+      _arguments.insert( formatArg( str2 ), _arguments.value( formatArg( str1 ) ) );
     else if( this->hasSwitch( str2 ) )
-      _hash.insert( str1, _hash.value( str2 ) );
+      _arguments.insert( formatArg( str1 ), _arguments.value( formatArg( str2 ) ) );
 
     return true;
   }
 }
 
+
+void CCmdLineWithQOptions::initialize() {
+  _helpFn = nullptr;
+  _versionFn = nullptr;
+  _hasHelpOption = false;
+  _hasVersionOption = false;
+}
+
+
+void CCmdLineWithQOptions::assign( const CCmdLineWithQOptions& other ) {
+  CCmdLine::assign( other );
+
+  _optionList = other._optionList;
+
+  _helpFn = other._helpFn;
+  _versionFn = other._versionFn;
+
+  _hasHelpOption = other._hasHelpOption;
+  _hasVersionOption = other._hasVersionOption;
+
+  _acceptedArgNames = other._acceptedArgNames;
+}
+
+
+void CCmdLineWithQOptions::addHelpOption( DisplayMessageFn helpFn /* = nullptr */ ) {
+  _helpFn = helpFn;
+  _hasHelpOption = true;
+  addOption(
+    QARCommandLineOption(
+      QStringList() << QStringLiteral("--help") << QStringLiteral("-h") << QStringLiteral("-?"),
+      QStringLiteral("Display this help message.")
+    )
+  );
+}
+
+
+void CCmdLineWithQOptions::addVersionOption( DisplayMessageFn versionFn /* = nullptr */ ) {
+  _versionFn = versionFn;
+  _hasVersionOption = true;
+  addOption(
+    QARCommandLineOption(
+      QStringList() << QStringLiteral("--version") << QStringLiteral("-v"),
+      QStringLiteral("Display the application version.")
+    )
+  );
+}
+
+
+void CCmdLineWithQOptions::addOption( const QARCommandLineOption& opt ) {
+  foreach( const QString& argName, opt.names() ) {
+    _acceptedArgNames.insert( formatArg( argName ) );
+  }
+
+  _optionList.append( opt );
+}
+
+
+void CCmdLineWithQOptions::showVersion() const {
+  if( nullptr != _versionFn ) {
+    _versionFn();
+    return;
+  }
+
+  cout << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << endl;
+}
+
+
+void CCmdLineWithQOptions::showHelp() const {
+  if( nullptr != _helpFn ) {
+    _helpFn();
+    return;
+  }
+
+  showVersion();
+
+  CHelpItemList hList;
+
+  for( int i = 0; i < _optionList.count(); ++i ) {
+    QARCommandLineOption opt = _optionList.at(i);
+
+    QStringList optNames;
+    QString optNamesStr;
+    for( int j = 0; j < opt.names().count(); ++j ) {
+      QString optName =  opt.names().at(j);
+      if( 1 == optName.length() ) {
+        optName.prepend( '-' );
+      }
+      else {
+        optName.prepend( "--" );
+      }
+      QStringList valueNames;
+      QString valueNamesStr;
+      for( int k = 0; k < opt.valueNames().count(); ++k ) {
+        if( !opt.valueNames().at(k).trimmed().isEmpty() ) {
+          valueNames.append( QStringLiteral( "<%1>" ).arg( opt.valueNames().at(k).trimmed() ) );
+        }
+      }
+      valueNamesStr = valueNames.join( ' ' );
+      if( !valueNamesStr.isEmpty() ) {
+        optNames.append( QStringLiteral( "%1 %2" ).arg( optName, valueNamesStr ) );
+      }
+      else {
+        optNames.append( optName );
+      }
+    }
+    optNamesStr = optNames.join( QStringLiteral( ", ") );
+    //optNamesStr.prepend( QStringLiteral("  ") );
+    //optNamesStr.append( ':' );
+
+    hList.append( optNamesStr, opt.description() );
+  }
+
+  hList.printHelpList();
+}
+
+
+void CCmdLineWithQOptions::generatePairs() {
+  foreach( const QARCommandLineOption& opt, _optionList ) {
+    QStringList args = opt.names();
+
+    QList<QString>::const_iterator str1;
+    QList<QString>::const_iterator str2;
+    for( str1 = args.constBegin(); str1 != args.constEnd(); ++str1 ) {
+      for( str2 = args.constBegin(); str2 != args.constEnd(); ++str2 ) {
+        pair( *str1, *str2 );
+      }
+    }
+  }
+}
+
+
+bool CCmdLineWithQOptions::process( const QCoreApplication& app ) {
+  QStringList args = app.arguments();
+
+  int argc = args.count();
+
+  char** argv = new char* [ argc ];
+
+  for( int i = 0; i < argc; ++i ) {
+    argv[i] = new char[args.at(i).length()+1];
+    strcpy( argv[i], args.at(i).toLatin1().data() );
+  }
+
+  splitLine( argc, argv, false );
+
+  //this->debug();
+
+  delete [] argv;
+
+  bool argsOK = true;
+  QStringList providedArgNames = _arguments.keys();
+
+  // Check for any unrecognized arguments.  If found, return false.
+  foreach( const QString& arg, providedArgNames ) {
+    if( !_acceptedArgNames.contains( formatArg( arg ) ) ) {
+      cout << "Unrecognized argument: " << formatArg( arg ) << endl;
+      argsOK = false;
+    }
+  }
+
+  // Check for any duplications.  If found, return false.
+  int nMatches;
+  foreach( const QARCommandLineOption& opt, _optionList ) {
+    QStringList args = opt.names();
+
+    nMatches = 0;
+    foreach( const QString& arg, args ) {
+      if( providedArgNames.contains( arg ) ) {
+        ++nMatches;
+      }
+    }
+    if( 1 < nMatches ) {
+      cout << "Ambiguous or unnecessary argument duplication: " << opt.names().at(0) << endl;
+      argsOK = false;
+    }
+  }
+
+  if( !argsOK ) {
+    return false;
+  }
+  else if( _hasHelpOption && hasHelp() ) {
+    showHelp();
+    exit( 0 );
+  }
+  else if( _hasVersionOption && hasVersion() ) {
+    showVersion();
+    exit( 0 );
+  }
+
+  // Generate pairs so that the application recognizes, e.g., "--version" and "-v" as the same thing.
+  generatePairs();
+
+  return true;
+}
 
