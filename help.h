@@ -67,8 +67,8 @@ class CHelpItem {
     CHelpItem( const QString& part1, const QString& part2 );
     CHelpItem( const char* part1, const char* part2 );
 
-    QString part1() const { return _part1; }
-    QString part2() const { return _part2; }
+    const QString& part1() const { return _part1; }
+    const QString& part2() const { return _part2; }
 
   protected:
     QString _part1;

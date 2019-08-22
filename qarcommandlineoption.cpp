@@ -39,9 +39,10 @@ QARCommandLineOption::QARCommandLineOption(
   const QString &description,  /* = QString() */
   const QString &valueName, /* = QString() */
   const QString &defaultValue /* = QString() */
-  ) {
+) :
+  _description( description )
+{
   addName( name );
-  _description = description;
 
   if( !valueName.isEmpty() )
     _valueNames.append( valueName );
@@ -56,11 +57,12 @@ QARCommandLineOption::QARCommandLineOption(
   const QString &description,
   const QStringList &valueNames,
   const QStringList &defaultValues /* = QStringList() */
-) {
+) :
+  _description( description ),
+  _valueNames( valueNames ),
+  _defaultValues( defaultValues )
+{
   addName( name );
-  _description = description;
-  _valueNames = valueNames;
-  _defaultValues = defaultValues;
 }
 
 
@@ -69,11 +71,12 @@ QARCommandLineOption::QARCommandLineOption(
   const QString &description, /* = QString() */
   const QString &valueName, /* = QString() */
   const QString &defaultValue /* = QString() */
-  ) {
+) :
+  _description( description )
+{
   foreach( const QString& n, names ) {
     addName( n );
   }
-  _description = description;
 
   if( !valueName.isEmpty() )
     _valueNames.append( valueName );
@@ -88,7 +91,11 @@ QARCommandLineOption::QARCommandLineOption(
   const QString &description,
   const QStringList &valueNames,
   const QStringList &defaultValues /* = QStringList() */
-) {
+) :
+  _description( description ),
+  _valueNames( valueNames ),
+  _defaultValues( defaultValues )
+{
   foreach( const QString& n, names ) {
     addName( n );
   }
@@ -106,8 +113,13 @@ void QARCommandLineOption::assign( const QARCommandLineOption& other ) {
 }
 
 
-QARCommandLineOption::QARCommandLineOption(const QARCommandLineOption &other) {
-  assign( other );
+QARCommandLineOption::QARCommandLineOption(const QARCommandLineOption &other) :
+  _names( other._names ),
+  _description( other._description ),
+  _valueNames( other._valueNames ),
+  _defaultValues( other._defaultValues )
+{
+  // Nothing else to do here
 }
 
 

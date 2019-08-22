@@ -48,24 +48,24 @@ class QARCommandLineOption {
     );
 
     
-    QARCommandLineOption(const QARCommandLineOption &other);
+    QARCommandLineOption( const QARCommandLineOption& other );
 
     ~QARCommandLineOption();
 
-    QARCommandLineOption &operator=(const QARCommandLineOption &other);
+    QARCommandLineOption& operator=( const QARCommandLineOption& other );
 
-    QStringList names() const { return _names; }
+    const QStringList& names() const { return _names; }
 
     void setValueName(const QString &valueName) { _valueNames.clear(); _valueNames.append( valueName ); }
     void setValueNames(const QStringList &valueNames) { _valueNames = valueNames; }
-    QStringList valueNames() const { return _valueNames; }
+    const QStringList& valueNames() const { return _valueNames; }
 
     void setDescription(const QString &description) { _description = description; }
-    QString description() const { return _description; }
+    const QString& description() const { return _description; }
 
     void setDefaultValue(const QString &defaultValue) { _defaultValues.clear(); _defaultValues.append( defaultValue ); }
     void setDefaultValues(const QStringList &defaultValues) { _defaultValues = defaultValues; }
-    QStringList defaultValues() const { return _defaultValues; }
+    const QStringList& defaultValues() const { return _defaultValues; }
     
   protected:
     void addName( const QString& name );

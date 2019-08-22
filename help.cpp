@@ -48,20 +48,23 @@ void showSampleHelpMessage() {
 
 
 CHelpItem::CHelpItem() {
-  _part1 = QString();
-  _part2 = QString();
+  // Nothing to do here
 }
 
 
-CHelpItem::CHelpItem( const QString& part1, const QString& part2 ) {
-  _part1 = part1;
-  _part2 = part2;
+CHelpItem::CHelpItem( const QString& part1, const QString& part2 ) :
+  _part1( part1 ),
+  _part2( part2 )
+{
+  // Nothing else to do here
 }
 
 
-CHelpItem::CHelpItem( const char* part1, const char* part2 ) {
-  _part1 = QString( part1 );
-  _part2 = QString( part2 );
+CHelpItem::CHelpItem( const char* part1, const char* part2 ) :
+  _part1( part1 ),
+  _part2( part2 )
+{
+  // Nothing else to do here
 }
 
 
