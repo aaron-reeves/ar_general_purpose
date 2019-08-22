@@ -48,9 +48,9 @@ namespace ReturnCode {
     //...
   };
 
-  QString codeList();
+  const QString codeList();
 
-  QString codeDescr( const int val );
+  const QString codeDescr( const int val );
 }
 
 #endif // RETURNCODES_H

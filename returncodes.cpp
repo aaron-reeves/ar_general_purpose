@@ -14,7 +14,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "returncodes.h"
 
-QString ReturnCode::codeList() {
+const QString ReturnCode::codeList() {
  return QString(
    "Exit codes (used in combination with one another):\n"
    "  SUCCESS                  :       0\n"
@@ -42,7 +42,7 @@ QString ReturnCode::codeList() {
  );
 }
 
-QString ReturnCode::codeDescr( const int val ) {
+const QString ReturnCode::codeDescr( const int val ) {
   if( SUCCESS == val )
     return QStringLiteral( "SUCCESS: No errors were encountered." );
   else {
