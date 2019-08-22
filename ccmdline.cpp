@@ -618,12 +618,16 @@ void CCmdLineWithQOptions::showHelp() const {
     QString optNamesStr;
     for( int j = 0; j < opt.names().count(); ++j ) {
       QString optName =  opt.names().at(j);
-      if( 1 == optName.length() ) {
-        optName.prepend( '-' );
-      }
-      else {
-        optName.prepend( "--" );
-      }
+
+      // I don't think this block is necessary any more.
+      // FIXME: delete this the next time through.
+      //if( 1 == optName.length() ) {
+      //  optName.prepend( '-' );
+      //}
+      //else {
+      //  optName.prepend( "--" );
+      //}
+
       QStringList valueNames;
       QString valueNamesStr;
       for( int k = 0; k < opt.valueNames().count(); ++k ) {
@@ -640,8 +644,6 @@ void CCmdLineWithQOptions::showHelp() const {
       }
     }
     optNamesStr = optNames.join( QStringLiteral( ", ") );
-    //optNamesStr.prepend( QStringLiteral("  ") );
-    //optNamesStr.append( ':' );
 
     hList.append( optNamesStr, opt.description() );
   }
