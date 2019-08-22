@@ -32,59 +32,93 @@ CPathString::CPathString( const char* charstr ) : QString( charstr ) {
 	// Nothing to do here.
 }
 
-QString CPathString::longFileName() const {
-	return *this;
+CPathString CPathString::longFileName() const {
+  return CPathString( *this );
 }
 
-QString CPathString::shortFileName() const {
-  QFileInfo fi( *this );
-  return fi.fileName();
+CPathString CPathString::shortFileName() const {
+  return CPathString( QFileInfo( *this ).fileName() );
 }
 
 
 QString CPathString::fileType() const {
-  QFileInfo fi( *this );
-  return fi.suffix();
+  return QFileInfo( *this ).suffix();
 }
 
 
 QString CPathString::baseName() const {
-  QFileInfo fi( *this );
-  return fi.baseName();
+  return QFileInfo( *this ).baseName();
 }
 
 QString CPathString::completeBaseName() const {
-  QFileInfo fi( *this );
-  return fi.completeBaseName();
+  return QFileInfo( *this ).completeBaseName();
 }
 
-QString CPathString::pathTrimmed( const int nPathsToTrim ) {
+int CPathString::nElements() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).count();
+}
+
+QString CPathString::firstElement() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).first();
+}
+
+QString CPathString::lastElement() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).last();
+}
+
+QString CPathString::element( const int idx ) {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).at( idx );
+}
+
+
+CPathString CPathString::parent() {
+  return pathTrimmedRight( 1 );
+}
+
+
+CPathString CPathString::pathTrimmedRight( const int nElementsToTrim ) {
   QString result;
 
-  QString temp = this->replace( '\\', '/' );
-  QStringList templ = temp.split( '/' );
-
-  if( nPathsToTrim > templ.count() ) {
+  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+  if( nElementsToTrim > templ.count() ) {
     result = QString();
-    qFatal( "Wrong number in CPathString::pathTrimmed()" );
+    qFatal( "Wrong number in CPathString::pathTrimmedRight()" );
   }
   else {
-    for( int i = 0; i < nPathsToTrim; ++i )
-      templ.takeAt(0);
+    for( int i = 0; i < nElementsToTrim; ++i )
+      templ.removeLast();
+    result = templ.join( '/' ).append( '/' );
+  }
+
+  return CPathString( result );
+}
+
+
+CPathString CPathString::pathTrimmedLeft( const int nElementsToTrim ) {
+  QString result;
+
+  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+
+  if( nElementsToTrim > templ.count() ) {
+    result = QString();
+    qFatal( "Wrong number in CPathString::pathTrimmedLeft()" );
+  }
+  else {
+    for( int i = 0; i < nElementsToTrim; ++i )
+      templ.removeFirst();
     result = templ.join( '/' );
   }
 
-  return result;
+  return CPathString( result );
 }
 
 
 QDir CPathString::dir() const {
-  QFileInfo finfo( *this );
-  return finfo.dir();
+  return QFileInfo( *this ).dir();
 }
 
-QString CPathString::directory() const {
-  return dir().absolutePath().append( "/" );
+CPathString CPathString::directory() const {
+  return CPathString( dir().absolutePath().append( "/" ) );
 }
 
 
@@ -143,26 +177,30 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
 
 
 
-CFileList::CFileList() : QList<CPathString>() {
-  _startingDir = QString();
-  _recurse = false;
+CFileList::CFileList() :
+  QList<CPathString>(),
+  _recurse( false )
+{
+  // Nothing more to do here
 }
 
-CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) : QList<CPathString>() {
-	//qDebug( "Constructor called" );
-	_startingDir = path;
-  _recurse = recurse;
-
+CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) :
+  QList<CPathString>(),
+  _startingDir( path ),
+  _recurse( recurse )
+{
 	getFileNames( path, filter, recurse );
-	//qDebug( "Done with CQFileList::CQFileList" );
 }
 
 
-CFileList::CFileList( const CFileList& other ) : QList<CPathString>( other ) {
-  _startingDir = other._startingDir;
-  _filter = other._filter;
-  _recurse = other._recurse;
-  _omittedDirs = other._omittedDirs;
+CFileList::CFileList( const CFileList& other ) :
+  QList<CPathString>( other ),
+  _startingDir( other._startingDir ),
+  _filter( other._filter ),
+  _recurse( other._recurse ),
+  _omittedDirs( other._omittedDirs )
+{
+  // Nothing more to do here
 }
 
 
