@@ -42,6 +42,8 @@ CConfigBlock::CConfigBlock( const CConfigBlock& other ) : QMap<QString, QString>
 
 
 CConfigBlock& CConfigBlock::operator=( const CConfigBlock& other ) {
+  QMap<QString, QString>::operator=( other );
+
   assign( other );
   return *this;
 }
