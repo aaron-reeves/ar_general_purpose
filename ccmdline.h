@@ -172,8 +172,15 @@ class CCmdLine {
     QString argument( const QString& pSwitch, const int iIdx) const;
     QString argument( const char* pSwitch, const char* name ) const { return argument( QString( pSwitch ), QString( name ) ); }
     QString argument( const QString& pSwitch, const QString& name ) const;
-    QString value( const char* pSwitch, const int iIdx = 0 ) const { return argument( QString( pSwitch ), iIdx ); }
-     QString value( const QString& pSwitch, const int iIdx = 0 ) const { return argument( pSwitch, iIdx ); }
+
+    QString value( const char* pSwitch ) const { return argument( QString( pSwitch ), 0 ); }
+    QString value( const char* pSwitch, const int iIdx ) const { return argument( QString( pSwitch ), iIdx ); }
+
+    QString value( const QString& pSwitch ) const { return argument( pSwitch, 0 ); }
+    QString value( const QString& pSwitch, const int iIdx ) const { return argument( pSwitch, iIdx ); }
+
+    QString value( const QString& pSwitch, const int iIdx, const QString& defaultVal ) { return safeArgument( pSwitch, iIdx, defaultVal ); }
+    QString value( const char* pSwitch, const int iIdx, const char* defaultVal ) { return safeArgument( QString( pSwitch ), iIdx, QString( defaultVal ) ); }
 
     QString argument( const QStringList& pSwitches, int iIdx );
     
