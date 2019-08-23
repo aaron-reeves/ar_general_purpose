@@ -58,8 +58,8 @@ class CPathString: public QString {
 
         @return QString containing the file name.
         */
-        QString shortFileName() const;
-        QString fileName() const { return shortFileName(); }
+        CPathString shortFileName() const;
+        CPathString fileName() const { return shortFileName(); }
 
         /**
         Returns just the file name component of a path without a file type.  For example, if the path string is
@@ -86,15 +86,15 @@ class CPathString: public QString {
 
         @return QString containing the complete path name.
         */
-        QString longFileName() const;
-        QString filePath() const { return longFileName(); }
+        CPathString longFileName() const;
+        CPathString filePath() const { return longFileName(); }
         /**
         Returns just the directory path associated with a file.  For example, if the path string
         is '/home/foo/bar.txt', directory returns '/home/foo/'.  Note that the trailing slash is included.
 
         @return QString containing the directory path.
         */
-        QString directory() const;
+        CPathString directory() const;
         QDir dir() const;
         
         /**
@@ -121,7 +121,27 @@ class CPathString: public QString {
          * @param nPathsToTrim number of steps to trim off the path.
          * @return QString containing the file name, with nPathsToTrim fewer steps in the path
          */
-        QString pathTrimmed( const int nPathsToTrim );
+        CPathString pathTrimmedLeft( const int nElementsToTrim );
+
+
+        CPathString pathTrimmedRight( const int nElementsToTrim );
+
+        /**
+         * Returns the number of elements in the path
+         * e.g. 'c:/foo/bar/bash/file.txt' has 5 elements (c:, foo, bar, bash, file.txt)
+         * e.g. 'c:/foo/bar; has 3 elements (c:, foo, bar)
+         */
+        int nElements();
+        QString firstElement();
+        QString lastElement();
+        QString element( const int idx );
+
+        /**
+         * Returns the parent directory
+         * e.g. parent of 'c:/foo/bar/bash/file.txt' is 'c:/foo/bar/bash/'
+         *      parent of 'c:/foo/bar/bash/' is 'c:/foo/bar/'
+         */
+        CPathString parent();
 
 };
 
@@ -164,6 +184,9 @@ class CFileList : public QList<CPathString> {
         CFileList( const CFileList& other );
         CFileList& operator=( const CFileList& other );
 
+        // Be careful with this one: private members won't have been set.
+        CFileList( const QList<CPathString>& other ) : QList<CPathString>( other ) {}
+
         /**
         Destroys the file list.  Pointers to list elements (CPathStrings) are NOT deleted.
         */
@@ -195,12 +218,19 @@ class CFileList : public QList<CPathString> {
         void debugList();
         void debug() { debugList(); }
 
+        void toStream(QTextStream* stream, const bool abbrevPath );
+
         /**
         Combines the contents of this list and the contents of subList.
         */
-        void merge( CFileList subList );
+        void merge( const CFileList& subList );
 
         void append( const QString& file ) { QList<CPathString>::append( CPathString( file ) ); }
+
+        void omitDir( const QString& dir );
+        void removeDir( const QString& dir );
+        void removeFile( const QString& filename );
+        void removeFiles( const CFileList& toRemove );
 
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
@@ -221,12 +251,12 @@ class CFileList : public QList<CPathString> {
         QStringList toStringList() const;
 
     private:
-        CFileList( bool createDirList );
-
 				QString _startingDir;
         QString _filter;
 
-        CFileList* _fileList;
+        bool _recurse;
+
+        QSet<QString> _omittedDirs;
 };
 
 #endif //CFILELIST_H_DEFINED

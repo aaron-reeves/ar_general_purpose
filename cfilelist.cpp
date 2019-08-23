@@ -32,59 +32,93 @@ CPathString::CPathString( const char* charstr ) : QString( charstr ) {
 	// Nothing to do here.
 }
 
-QString CPathString::longFileName() const {
-	return *this;
+CPathString CPathString::longFileName() const {
+  return CPathString( *this );
 }
 
-QString CPathString::shortFileName() const {
-  QFileInfo fi( *this );
-  return fi.fileName();
+CPathString CPathString::shortFileName() const {
+  return CPathString( QFileInfo( *this ).fileName() );
 }
 
 
 QString CPathString::fileType() const {
-  QFileInfo fi( *this );
-  return fi.suffix();
+  return QFileInfo( *this ).suffix();
 }
 
 
 QString CPathString::baseName() const {
-  QFileInfo fi( *this );
-  return fi.baseName();
+  return QFileInfo( *this ).baseName();
 }
 
 QString CPathString::completeBaseName() const {
-  QFileInfo fi( *this );
-  return fi.completeBaseName();
+  return QFileInfo( *this ).completeBaseName();
 }
 
-QString CPathString::pathTrimmed( const int nPathsToTrim ) {
+int CPathString::nElements() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).count();
+}
+
+QString CPathString::firstElement() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).first();
+}
+
+QString CPathString::lastElement() {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).last();
+}
+
+QString CPathString::element( const int idx ) {
+  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).at( idx );
+}
+
+
+CPathString CPathString::parent() {
+  return pathTrimmedRight( 1 );
+}
+
+
+CPathString CPathString::pathTrimmedRight( const int nElementsToTrim ) {
   QString result;
 
-  QString temp = this->replace( '\\', '/' );
-  QStringList templ = temp.split( '/' );
-
-  if( nPathsToTrim > templ.count() ) {
-    result = "";
-    qFatal( "Wrong number in CPathString::pathTrimmed()" );
+  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+  if( nElementsToTrim > templ.count() ) {
+    result = QString();
+    qFatal( "Wrong number in CPathString::pathTrimmedRight()" );
   }
   else {
-    for( int i = 0; i < nPathsToTrim; ++i )
-      templ.takeAt(0);
+    for( int i = 0; i < nElementsToTrim; ++i )
+      templ.removeLast();
+    result = templ.join( '/' ).append( '/' );
+  }
+
+  return CPathString( result );
+}
+
+
+CPathString CPathString::pathTrimmedLeft( const int nElementsToTrim ) {
+  QString result;
+
+  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+
+  if( nElementsToTrim > templ.count() ) {
+    result = QString();
+    qFatal( "Wrong number in CPathString::pathTrimmedLeft()" );
+  }
+  else {
+    for( int i = 0; i < nElementsToTrim; ++i )
+      templ.removeFirst();
     result = templ.join( '/' );
   }
 
-  return result;
+  return CPathString( result );
 }
 
 
 QDir CPathString::dir() const {
-  QFileInfo finfo( *this );
-  return finfo.dir();
+  return QFileInfo( *this ).dir();
 }
 
-QString CPathString::directory() const {
-  return dir().absolutePath().append( "/" );
+CPathString CPathString::directory() const {
+  return CPathString( dir().absolutePath().append( "/" ) );
 }
 
 
@@ -143,23 +177,30 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
 
 
 
-CFileList::CFileList() : QList<CPathString>() {
-	_startingDir = "";
-
+CFileList::CFileList() :
+  QList<CPathString>(),
+  _recurse( false )
+{
+  // Nothing more to do here
 }
 
-CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) : QList<CPathString>() {
-	//qDebug( "Constructor called" );
-	_startingDir = path;
-
+CFileList::CFileList( const QString& path, const QString& filter, const bool recurse ) :
+  QList<CPathString>(),
+  _startingDir( path ),
+  _recurse( recurse )
+{
 	getFileNames( path, filter, recurse );
-	//qDebug( "Done with CQFileList::CQFileList" );
 }
 
 
-CFileList::CFileList( const CFileList& other ) : QList<CPathString>( other ) {
-  _startingDir = other._startingDir;
-  _filter = other._filter;
+CFileList::CFileList( const CFileList& other ) :
+  QList<CPathString>( other ),
+  _startingDir( other._startingDir ),
+  _filter( other._filter ),
+  _recurse( other._recurse ),
+  _omittedDirs( other._omittedDirs )
+{
+  // Nothing more to do here
 }
 
 
@@ -168,6 +209,8 @@ CFileList& CFileList::operator=( const CFileList& other ) {
 
   _startingDir = other._startingDir;
   _filter = other._filter;
+  _recurse = other._recurse;
+  _omittedDirs = other._omittedDirs;
 
   return *this;
 }
@@ -175,6 +218,11 @@ CFileList& CFileList::operator=( const CFileList& other ) {
 
 CFileList::~CFileList() {
   // Nothing to do here.
+}
+
+
+void CFileList::omitDir( const QString& dir ) {
+  _omittedDirs.insert( dir );
 }
 
 
@@ -186,15 +234,21 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
   QStringList filters;
 
   _filter = filter;
+  _recurse = recurse;
 
   filters = filter.split( ';', QString::SkipEmptyParts );
 
+  bool dirIsOmitted = ( _omittedDirs.contains( dirName ) || _omittedDirs.contains( QFileInfo( dirName ).fileName() ) );
+  if( dirIsOmitted ) {
+    return;
+  }
+
   for( int i = 0; i < filters.count(); ++i ) {
-    if( filters.at(i).startsWith( "*." ) )
+    if( filters.at(i).startsWith( QStringLiteral("*.") ) )
       filters[i] = filters.at(i).right( filters.at(i).length() - 1 );
   }
 
-	QDir dir( dirName );
+  QDir dir( dirName );
 	dir.setFilter( QDir::Files | QDir::Dirs | QDir::Hidden );
 
   for( int i = 0; i < dir.entryList().count(); ++i ) {
@@ -217,7 +271,7 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
         str = finfo.filePath().toLower();
 
         // Check for the wildcard that matches all files.
-        if( filters.contains( ".*" ) ) {
+        if( filters.contains( QStringLiteral(".*") ) ) {
           listItem = CPathString( finfo.filePath() );
 					this->append( listItem );
 				}
@@ -260,7 +314,50 @@ void CFileList::debugList() {
 }
 
 
-void CFileList::merge( CFileList subList ) {
+void CFileList::toStream( QTextStream* stream, const bool abbrevPath ) {
+  for( int i = 0; i < this->count(); ++i ) {
+    if( abbrevPath )
+      *stream << abbreviatePath( this->at(i), 80 ) << endl;
+    else
+      *stream << this->at(i) << endl;
+  }
+}
+
+
+void CFileList::removeFile( const QString &filename ) {
+  CFileList toRemove;
+  for( int i = 0; i < this->count(); ++i ) {
+    if( this->at(i).endsWith( QStringLiteral("/%1").arg( filename ) ) || ( 0 == this->at(i).compare( filename ) )  ) {
+      toRemove.append( this->at(i) );
+    }
+  }
+
+  this->removeFiles( toRemove );
+}
+
+
+void CFileList::removeFiles( const CFileList &toRemove ) {
+  for( int i = 0; i < toRemove.count(); ++i ) {
+    this->removeAt( this->indexOf( toRemove.at(i) ) );
+  }
+}
+
+
+void CFileList::removeDir( const QString& dir ) {
+  CFileList toRemove;
+
+  for( int i = 0; i < this->count(); ++i ) {
+    QFileInfo fi( this->at(i) );
+    if( fi.path().endsWith( QStringLiteral("/%1").arg( dir ) ) || ( 0 == fi.path().compare( dir ) ) ) {
+      toRemove.getFileNames( fi.path(), this->_filter, this->_recurse );
+    }
+  }
+
+  this->removeFiles( toRemove );
+}
+
+
+void CFileList::merge( const CFileList& subList ) {
   CPathString strp;
   int i;
 
@@ -311,8 +408,8 @@ QStringList CFileList::toStringList() const {
 
   for( int i = 0; i < this->count(); ++i ) {
     CPathString strp = this->at(i);
-    strp.replace( "//", "/" );
-    strp.replace( "\\\\", "\\" );
+    strp.replace( QStringLiteral("//"), QStringLiteral("/") );
+    strp.replace( QStringLiteral("\\\\"), QStringLiteral("\\") );
     result.append( strp );
   }
 
