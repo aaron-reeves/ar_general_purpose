@@ -39,6 +39,7 @@ enum LogLevel {
 // The logMsgx functions are thread-safe.
 // Do not call any appLog functions directly from different threads.
 // See below for more details.
+void logMsg( const char* msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QString& msg, const LogLevel logLevel = LoggingTypical );
 void logMsg( const QStringList& msgs, const LogLevel logLevel = LoggingTypical );
 void logMsgUnique( const QString& msg, const LogLevel logLevel = LoggingTypical );
@@ -47,6 +48,7 @@ void logBlank( const LogLevel logLevel = LoggingTypical );
 
 #ifdef QSQL_USED
 // Thread-safe
+void logFailedQuery( QSqlQuery* query, const char* description = "Query" );
 void logFailedQuery( QSqlQuery* query, const QString& description = QStringLiteral("Query") );
 #endif
 
@@ -80,7 +82,13 @@ class CAppLog : public QObject {
     CAppLog();
     
     // Creates a log with the indicated file name, that will eventually be written to.
-    CAppLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile, QObject* parent = nullptr );
+    CAppLog(
+      const QString& fileName,
+      const LogLevel logLevel,
+      const FileFrequency freq = OneFile,
+      const bool userSpacerLine = true,
+      QObject* parent = nullptr
+    );
     
     bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
     void closeLog();
@@ -94,10 +102,14 @@ class CAppLog : public QObject {
     void setAutoTruncate( const bool val ) { _autoTruncate = val; }
     void setConsoleEcho( const bool val ) { _consoleEcho = val; }
     void setWindowsFriendly( const bool val ) { _windowsFriendly = val; }
+    void setUseSpacerLine( const bool val ) { _useSpacerLine = val; }
 
     void logMessageUnique( const QString& message, const LogLevel logLevel );
+    void logMessage( const char* message, const LogLevel logLevel ) { logMessage( QString( message ), logLevel ); }
     void logMessage( QString message, const LogLevel logLevel );
+    void typical( const char* message ) { logMessage( QString( message ), LoggingTypical ); }
     void typical( const QString& message ) { logMessage( message, LoggingTypical ); }
+    void verbose( const char* message ) { logMessage( QString( message ), LoggingVerbose ); }
     void verbose( const QString& message ) { logMessage( message, LoggingVerbose ); } 
     
     const QString fileName() const { return _logFileName; }
@@ -109,6 +121,7 @@ class CAppLog : public QObject {
     void startMessageList() { _useMessageList = true; }
     void stopMessageList() { _useMessageList = false; }
     void clearMessageList() { _messageList.clear(); }
+    void clearUniqueMessageLists() { _messagesUniqueTypical.clear(); _messagesUniqueVerbose.clear(); }
 
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
@@ -149,6 +162,8 @@ class CAppLog : public QObject {
 
     bool _useMessageList;
     QStringList _messageList;
+
+    bool _useSpacerLine;
 };
 
 

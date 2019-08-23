@@ -19,11 +19,23 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #ifdef QCONCURRENT_USED
   #include <QBasicMutex>
-  static QBasicMutex _mutex;
+  static QBasicMutex _mutex; // Note: NOT recursive, so don't lock muliple times.
 #endif
 
 CAppLog appLog;
 CLockFile lockFile;
+
+void logMsg( const char* msg, const LogLevel logLevel /* = LoggingTypical */ ) {
+  #ifdef QCONCURRENT_USED
+    _mutex.lock();
+  #endif
+
+  appLog.logMessage( msg, logLevel );
+
+  #ifdef QCONCURRENT_USED
+    _mutex.unlock();
+  #endif
+}
 
 void logMsg( const QString& msg, const LogLevel logLevel /* = LoggingTypical */ ) {
   #ifdef QCONCURRENT_USED
@@ -91,6 +103,11 @@ void logBlank( const LogLevel logLevel /* = LoggingTypical */ ) {
 
 
 #ifdef QSQL_USED
+void logFailedQuery( QSqlQuery* query, const char* description /* = "Query" */ ) {
+  logFailedQuery( query, QString( description ) );
+}
+
+
 void logFailedQuery( QSqlQuery* query, const QString& description /* = "Query" */ ) {
   #ifdef QCONCURRENT_USED
     _mutex.lock();
@@ -121,10 +138,17 @@ CAppLog::CAppLog() : QObject() {
 }
 
 
-CAppLog::CAppLog(const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */, QObject* parent /* = nullptr */ ) : QObject( parent ) {
+CAppLog::CAppLog(
+    const QString& fileName,
+    const LogLevel logLevel,
+    const FileFrequency freq /* = OneFile */,
+    const bool userSpacerLine /* = true */,
+    QObject* parent /* = nullptr */
+) : QObject( parent ) {
   initialize();
+  _useSpacerLine = userSpacerLine;
 
-  openLog( fileName, logLevel, freq );  
+  openLog( fileName, logLevel, freq );
 }
 
 
@@ -149,6 +173,8 @@ void CAppLog::initialize() {
   _windowsFriendly = false;
 
   _useMessageList = false;
+
+  _useSpacerLine = true;
 
   setLogLevel( LoggingPending );
 }
@@ -241,7 +267,7 @@ void CAppLog::setLogLevel( const LogLevel logLevel ) {
       }
       else {
         // FIXME: For the moment, fail silently.
-        //qDebug() << "Log file is not open!";  
+        //qDb() << "Log file is not open!";
       }
     }
   }
@@ -256,15 +282,19 @@ bool CAppLog::openLog() {
 
     if( _logFile->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
       _logTextStream = new QTextStream( _logFile );
-      if( _windowsFriendly )
-        *_logTextStream << "\r\n" << ::flush;
-      else
-        *_logTextStream << ::endl << ::flush;
-      //qDebug() << "Log file is open.";
+
+      if( _useSpacerLine ) {
+        if( _windowsFriendly )
+          *_logTextStream << "\r\n" << ::flush;
+        else
+          *_logTextStream << ::endl << ::flush;
+      }
+
+      //qDb() << "Log file is open.";
       return true;
     }
     else {
-      //qDebug() << "Log file did not open!";
+      //qDb() << "Log file did not open!";
       delete _logFile;
       _logFile = nullptr;
       _logTextStream = nullptr;
@@ -382,7 +412,7 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   }
 
   if( _useStderr ) {
-    qDebug() << "          (log)" << message;
+    qDb() << "          (log)" << message;
   }
 
   if( _consoleEcho ) {

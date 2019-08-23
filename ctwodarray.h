@@ -1,9 +1,9 @@
 /*
-ctwodarray.h/cpp
+ctwodarray.h/tpp
 ------------------
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 --------------------------------------------------
-Copyright (C) 2018 SRUC, Scotland's Rural College
+Copyright (C) 2018 - 2019 Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -26,10 +26,11 @@ class CTwoDArray {
     CTwoDArray& operator= ( const CTwoDArray& other );
     void assign( const CTwoDArray& other );
 
-    ~CTwoDArray();
+    virtual ~CTwoDArray();
 
     // Sizing
     //-------
+    void clear() { _data.clear(); _nRows = 0; _nCols = 0; }
     void setSize( const int nCols, const int nRows ); // This currently assumes that the object is empty.
     void setSize( const int nCols, const int nRows, const T defaultVal ); // This currently assumes that the object is empty.
     void fill( const T val ); // Will overwrite existing data
@@ -47,10 +48,10 @@ class CTwoDArray {
 
     void append( const CTwoDArray<T> array );
 
-    void removeRow( const int rowIdx );
+    virtual void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
 
-    void removeColumn( const int colIdx );
+    virtual void removeColumn( const int colIdx );
     void removeColumn( const QString& colName );
 
     // Basic setter and getters

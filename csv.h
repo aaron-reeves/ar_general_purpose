@@ -309,7 +309,6 @@ class QCsv {
     bool identicalFieldNames( const QStringList& otherNames ) const;
 
     void clearError();
-    QStringList writeLine( const QStringList& line );
 
     bool isCommentLine( const QString& line );
 

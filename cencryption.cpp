@@ -50,7 +50,7 @@ QByteArray CEncryption::rc4Encrypt( const QString& input, const QString& pwd ) {
     else {
       temp.append( QChar( s[t]^input.at(tmp).unicode() ) );
     }
-    //qDebug() << "Char" << tmp << ":" << temp.at(tmp) << temp.at(tmp).unicode();
+    //qDb() << "Char" << tmp << ":" << temp.at(tmp) << temp.at(tmp).unicode();
   }
 
   return temp;
@@ -88,10 +88,10 @@ void CEncryption::rc4( const char* ByteInput, const char* pwd, char*& ByteOutput
     else {
       temp[tmp]=char( s[t]^ByteInput[tmp] );
     }
-    //qDebug() << "Char" << tmp << ":" << temp[tmp] << (int)temp[tmp];
+    //qDb() << "Char" << tmp << ":" << temp[tmp] << (int)temp[tmp];
   }
   temp[tmp]='\0';
-  //qDebug() << "temp:" << temp;
+  //qDb() << "temp:" << temp;
   ByteOutput=temp;
 }
 
@@ -105,7 +105,7 @@ QString CEncryption::hexEncode( const QString& temp ) {
   for( i = 0; i < temp.length(); ++i ) {
     c = temp.at(i).cell();
 
-    //qDebug() << c;
+    //qDb() << c;
 
     if( c < 16 ) {
       temp4.sprintf( "0%X", c );

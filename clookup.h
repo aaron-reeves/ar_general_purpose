@@ -17,6 +17,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QDebug>
 
+#include <ar_general_purpose/qcout.h>
+
 //-----------------------------------------------------------------------------
 // Example
 //-----------------------------------------------------------------------------
@@ -102,12 +104,12 @@ class CLookup {
 
       void debug() {
         int i;
-        qDebug() << QString( "Forward:" );
+        qDb() << "Forward:";
         for( i = 0; i < _forwardMap.count(); ++i )
-          qDebug() << "  " << _forwardMap.keys().at(i) << _forwardMap.values().at(i);
-        qDebug() << "Backward:";
+          qDb() << "  " << _forwardMap.keys().at(i) << _forwardMap.values().at(i);
+        qDb() << "Backward:";
         for( i = 0; i < _reverseMap.count(); ++i )
-          qDebug() << "  " << _reverseMap.keys().at(i) << _reverseMap.values().at(i);
+          qDb() << "  " << _reverseMap.keys().at(i) << _reverseMap.values().at(i);
       }
 
     protected:

@@ -1,5 +1,11 @@
 #include "getlastinsertid.h"
 
+
+int getLastInsertId( const QSqlDatabase* db, const char* sequenceName ) {
+  return getLastInsertId( db, QString( sequenceName ) );
+}
+
+
 int getLastInsertId( const QSqlDatabase* db, const QString& sequenceName ) {
   QSqlQuery q( *db );
 

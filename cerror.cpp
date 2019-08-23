@@ -1,5 +1,7 @@
 #include "cerror.h"
 
+#include <ar_general_purpose/qcout.h>
+
 /*
 cerror.h/cpp
 ------------
@@ -88,7 +90,7 @@ QString CError::typeAsString( const ErrorType type ) {
     case CError::Critical: typeStr = QStringLiteral("Critical"); break;
     case CError::Fatal: typeStr = QStringLiteral("Fatal"); break;
     default:
-      qDebug() << "Problem encountered in CError::typeAsString()";
+      qDb() << "Problem encountered in CError::typeAsString()";
       Q_ASSERT( false );
       break;
   }
@@ -98,7 +100,7 @@ QString CError::typeAsString( const ErrorType type ) {
 
 void CError::debug() const {
   QString q = QStringLiteral( "%1: %2, %3, %4" ).arg( this->typeAsString(), this->msg(), QString::number( this->dataSourceID() ), QString::number( this->lineNumber() ) );
-  qDebug() << q;
+  qDb() << q;
 }
 
 
