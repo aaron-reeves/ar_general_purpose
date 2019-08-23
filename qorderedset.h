@@ -16,17 +16,19 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtCore>
 
 template <class T>
-class QOrderedSet : public QMap<T, T> {
+class QOrderedSet : public QMap<T, int> {
   public:
     QOrderedSet();
     QOrderedSet( const QOrderedSet<T>& other );
     QOrderedSet& operator=( const QOrderedSet& other );
     ~QOrderedSet() { /* Nothing more to do here */ }
 
-    typename QMap<T, T>::iterator insert( const T val );
+    typename QMap<T, int>::iterator insert( const T val );
 
     QList<T> values();
 };
+
+// FIXME: This needs some proper iterators
 
 #include "qorderedset.tpp"
 

@@ -13,34 +13,34 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include "qorderedset.h" // For convenience only: this would be a circular reference without guards.
 
 template <class T>
-QOrderedSet<T>::QOrderedSet() : QMap<T, T>() {
+QOrderedSet<T>::QOrderedSet() : QMap<T, int>() {
   // Nothing else to do here
 }
 
 
 template <class T>
-QOrderedSet<T>::QOrderedSet( const QOrderedSet<T>& other ) : QMap<T, T>( other ) {
+QOrderedSet<T>::QOrderedSet( const QOrderedSet<T>& other ) : QMap<T, int>( other ) {
   // Nothing else to do here
 }
 
 
 template <class T>
 QOrderedSet<T>& QOrderedSet<T>::operator=( const QOrderedSet<T>& other ) {
-  QMap<T, T>::operator=( other );
+  QMap<T, int>::operator=( other );
   
   return *this;
 }
 
 
 template <class T>
-typename QMap<T, T>::iterator QOrderedSet<T>::insert( const T val ) {
-  return QMap<T, T>::insert( val, 0 );
+typename QMap<T, int>::iterator QOrderedSet<T>::insert( const T val ) {
+  return QMap<T, int>::insert( val, 0 );
 }
 
 
 template <class T>
 QList<T> QOrderedSet<T>::values() {
-  return QMap<T, T>::keys();
+  return QMap<T, int>::keys();
 }
 
 
