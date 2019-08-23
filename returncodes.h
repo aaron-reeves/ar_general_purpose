@@ -21,9 +21,9 @@ Public License as published by the Free Software Foundation; either version 2 of
 namespace ReturnCode {
   enum Result {
     SUCCESS                  = 0x000000, //       0
-    EMPTY_INPUT_FILE         = 0x000001, //       1
-    DUPLICATE_RECORD         = 0x000002, //       2
-    KNOWN_VALIDATION_ISSUE   = 0x000004, //       4
+    WARNING_EMPTY_INPUT_FILE = 0x000001, //       1
+    WARNING_DUPLICATE_RECORD = 0x000002, //       2
+    WARNING_KNOWN_ISSUE      = 0x000004, //       4
     DATA_VALIDATION_PROBLEM  = 0x000008, //       8
     BAD_COMMAND              = 0x000010, //      16
     INPUT_FILE_PROBLEM       = 0x000020, //      32

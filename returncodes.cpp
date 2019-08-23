@@ -18,9 +18,9 @@ const QString ReturnCode::codeList() {
  return QString(
    "Exit codes (used in combination with one another):\n"
    "  SUCCESS                  :       0\n"
-   "  EMPTY_INPUT_FILE         :       1\n"
-   "  DUPLICATE_RECORD         :       2\n"
-   "  KNOWN_VALIDATION_ISSUE   :       4\n"
+   "  WARNING_EMPTY_INPUT_FILE :       1\n"
+   "  WARNING_DUPLICATE_RECORD :       2\n"
+   "  WARNING_KNOWN_ISSUE      :       4\n"
    "  DATA_VALIDATION_PROBLEM  :       8\n"
    "  BAD_COMMAND              :      16\n"
    "  INPUT_FILE_PROBLEM       :      32\n"
@@ -48,12 +48,12 @@ const QString ReturnCode::codeDescr( const int val ) {
   else {
      QString result;
 
-     if( val & EMPTY_INPUT_FILE )
-       result.append( "EMPTY_INPUT_FILE: The specified input file contains no data.\n" );
-     if( val & DUPLICATE_RECORD )
-       result.append( "DUPLICATE_RECORD: Duplicate records were encountered.\n" );
-     if( val & KNOWN_VALIDATION_ISSUE )
-       result.append( "KNOWN_VALIDATION_ISSUE: Some records contain recognized but invalid field values.\n" );
+     if( val & WARNING_EMPTY_INPUT_FILE )
+       result.append( "WARNING_EMPTY_INPUT_FILE: The specified input file contains no data.\n" );
+     if( val & WARNING_DUPLICATE_RECORD )
+       result.append( "WARNING_DUPLICATE_RECORD: Duplicate records were encountered.\n" );
+     if( val & WARNING_KNOWN_ISSUE )
+       result.append( "WARNING_KNOWN_ISSUE: Some records contain recognized but invalid field values.\n" );
     if( val & DATA_VALIDATION_PROBLEM )
       result.append( "DATA_VALIDATION_PROBLEM: Some records contain invalid field values.\n" );
     if( val & BAD_COMMAND )
