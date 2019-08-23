@@ -535,21 +535,21 @@ QDateTime CSpreadsheet::xlsDateTime( const double d, const bool is1904DateSystem
 bool CSpreadsheet::readXlsx(const QString& sheetName, QXlsx::Document* xlsx, const bool displayVerboseOutput /* = false */ ) {
   if( !xlsx->selectSheet( sheetName ) ) {
     if( displayVerboseOutput )
-      cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
+      qDb() << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName );
     return false;
   }
   if( displayVerboseOutput )
-    cout << "Worksheet is open." << endl;
+    qDb() << "Worksheet is open." << endl;
 
   QXlsx::CellRange cellRange = xlsx->dimension();
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
-    cout << "Cell range is out of bounds." << endl;
+    qDb() << "Cell range is out of bounds.";
     return false;
   }
   if( displayVerboseOutput )
-    cout << QStringLiteral( "Cell range: rows( %1, %2 ), columns (%3, %4)" )
+    qDb() << QStringLiteral( "Cell range: rows( %1, %2 ), columns (%3, %4)" )
       .arg( QString::number( cellRange.firstRow() ), QString::number( cellRange.lastRow() ), QString::number( cellRange.firstColumn() ), QString::number( cellRange.lastColumn() ) )
-    << endl;
+    ;
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
@@ -613,7 +613,7 @@ bool CSpreadsheet::readXls( const int sheetIdx, xls::xlsWorkBook* pWB, const boo
         if( displayVerboseOutput ) {
           msg.replace( QLatin1String("CELLCOL"), QString::number( cellCol ), Qt::CaseSensitive );
           msg.replace( QLatin1String("CELLROW"), QString::number( cellRow ), Qt::CaseSensitive );
-          cout << msg << endl;
+          qDb() << msg;
         }
       }
     }
@@ -1203,10 +1203,10 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
     _xlsFormats.insert( _pWB->formats.format[i].index, _pWB->formats.format[i].value );
 
     if( _displayVerboseOutput )
-      cout << "Format: " << "i: " << i << ", idx: " << _pWB->formats.format[i].index << ", val: " << _pWB->formats.format[i].value << endl;
+      qDb() << "Format: " << "i: " << i << ", idx: " << _pWB->formats.format[i].index << ", val: " << _pWB->formats.format[i].value;
   }
   if( _displayVerboseOutput )
-    cout << endl;
+    qDb() << endl;
 
   _xlsXFs.clear();
   for( unsigned int i = 0; i < _pWB->xfs.count; ++i ) {
@@ -1214,21 +1214,21 @@ bool CSpreadsheetWorkBook::openXlsWorkbook() {
       _xlsXFs.insert( int( i ), _pWB->xfs.xf[i].format );
 
       if( _displayVerboseOutput )
-        cout << "XFs: " << "i: " << i << ", format: " << _pWB->xfs.xf[i].format << ", type: " << _pWB->xfs.xf[i].type << endl;
+        qDb() << "XFs: " << "i: " << i << ", format: " << _pWB->xfs.xf[i].format << ", type: " << _pWB->xfs.xf[i].type;
     }
   }
   if( _displayVerboseOutput )
-    cout << endl;
+    qDb() << endl;
 
 
   for( unsigned int i = 0; i < _pWB->sheets.count; ++i ) {
     _sheetNames.insert( int( i ), _pWB->sheets.sheet[i].name );
 
     if( _displayVerboseOutput )
-      cout << _pWB->sheets.sheet[i].name << endl;
+      qDb() << _pWB->sheets.sheet[i].name;
   }
   if( _displayVerboseOutput )
-    cout << endl;
+    qDb() << endl;
 
   return true;
 }

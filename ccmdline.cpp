@@ -121,10 +121,7 @@ int CCmdLine::splitFile( const QString& fileName ) {
   
   // Read the contents of the file into a string
   QFile file( fileName );
-  if( !file.open( QIODevice::ReadOnly | QIODevice::Text ) ) {
-    qDebug() << "Cannot open specified file.";
-  }
-  else {
+  if( file.open( QIODevice::ReadOnly | QIODevice::Text ) ) {
     QTextStream in( &file );
     while( !in.atEnd() ) {
       s = in.readLine();
@@ -133,6 +130,9 @@ int CCmdLine::splitFile( const QString& fileName ) {
         list.append( s );
       }
     }
+  }
+  else {
+    qDb() << "Cannot open specified file.";
   }
   
   return processList( list ); 
@@ -483,7 +483,7 @@ void CCmdLine::debug( void ) {
 
   while( it.hasNext() ) {
     it.next();
-    qDebug() << "Key " << it.key() << " values " << it.value().join( QStringLiteral(", ") );
+    qDb() << "Key " << it.key() << " values " << it.value().join( QStringLiteral(", ") );
   }
 }
 
