@@ -65,6 +65,8 @@ sources.
 #if defined(_WIN32) || defined(WIN32)
   #define SET_BINARY(_f) do {if (!isatty(_f)) setmode (_f, O_BINARY);} while (0)
   typedef int sssize_t;
+#else
+  typedef ssize_t sssize_t;
 #endif
 //-----------------------------------------------------
 
