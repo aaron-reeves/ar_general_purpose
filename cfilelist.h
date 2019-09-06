@@ -228,9 +228,11 @@ class CFileList : public QList<CPathString> {
         void append( const QString& file ) { QList<CPathString>::append( CPathString( file ) ); }
 
         void omitDir( const QString& dir );
-        void removeDir( const QString& dir );
+        void removeFilesInDir( const QString& dir );
+        void removeDirectory( const QString& dirname );
         void removeFile( const QString& filename );
         void removeFiles( const CFileList& toRemove );
+
 
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
