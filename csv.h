@@ -170,11 +170,13 @@ class QCsv {
 
     // Field/column names are case-insensitive.
     QString fieldName( const int index ) const; // Returns the field/column name of field/column index.
-    QStringList fieldNames() const {return _fieldNames; } // Returns a list of all field/column names.
     int fieldIndexOf( const QString& fieldName ); // Returns the field/column number of the specified field name.
     bool renameFields( const QStringList& newFieldNames ); // Rename all fields/columns with the names in the list.  The number of new names provided must match the number of existing names.
     bool renameField( QString oldName, QString newName ); // Change the name of field 'oldName' to 'newName'.
     bool containsFieldName( const QString& fieldName ); // Is there a field called 'fieldName'?
+
+    // Original field names are case-sensitive, so it's generally better to use one of the accessor functions above than to use fieldNames directly
+    QStringList fieldNames() const {return _fieldNames; } // Returns a list of all field/column names.
 
     // The field at position index (starting from 0) or with the name 'fieldName' of the current line.
     // May be used with either line-by-line or entire-file mode.
