@@ -379,13 +379,20 @@ void CTwoDArray<T>::removeColumn( const QString& colName ) {
 template <class T>
 void CTwoDArray<T>::setColNames( const QStringList& names ) {
   Q_ASSERT( names.count() == _nCols );
-  _colNames = names;
+
+  for( int i = 0; i < names.count(); ++i ) {
+    _colNames.append( names.at(i).trimmed() );
+  }
 }
+
 
 template <class T>
 void CTwoDArray<T>::setRowNames( const QStringList& names ) {
   Q_ASSERT( names.count() == _nRows );
-  _rowNames = names;
+
+  for( int i = 0; i < names.count(); ++i ) {
+    _rowNames.append( names.at(i).trimmed() );
+  }
 }
 //----------------------------------------------------------------------------------------------
 
