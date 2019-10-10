@@ -358,7 +358,7 @@ class QCsv {
  * This signal, nBytesRead, indicates the number of bytes of data read from a file,
  * and can be handled in the same way any other Qt signal might be treated.
  */
-class QCsvObject : public QObject, QCsv {
+class QCsvObject : public QObject, public QCsv {
   Q_OBJECT
 
   public:
