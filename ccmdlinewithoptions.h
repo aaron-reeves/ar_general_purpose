@@ -15,7 +15,7 @@ class CCmdLineWithQOptions : public CCmdLine {
     CCmdLineWithQOptions& operator=( const CCmdLineWithQOptions& other ) { assign( other ); return *this; }
     ~CCmdLineWithQOptions() { /* Nothing else to do here */ }
 
-    void setSingleDashWordOptionMode( const int dummy ) const { Q_UNUSED( dummy ); }
+    void setSingleDashWordOptionMode( const int dummy ) const { Q_UNUSED( dummy ) }
 
     void addHelpOption( DisplayMessageFn helpFn = nullptr );
     void addVersionOption( DisplayMessageFn versionFn = nullptr );

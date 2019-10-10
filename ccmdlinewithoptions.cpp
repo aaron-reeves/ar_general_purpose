@@ -1,6 +1,10 @@
 
 #include "ccmdlinewithoptions.h"
 
+#include <ar_general_purpose/qcout.h>
+#include <ar_general_purpose/strutils.h>
+#include <ar_general_purpose/help.h>
+
 void CCmdLineWithQOptions::initialize() {
   _helpFn = nullptr;
   _versionFn = nullptr;
