@@ -26,6 +26,31 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <xls.h>
 
 
+/* SAMPLE CODE
+   ===========
+  int main() {
+    QString filename = "sampleResults.xlsx";
+
+    CSpreadsheetWorkBook wb(
+      CSpreadsheetWorkBook::Format2007,
+      filename
+    );
+
+    wb.readAllSheets();
+
+    CSpreadsheet sheet = wb.sheet( 0 );
+
+    for( int c = 0; c < sheet.nCols(); ++c ) {
+      for( int r = 0; r < sheet.nRows(); ++r ) {
+        qDebug() << sheet.cellValue( c, r );
+      }
+    }
+
+    return 0;
+  }
+*/
+
+
 class CSpreadsheetWorkBook;
 
 class CCellRef {
@@ -298,6 +323,7 @@ class CSpreadsheetWorkBook : public QObject {
     static QString fileFormatAsString( const SpreadsheetFileFormat fmt );
 
     int sheetCount() const { return _sheetNames.count(); }
+    int nSheets() const { return _sheetNames.count(); }
     bool hasSheet( const int idx );
     bool hasSheet( const QString& sheetName );
     int sheetIndex( const QString& sheetName );
