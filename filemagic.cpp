@@ -99,6 +99,40 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
 }
 
 
+bool magicStringShowsAsciiTextFile( const QString& fileTypeInfo ) {
+  bool result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
+  //    bool result = (
+  //      fileTypeInfo.startsWith( "ASCII text" )
+  //      || fileTypeInfo.startsWith( "ASCII English text" )
+  //      || fileTypeInfo.startsWith( "ASCII C program text" )
+  //    );
+
+  return result;
+}
+
+
+bool magicStringShowsXlsxFile( const QString& fileTypeInfo, const QString& fileName ) {
+  bool result = (
+    ( fileTypeInfo.startsWith( QLatin1String("Zip archive data") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
+    || ( 0 == fileTypeInfo.compare( QLatin1String("Microsoft Excel 2007+") ) )
+    || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
+    || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xls"), Qt::CaseInsensitive ) )
+  );
+
+  return result;
+}
+
+
+bool magicStringShowsXlsFile( const QString& fileTypeInfo ) {
+  bool result = (
+    fileTypeInfo.contains( QLatin1String("Composite Document File V2 Document") )
+    || fileTypeInfo.contains( QLatin1String("CDF V2 Document") )
+  );
+
+  return result;
+}
+
+
 bool _magicIsType( const int type, const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   // Determine which magic file to use
   //----------------------------------
@@ -141,26 +175,13 @@ bool _magicIsType( const int type, const QString& fileName, bool* error /* = nul
 
     switch( type ) {
       case CHECKTEXT:
-          result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
-          //    result = (
-          //      fileTypeInfo.startsWith( "ASCII text" )
-          //      || fileTypeInfo.startsWith( "ASCII English text" )
-          //      || fileTypeInfo.startsWith( "ASCII C program text" )
-          //    );
+          result = magicStringShowsAsciiTextFile( fileTypeInfo );
         break;
       case CHECKXLSX:
-          result = (
-            ( fileTypeInfo.startsWith( QLatin1String("Zip archive data") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
-            || ( 0 == fileTypeInfo.compare( QLatin1String("Microsoft Excel 2007+") ) )
-            || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xlsx"), Qt::CaseInsensitive ) )
-            || ( fileTypeInfo.contains( QLatin1String("Microsoft OOXML") ) && fileName.endsWith( QLatin1String(".xls"), Qt::CaseInsensitive ) )
-          );
+          result = magicStringShowsXlsxFile( fileTypeInfo, fileName );
         break;
       case CHECKXLS:
-        result = (
-          fileTypeInfo.contains( QLatin1String("Composite Document File V2 Document") )
-          || fileTypeInfo.contains( QLatin1String("CDF V2 Document") )
-        );
+        result = magicStringShowsXlsFile( fileTypeInfo );
         break;
       default:
           Q_ASSERT( false );
