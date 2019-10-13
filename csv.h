@@ -140,7 +140,7 @@ class QCsv {
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator
 
-    ~QCsv(); // Destroys the object.
+    virtual ~QCsv(); // Destroys the object.
 
     // Parses a CSV-formatted multi-line string, breaking it into its component parts
     // which can then be accessed via the various qCSV functions.
@@ -301,7 +301,7 @@ class QCsv {
 
   protected:
     void initialize();
-    int readNext();
+    virtual int readNext();
     void assign( const QCsv& other );
 
     bool openFileAndReadHeader();
@@ -380,9 +380,9 @@ class QCsvObject : public QObject, public QCsv {
 
     //qCSV( const qCSV& other );
 
-    ~QCsvObject();
+    ~QCsvObject() override;
 
-    int readNext();
+    int readNext() override;
 
   signals:
     void nBytesRead( const int val );
