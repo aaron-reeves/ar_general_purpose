@@ -1,7 +1,10 @@
 #include "debugutils.h"
 
 void debugArray( const CTwoDArray<QVariant>& array ) {
-  qDb() << "******************** BEGIN ARRAY";
+  qDb() << "******************** BEGIN ARRAY with size" << array.nCols() << "x" << array.nRows();
+
+  if( array.hasColNames() )
+    qDb() << array.colNames();
 
   for( int r = 0; r < array.nRows(); ++r ) {
     QString result;
