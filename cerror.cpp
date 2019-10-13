@@ -1,7 +1,3 @@
-#include "cerror.h"
-
-#include <ar_general_purpose/qcout.h>
-
 /*
 cerror.h/cpp
 ------------
@@ -15,6 +11,10 @@ This program is free software; you can redistribute it and/or modify it under th
 Public License as published by the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 */
+
+#include "cerror.h"
+
+#include <ar_general_purpose/qcout.h>
 
 #include "cerror.h"
 

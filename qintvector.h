@@ -4,7 +4,7 @@ qintvector.h/cpp
 Begin: 2014/05/08
 Author: Aaron Reeves <aaron.reeves@naadsm.org>
 ------------------------------------------------------
-Copyright (C) 2014 SRUC
+Copyright (C) 2014 Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

@@ -1,5 +1,5 @@
 /*
-cfilelist2.h/cpp
+cfilelist.h/cpp
 Begin: 2003/06/11
 -----------------
 Copyright (C) 2003 - 2017 by Aaron Reeves
