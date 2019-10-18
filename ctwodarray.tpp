@@ -330,6 +330,146 @@ void CTwoDArray<T>::append( const CTwoDArray<T> array ) {
 
 
 template <class T>
+void CTwoDArray<T>::prependRow() {
+  QVector<T> row( _nCols );
+
+  if( _useDefaultVal ) {
+    row.fill( _defaultVal );
+  }
+
+  _data.prepend( row );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    _rowNames.prepend( newRowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName ) {
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow();
+  }
+  else {
+    QVector<T> row( _nCols );
+
+    if( _useDefaultVal ) {
+      row.fill( _defaultVal );
+    }
+
+    _data.prepend( row );
+    ++_nRows;
+    _rowNames.prepend( rowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const T defaultVal ) {
+  _useDefaultVal = true;
+  _defaultVal = defaultVal;
+  prependRow();
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow(  const QString& rowName, const T defaultVal ) {
+  _useDefaultVal = true;
+  _defaultVal = defaultVal;
+  prependRow( rowName );
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow(const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.prepend( values );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    _rowNames.prepend( newRowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.prepend( values.toVector() );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    _rowNames.prepend( newRowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName, const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow( values );
+  }
+  else {
+    _data.prepend( values );
+    ++_nRows;
+    _rowNames.prepend( rowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName, const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNames.contains( rowName ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow( values );
+  }
+  else {
+    _data.prepend( values.toVector() );
+    ++_nRows;
+    _rowNames.prepend( rowName );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prepend( const CTwoDArray<T> array ) {
+  for( int r = array.nRows() - 1; r >= 0 ; --r ) {
+    this->prependRow( array.row( r ) );
+  }
+}
+
+
+template <class T>
 void CTwoDArray<T>::removeRow( const int rowIdx ) {
   Q_ASSERT( (rowIdx >= 0) && (rowIdx < _nRows) );
   _data.removeAt( rowIdx );
@@ -379,13 +519,20 @@ void CTwoDArray<T>::removeColumn( const QString& colName ) {
 template <class T>
 void CTwoDArray<T>::setColNames( const QStringList& names ) {
   Q_ASSERT( names.count() == _nCols );
-  _colNames = names;
+
+  for( int i = 0; i < names.count(); ++i ) {
+    _colNames.append( names.at(i).trimmed() );
+  }
 }
+
 
 template <class T>
 void CTwoDArray<T>::setRowNames( const QStringList& names ) {
   Q_ASSERT( names.count() == _nRows );
-  _rowNames = names;
+
+  for( int i = 0; i < names.count(); ++i ) {
+    _rowNames.append( names.at(i).trimmed() );
+  }
 }
 //----------------------------------------------------------------------------------------------
 

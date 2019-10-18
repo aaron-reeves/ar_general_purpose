@@ -48,6 +48,18 @@ class CTwoDArray {
 
     void append( const CTwoDArray<T> array );
 
+    void prependRow();
+    void prependRow( const T defaultVal );
+    void prependRow( const QString& rowName );
+    void prependRow(  const QString& rowName, const T defaultVal );
+
+    void prependRow(const QVector<T>& values );
+    void prependRow( const QString& rowName, const QVector<T>& values );
+    void prependRow(const QList<T>& values );
+    void prependRow( const QString& rowName, const QList<T>& values );
+
+    void prepend( const CTwoDArray<T> array );
+
     virtual void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
 

@@ -1,5 +1,5 @@
 /*
-cfilelist2.h/cpp
+cfilelist.h/cpp
 Begin: 2003/06/11
 -----------------
 Copyright (C) 2003 - 2017 by Aaron Reeves
@@ -19,6 +19,22 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 // Set to true to enable debugging messages for this file
 #define DEBUG true
+
+QString formatFileName( QString filename ) {
+  filename = filename.trimmed();
+  filename.replace( '\\', '/' );
+  filename.replace( QRegExp( "[/]+" ), QStringLiteral("/") );
+  return filename;
+}
+
+QString formatDirName( QString dirname ) {
+  dirname = formatFileName( dirname );
+
+  if( !dirname.endsWith( '/' ) )
+    dirname.append( '/' );
+
+  return dirname;
+}
 
 CPathString::CPathString() : QString( ) {
   // Nothing to do here.
@@ -55,19 +71,19 @@ QString CPathString::completeBaseName() const {
 }
 
 int CPathString::nElements() {
-  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).count();
+  return formatFileName( *this ).split( '/', QString::SkipEmptyParts ).count();
 }
 
 QString CPathString::firstElement() {
-  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).first();
+  return formatFileName( *this ).split( '/', QString::SkipEmptyParts ).first();
 }
 
 QString CPathString::lastElement() {
-  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).last();
+  return formatFileName( *this ).split( '/', QString::SkipEmptyParts ).last();
 }
 
 QString CPathString::element( const int idx ) {
-  return this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts ).at( idx );
+  return formatFileName( *this ).split( '/', QString::SkipEmptyParts ).at( idx );
 }
 
 
@@ -79,7 +95,7 @@ CPathString CPathString::parent() {
 CPathString CPathString::pathTrimmedRight( const int nElementsToTrim ) {
   QString result;
 
-  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+  QStringList templ = formatFileName( *this ).split( '/', QString::SkipEmptyParts );
   if( nElementsToTrim > templ.count() ) {
     result = QString();
     qFatal( "Wrong number in CPathString::pathTrimmedRight()" );
@@ -97,7 +113,7 @@ CPathString CPathString::pathTrimmedRight( const int nElementsToTrim ) {
 CPathString CPathString::pathTrimmedLeft( const int nElementsToTrim ) {
   QString result;
 
-  QStringList templ = this->replace( '\\', '/' ).split( '/', QString::SkipEmptyParts );
+  QStringList templ = formatFileName( *this ).split( '/', QString::SkipEmptyParts );
 
   if( nElementsToTrim > templ.count() ) {
     result = QString();
@@ -133,8 +149,7 @@ QString CPathString::shortDirectory() const {
 
 
 QString CPathString::removeRoot( QString oldRoot ) {
-  oldRoot = oldRoot.trimmed();
-  oldRoot = oldRoot.replace( '\\', '/' );
+  oldRoot = formatFileName( oldRoot );
 
   if( 0 == longFileName().indexOf( oldRoot.trimmed() ) ) {
     return longFileName().remove( 0, oldRoot.trimmed().length() + 1 );
@@ -150,8 +165,7 @@ QString CPathString::replaceRoot( QString oldRoot, QString newRoot ) {
 
   if( DEBUG ) qDb() << "--- CQPathString::replaceRoot";
 
-  oldRoot = oldRoot.trimmed();
-  oldRoot = oldRoot.replace( '\\', '/' );
+  oldRoot = formatFileName( oldRoot );
 
   newRoot = newRoot.trimmed();
   if( '/' == newRoot.at( newRoot.length() - 1 ) ) {
@@ -327,7 +341,7 @@ void CFileList::toStream( QTextStream* stream, const bool abbrevPath ) {
 void CFileList::removeFile( const QString &filename ) {
   CFileList toRemove;
   for( int i = 0; i < this->count(); ++i ) {
-    if( this->at(i).endsWith( QStringLiteral("/%1").arg( filename ) ) || ( 0 == this->at(i).compare( filename ) )  ) {
+    if( this->at(i).endsWith( QStringLiteral("/%1").arg( filename ) ) || ( 0 == this->at(i).compare( filename ) ) ) {
       toRemove.append( this->at(i) );
     }
   }
@@ -343,7 +357,12 @@ void CFileList::removeFiles( const CFileList &toRemove ) {
 }
 
 
-void CFileList::removeDir( const QString& dir ) {
+void CFileList::removeDirectory( const QString& dirname ) {
+  this->removeAt( this->indexOf( formatDirName( dirname ) ) );
+}
+
+
+void CFileList::removeFilesInDir( const QString& dir ) {
   CFileList toRemove;
 
   for( int i = 0; i < this->count(); ++i ) {

@@ -1511,7 +1511,7 @@ void CSpreadsheet::removeEmptyColumns( const bool excludeHeaderRow /* = false */
 void CSpreadsheet::removeEmptyRows() {
   QList<int> emptyRows;
 
-  for( int r = 0; r < this->nCols(); ++r ) {
+  for( int r = 0; r < this->nRows(); ++r ) {
     if( this->rowIsEmpty( r ) ) {
       emptyRows.prepend( r );
     }
