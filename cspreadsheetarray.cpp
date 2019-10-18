@@ -2030,7 +2030,7 @@ bool CSpreadsheetWorkBook::isXlsTime( const int xf, const double d ) const {
 
 
 bool CSpreadsheetWorkBook::isXlsDateTime(const int xf, const double d ) const {
-  Q_UNUSED( d );
+  Q_UNUSED( d )
 
   if( Format97_2003 != _fileFormat ) {
     return false;
