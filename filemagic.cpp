@@ -66,7 +66,7 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
     if( nullptr != errorMessage )
       *errorMessage = QStringLiteral( "magicFile is empty" );
 
-    return QLatin1String("");
+    return QString();
   }
 
   // Set up magic
@@ -82,7 +82,7 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
     if( nullptr != errorMessage )
       *errorMessage = QStringLiteral( "magicLoadMagic failed: %1" ).arg( errMsg );
 
-    return QLatin1String("");
+    return QString();
   }
 
   // Check the file type.
@@ -103,7 +103,7 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
     if( nullptr != errorMessage )
       *errorMessage = QStringLiteral( "magicProcess failed: %1" ).arg( errMsg );
 
-    result = QLatin1String("");
+    return QString();
   }
 
   magicCloseMagic( magic );
@@ -280,13 +280,21 @@ bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileT
 
   if( nullptr == type ) {
     errMsg = QStringLiteral( "%1" ).arg( magic_error( ms ) );
-    fileTypeInfo = QLatin1String("");
+    fileTypeInfo = QString();
     return false;
   }
   else {
     fileTypeInfo = QStringLiteral( "%1" ).arg( type );
-    errMsg = QLatin1String("");
-    return true;
+
+    if( fileTypeInfo.startsWith( QStringLiteral("cannot open") ) ) {
+      errMsg = fileTypeInfo;
+      fileTypeInfo = QString();
+      return false;
+    }
+    else {
+      errMsg =  QString();
+      return true;
+    }
   }
 }
 
