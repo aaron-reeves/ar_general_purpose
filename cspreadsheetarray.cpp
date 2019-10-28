@@ -1522,6 +1522,57 @@ void CSpreadsheet::removeEmptyRows() {
   }
 }
 
+
+void CSpreadsheet::trimEmptyRows() {
+  // Remove empty rows from the start of the file
+  //---------------------------------------------
+  while( !this->isEmpty() ) {
+    if( this->rowIsEmpty( 0 ) ) {
+      this->removeRow( 0 );
+    }
+    else {
+      break;
+    }
+  }
+
+  // Remove empty rows from the end of the file
+  //-------------------------------------------
+  while( !this->isEmpty() ) {
+    if( this->rowIsEmpty( this->nRows() - 1 ) ) {
+      this->removeRow(  this->nRows() - 1 );
+    }
+    else {
+      break;
+    }
+  }
+}
+
+
+void CSpreadsheet::trimEmptyColumns() {
+  // Remove empty columns from the start of the file
+  //------------------------------------------------
+  while( !this->isEmpty() ) {
+    if( this->columnIsEmpty( 0 ) ) {
+      this->removeColumn( 0 );
+    }
+    else {
+      break;
+    }
+  }
+
+  // Remove empty columns from the end of the file
+  //----------------------------------------------
+  while( !this->isEmpty() ) {
+    if( this->columnIsEmpty( this->nCols() - 1 ) ) {
+      this->removeColumn(  this->nCols() - 1 );
+    }
+    else {
+      break;
+    }
+  }
+}
+
+
 void CSpreadsheet::appendRow(const QVariantList& values ) {
   QVector<CSpreadsheetCell> cells( values.count() );
 

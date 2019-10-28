@@ -210,6 +210,10 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void removeRow( const int rowIdx ) override;
     void removeColumn( const int colIdx ) override;
 
+    // Remove empty rows/columns from the start and end of the file
+    void trimEmptyRows();
+    void trimEmptyColumns();
+
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
 
