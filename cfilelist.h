@@ -210,13 +210,24 @@ class CFileList : public QList<CPathString> {
         */
         CFileList directories() const;
 
+
+        /**
+         * This will sort out any subdirectory names that might have made it into the list.
+         *
+         * @return A CFileList containing only files
+         */
         CFileList files() const;
+
+        /**
+         * @brief containsShortFileName
+         * @return True if the short file name (see CPathString::shortFileName()) is contained in the list.  Otherwise false.
+         */
+        bool containsShortFileName( const QString& shortFileName ) const;
 
         /**
         Displays all of the items in 'this' list by printing them to the debug stream.
         */
-        void debugList();
-        void debug() { debugList(); }
+        void debug() const;
 
         void toStream(QTextStream* stream, const bool abbrevPath );
 
@@ -252,7 +263,7 @@ class CFileList : public QList<CPathString> {
          */
         QStringList toStringList() const;
 
-    private:
+    protected:
 				QString _startingDir;
         QString _filter;
 

@@ -245,12 +245,15 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
   QString completePath;
   QString str;
   CPathString listItem;
-  QStringList filters;
+  QStringList tmp, filters;
 
   _filter = filter;
   _recurse = recurse;
 
-  filters = filter.split( ';', QString::SkipEmptyParts );
+  tmp = filter.split( ';', QString::SkipEmptyParts );
+  foreach( const QString& str, tmp ) {
+    filters.append( str.trimmed() );
+  }
 
   bool dirIsOmitted = ( _omittedDirs.contains( dirName ) || _omittedDirs.contains( QFileInfo( dirName ).fileName() ) );
   if( dirIsOmitted ) {
@@ -308,7 +311,27 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
 }
 
 
-void CFileList::debugList() {
+bool CFileList::containsShortFileName( const QString& shortFileName ) const {
+  bool result = false;
+
+  #ifdef Q_OS_WIN
+    Qt::CaseSensitivity sens = Qt::CaseInsensitive;
+  #else
+    Qt::CaseSensitivity sens = Qt::CaseSensitive;
+  #endif
+
+  foreach( const CPathString& str, *this ) {
+    if( 0 == str.shortFileName().compare( shortFileName, sens ) ) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+void CFileList::debug() const {
 	CPathString strp;
 	int i;
 	int count = this->count();
