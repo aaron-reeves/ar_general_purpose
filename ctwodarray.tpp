@@ -482,10 +482,23 @@ void CTwoDArray<T>::removeRow( const int rowIdx ) {
 
 template <class T>
 void CTwoDArray<T>::removeRow( const QString& rowName ) {
-  Q_ASSERT( !_rowNames.contains( rowName ) );
-  int rowIdx = _rowNames.indexOf( rowName );
-  this->removeRow( rowIdx );
+  removeRow( rowName, Qt::CaseSensitive );
 }
+
+template <class T>
+void CTwoDArray<T>::removeRow( const QString& rowName, const Qt::CaseSensitivity sens ) {
+  QVector<int> toRemove;
+
+  for( int i = 0; i < _rowNames.count(); ++i ) {
+    if( 0 == _rowNames.at(i).compare( rowName, sens ) )
+      toRemove.append( i );
+  }
+
+  for( int i = toRemove.count() - 1; i > -1; --i ) {
+    removeRow( toRemove.at(i) );
+  }
+}
+
 
 template <class T>
 void CTwoDArray<T>::removeColumn( const int colIdx ) {
@@ -504,11 +517,23 @@ void CTwoDArray<T>::removeColumn( const int colIdx ) {
 
 template <class T>
 void CTwoDArray<T>::removeColumn( const QString& colName ) {
-  Q_ASSERT( !_colNames.contains( colName ) );
-  int colIdx = _colNames.indexOf( colName );
-  this->removeRow( colIdx );
+  removeColumn( colName, Qt::CaseSensitive );
 }
 
+
+template <class T>
+void CTwoDArray<T>::removeColumn( const QString& colName, const Qt::CaseSensitivity sens ) {
+  QVector<int> toRemove;
+
+  for( int i = 0; i < _colNames.count(); ++i ) {
+    if( 0 == _colNames.at(i).compare( colName, sens ) )
+      toRemove.append( i );
+  }
+
+  for( int i = toRemove.count() - 1; i > -1; --i ) {
+    removeColumn( toRemove.at(i) );
+  }
+}
 //----------------------------------------------------------------------------------------------
 
 

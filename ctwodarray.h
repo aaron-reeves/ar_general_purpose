@@ -62,9 +62,11 @@ class CTwoDArray {
 
     virtual void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
+    void removeRow( const QString& rowName, const Qt::CaseSensitivity sens );
 
     virtual void removeColumn( const int colIdx );
     void removeColumn( const QString& colName );
+    void removeColumn( const QString& colName, const Qt::CaseSensitivity sens );
 
     // Basic setter and getters
     //-------------------------
