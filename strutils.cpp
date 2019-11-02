@@ -425,10 +425,21 @@ QString removeWhiteSpace( const char* str1 ) {
 }
 
 
+QString removePunct( QString str ) {
+  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), QString() );
+
+  for( int i = str.length() - 1; -1 < i; --i ) {
+    if( str.at(i).isPunct() )
+      str.replace( i, 1, QString() );
+  }
+
+  return str;
+}
+
+
 QString trimPunct( QString str ) {
   str = str.trimmed();
-  str.replace( QRegExp( "[~!@#$%\\^&*()\\-\\+={}\\[\\]|\\:\";'<>?,\\./_]" ), QString() );
-  return str;
+  return removePunct( str );
 }
 
 QString leftTrimmed( QString str ) {
