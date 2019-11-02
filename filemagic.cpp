@@ -112,6 +112,11 @@ QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */,
 }
 
 
+bool magicStringShowsAnyTextFile( const QString& fileTypeInfo ) {
+  return ( -1 < QRegExp( "\\b(text)\\b" ).indexIn( fileTypeInfo ) );
+}
+
+
 bool magicStringShowsAsciiTextFile( const QString& fileTypeInfo ) {
   bool result = ( 0 == QRegExp( "^(ASCII)[\\s]+[\\sA-Za-z]*(text)" ).indexIn( fileTypeInfo ) );
   //    bool result = (

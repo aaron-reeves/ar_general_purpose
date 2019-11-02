@@ -31,6 +31,7 @@ QString magicFileTypeInfo( const QString& fileName, bool* error = nullptr, QStri
 bool looksLikeTextFile( const QString& fileName );
 
 bool magicStringShowsAsciiTextFile( const QString& fileTypeInfo );
+bool magicStringShowsAnyTextFile( const QString& fileTypeInfo );
 bool magicStringShowsXlsxFile( const QString& fileTypeInfo, const QString& fileName );
 bool magicStringShowsXlsFile( const QString& fileTypeInfo );
 
