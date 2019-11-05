@@ -154,6 +154,8 @@ class CTwoDArray {
 
     // Key is the column/row name, converted to lower case.
     // Value is the position of the field in the file (i.e., the column/row number), starting from 0.
+    void updateRowNames();
+    void updateColNames();
     QHash<QString, int> _colNamesLookup;
     QHash<QString, int> _rowNamesLookup;
 
