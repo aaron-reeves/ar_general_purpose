@@ -1402,7 +1402,7 @@ bool CSpreadsheet::rowIsEmpty( const int r ) {
         }
       }
       else {
-        //qDb() << "Row" << r << "is not empty: variant is not null" << v.type();
+        //qDb() << "Row" << r << "is not empty: value in column" << c << "is not null" << v.type() << v.toString();
         result = false;
         break;
       }
