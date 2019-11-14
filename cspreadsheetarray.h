@@ -279,15 +279,6 @@ class CSpreadsheetWorkBook : public QObject {
       Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
     };
 
-    //enum ReadRowBehavior {
-    //  BehaviorUnspecified = 0,
-    //  PreserveRowMerge = 1,
-    //  UnmergeRow = 2,
-    //  UnmergeAndDuplicateRow = 4,
-    //  BlankMergedColValue = 8,
-    //  DuplicateMergedColValue = 16
-    //};
-
     CSpreadsheetWorkBook(
       const SpreadsheetFileFormat fileFormat,
       const QString& fileName,
@@ -310,10 +301,6 @@ class CSpreadsheetWorkBook : public QObject {
     bool readSheet( const int sheetIdx );
     bool readSheet( const QString& sheetName );
     bool readAllSheets();
-
-    // Use CSpreadsheet::rowAsVariantList() instead
-    //QVariantList firstRowFromSheet( const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
-    //QVariantList rowFromSheet( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior = PreserveRowMerge );
 
     bool isReadable() const { return _isReadable; }
     bool isWritable() const { return _isWritable; }
@@ -393,9 +380,6 @@ class CSpreadsheetWorkBook : public QObject {
 
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
-
-    //QVariantList rowFromSheetXlsx( const int rowIdx, const QString& sheetName, const ReadRowBehavior behavior );
-    //QVariantList rowFromSheetXls( const int rowIdx, const int sheetIdx, const ReadRowBehavior behavior );
 
     QString _srcPathName;
     SpreadsheetFileFormat _fileFormat;
