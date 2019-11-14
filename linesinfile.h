@@ -30,6 +30,8 @@ for the original sources.
 #ifndef LINESINFILE_H
 #define LINESINFILE_H
 
+#include <QString>
+
 /*
  * Returns the number of lines in the indicated file.
  * Code is based on the GNU utility wc (with option -l), so
@@ -46,6 +48,7 @@ for the original sources.
  *
  * Return: number of lines in the indicated file
  */
+unsigned long long linesInFile( const QString& filename, bool& ok );
 unsigned long long linesInFile( const char* filename, bool& ok );
 
 #endif // LINESINFILE_H
