@@ -126,6 +126,8 @@ class CAppLog : public QObject {
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
+    CAppLog& operator<<( const double number );
+    CAppLog& operator<<( const long long number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
 
     void cout();

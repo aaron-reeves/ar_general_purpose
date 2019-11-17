@@ -479,6 +479,20 @@ CAppLog& CAppLog::operator<<( const int number ) {
 }
 
 
+CAppLog& CAppLog::operator<<( const long long number ) {
+  _msgInProgress.append( QString::number( number ) );
+
+  return *this;
+}
+
+
+CAppLog& CAppLog::operator<<( const double number ) {
+  _msgInProgress.append( QString::number( number ) );
+
+  return *this;
+}
+
+
 CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
   if( (f == ::endl) || (f == ::flush) ) {
     this->logMessage( _msgInProgress, LoggingTypical );
