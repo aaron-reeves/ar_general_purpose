@@ -183,7 +183,7 @@ QString CErrorList::logMessage() const {
   QString result;
 
   for( int i = 0; i < _list.count(); ++i ) {
-    if( !_list.at(i).logMessage().isEmpty() ) {
+    if( !_list.at(i).logMessage().isEmpty() && ( _list.at(i).type() >= CError::Critical ) ) {
       result.append( _list.at(i).logMessage() );
       result.append( "\r\n" );
     }
