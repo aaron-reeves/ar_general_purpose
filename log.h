@@ -196,9 +196,10 @@ class CLogFileContents {
     const QStringList& logContents() const { return _fullContents; }
     QStringList summary() const;
     void writeSummaryToStream( QTextStream* stream );
+    void writeFilteredToStream( QString filter, QTextStream* stream , const bool useDetails );
 
   protected:
-    void processLine( const QString& line, const bool includeQueryDetails );
+    QString processLine( const QString& line, const bool useDetails );
     QString trimMatch( QString line, const QRegExp& exp );
     void generateSummary();
 

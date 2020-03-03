@@ -592,9 +592,9 @@ QString CLogFileContents::trimMatch( QString line, const QRegExp& exp ) {
 }
 
 
-void CLogFileContents::processLine( const QString& line, const bool includeQueryDetails ) {
+QString CLogFileContents::processLine( const QString& line, const bool useDetails ) {
   if( line.trimmed().isEmpty() )
-    return;
+    return QString();
 
   QString msg;
 
@@ -605,7 +605,7 @@ void CLogFileContents::processLine( const QString& line, const bool includeQuery
   if( line.contains( QLatin1String(">>>") ) ) {
     QStringList list = line.split( '\n' );
 
-    if( includeQueryDetails && ( 2 < list.count() ) ) {
+    if( useDetails && ( 2 < list.count() ) ) {
       msg = QStringLiteral( "%1 | %2" ).arg( list.at(1).trimmed(), list.at(2).trimmed() );
     }
     else {
@@ -632,10 +632,7 @@ void CLogFileContents::processLine( const QString& line, const bool includeQuery
 
   msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), QStringLiteral("(detail: x)") );
 
-  if( _hash.contains( msg ) )
-    _hash[msg] = _hash.value( msg ) + 1;
-  else
-    _hash.insert( msg, 1 );
+  return msg;
 }
 
 
@@ -669,8 +666,6 @@ void CLogFileContents::generateSummary() {
       _entries.append( items.at(j) );
     }
   }
-
-  _hash.clear();
 }
 
 
@@ -708,7 +703,13 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
     if( saveFullContents )
       _fullContents.append( line );
 
-    processLine( line, includeQueryDetails );
+    QString msg = processLine( line, includeQueryDetails );
+
+    if( _hash.contains( msg ) )
+      _hash[msg] = _hash.value( msg ) + 1;
+    else
+      _hash.insert( msg, 1 );
+
   } while( !line.isNull() );
 
   generateSummary();
@@ -721,7 +722,55 @@ void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
   QString keyStr;
   for( int i = 0; i < _entries.count(); ++i ) {
     keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
-    *stream << keyStr << ": '" << _entries.at(i) << endl;
+    *stream << keyStr << ": '" << _entries.at(i) << "'" << endl;
+  }
+}
+
+
+void CLogFileContents::writeFilteredToStream( QString filter, QTextStream* stream, const bool useDetails ) {
+  bool useStringFilter = false;
+  int n = 0;
+  bool gt = false;
+  bool lt = false;
+  bool eq = false;
+
+
+  if( QRegExp( "^[<>=][0-9]+$" ).exactMatch( filter ) ) {
+    gt = filter.startsWith( '>' );
+    lt = filter.startsWith( '<' );
+    eq = filter.startsWith( '=' );
+    n = filter.right( filter.length() - 1 ).toInt();
+  }
+  else if( filter.startsWith( '=' ) ) {
+    useStringFilter = true;
+    filter = filter.right( filter.length() - 1 );
+  }
+
+  QString str;
+
+  for( int i = 0; i < _fullContents.count(); ++i ) {
+    str = processLine( _fullContents.at(i), useDetails );
+
+    if( useStringFilter ) {
+      if( 0 != filter.compare( str ) ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( gt ) {
+      if( _hash.value( str ) <= n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( lt ) {
+      if( _hash.value( str ) >= n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( eq ) {
+      if( _hash.value( str ) != n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
   }
 }
 
