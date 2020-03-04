@@ -679,11 +679,12 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
   }
 
   QTextStream stream( &f );
-  QString line, line2;
+  QString origLine, origLine2, line, line2;
   do {
     QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
 
-    line = trimMatch( stream.readLine(), timeStamp );
+    origLine = stream.readLine();
+    line = trimMatch( origLine, timeStamp );
 
     if( "(No errors encountered)" == line )
       continue;
@@ -694,14 +695,17 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
     //--------------------------------------------------------------------
     if( line.contains( QStringLiteral(">>>") ) ) {
       do {
-        line2 = trimMatch( stream.readLine(), timeStamp );
+        origLine2 = stream.readLine();
+        line2 = trimMatch( origLine2, timeStamp );
         line.append( "\n" );
         line.append( line2 );
+        origLine.append( "\n" );
+        origLine.append( origLine2 );
       } while( !line2.contains( QStringLiteral("<<<") ) );
     }
 
     if( saveFullContents )
-      _fullContents.append( line );
+      _fullContents.append( origLine );
 
     QString msg = processLine( line, includeQueryDetails );
 
@@ -747,9 +751,10 @@ void CLogFileContents::writeFilteredToStream( QString filter, QTextStream* strea
   }
 
   QString str;
+  QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
 
-  for( int i = 0; i < _fullContents.count(); ++i ) {
-    str = processLine( _fullContents.at(i), useDetails );
+  for( int i = 0; i < _fullContents.count(); ++i ) {    
+    str = processLine( trimMatch( _fullContents.at(i), timeStamp ), useDetails );
 
     if( useStringFilter ) {
       if( 0 != filter.compare( str ) ) {
