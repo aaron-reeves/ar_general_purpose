@@ -172,8 +172,8 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
 
     bool isTidy( const bool containsHeaderRow );
-    QStringList rowAsStringList( const int rowNumber );
-    QVariantList rowAsVariantList( const int rowNumber );
+    QStringList rowAsStringList( const int rowNumber ) const;
+    QVariantList rowAsVariantList( const int rowNumber ) const;
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
     bool readXls(
@@ -202,16 +202,16 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void unmergeCellsInRow( const int r, const bool duplicateValues );
 
     bool columnIsEmpty( const int c, const bool excludeHeaderRow = false );
-    bool rowIsEmpty( const int r );
+    bool rowIsEmpty( const int r, const bool trimStrings = false );
     bool hasEmptyColumns( const bool excludeHeaderRow = false );
-    bool hasEmptyRows();
+    bool hasEmptyRows( const bool trimStrings = false );
     void removeEmptyColumns( const bool excludeHeaderRow = false );
-    void removeEmptyRows();
+    void removeEmptyRows( const bool trimStrings = false );
     void removeRow( const int rowIdx ) override;
     void removeColumn( const int colIdx ) override;
 
     // Remove empty rows/columns from the start and end of the file
-    void trimEmptyRows();
+    void trimEmptyRows( const bool trimStrings = false );
     void trimEmptyColumns();
 
     void appendRow( const QVariantList& values );

@@ -426,7 +426,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
 }
 
 
-QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) {
+QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) const {
   QVariantList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
@@ -437,7 +437,7 @@ QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) {
 }
 
 
-QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) {
+QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) const {
   QStringList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
@@ -1388,14 +1388,19 @@ bool CSpreadsheet::columnIsEmpty( const int c, const bool excludeHeaderRow /* = 
 }
 
 
-bool CSpreadsheet::rowIsEmpty( const int r ) {
+bool CSpreadsheet::rowIsEmpty( const int r, const bool trimStrings /* = false */ ) {
   bool result = true; // Until shown otherwise.
 
   for( int c = 0; c < this->nCols(); ++c ) {
     QVariant v = this->cellValue( c, r );
     if( !v.isNull() ) {
       if( QVariant::String == v.type() ) {
-        if( !(v.toString().isEmpty()) ) {
+        QString s = v.toString();
+        if( trimStrings ) {
+          s = s.trimmed();
+        }
+
+        if( !(s.isEmpty()) ) {
           //qDb() << "Row" << r << "is not empty: value in column" << c << "(" << v.toString() << ")" << v.type() << v.toString().isEmpty();
           result = false;
           break;
@@ -1427,11 +1432,11 @@ bool CSpreadsheet::hasEmptyColumns(const bool excludeHeaderRow /* = false */ ) {
 }
 
 
-bool CSpreadsheet::hasEmptyRows() {
+bool CSpreadsheet::hasEmptyRows( const bool trimStrings /* = false */ ) {
   bool result = false; // Until shown otherwise.
 
   for( int r = 0; r < this->nRows(); ++r ) {
-    if( this->rowIsEmpty( r ) ) {
+    if( this->rowIsEmpty( r, trimStrings ) ) {
       result = true;
       break;
     }
@@ -1508,11 +1513,11 @@ void CSpreadsheet::removeEmptyColumns( const bool excludeHeaderRow /* = false */
 }
 
 
-void CSpreadsheet::removeEmptyRows() {
+void CSpreadsheet::removeEmptyRows( const bool trimStrings /* = false */ ) {
   QList<int> emptyRows;
 
   for( int r = 0; r < this->nRows(); ++r ) {
-    if( this->rowIsEmpty( r ) ) {
+    if( this->rowIsEmpty( r, trimStrings ) ) {
       emptyRows.prepend( r );
     }
   }
@@ -1523,11 +1528,11 @@ void CSpreadsheet::removeEmptyRows() {
 }
 
 
-void CSpreadsheet::trimEmptyRows() {
+void CSpreadsheet::trimEmptyRows( const bool trimStrings /* = false */ ) {
   // Remove empty rows from the start of the file
   //---------------------------------------------
   while( !this->isEmpty() ) {
-    if( this->rowIsEmpty( 0 ) ) {
+    if( this->rowIsEmpty( 0, trimStrings ) ) {
       this->removeRow( 0 );
     }
     else {
@@ -1538,7 +1543,7 @@ void CSpreadsheet::trimEmptyRows() {
   // Remove empty rows from the end of the file
   //-------------------------------------------
   while( !this->isEmpty() ) {
-    if( this->rowIsEmpty( this->nRows() - 1 ) ) {
+    if( this->rowIsEmpty( this->nRows() - 1, trimStrings ) ) {
       this->removeRow(  this->nRows() - 1 );
     }
     else {
