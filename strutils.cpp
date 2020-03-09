@@ -207,6 +207,8 @@ bool strToBool( QString val, bool* ok /* = nullptr */ ) {
     || "true" == val
     || "1" == val
     || "-1" == val
+    || "positive" == val
+    || "pos" == val
   ) {
     if( nullptr != ok )
       *ok = true;
@@ -217,6 +219,8 @@ bool strToBool( QString val, bool* ok /* = nullptr */ ) {
     || "f" == val
     || "false" == val
     || "0" == val
+    || "negative" == val
+    || "neg" == val
   ) {
     if( nullptr != ok )
       *ok = true;
