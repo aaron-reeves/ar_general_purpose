@@ -214,7 +214,7 @@ void CAppLog::setFileName( const QString& fileName ) {
 
   switch ( _freq ) {
     case DailyFiles:
-      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDate::currentDate().toString( QStringLiteral("yyyyMMdd") ), fi.fileName() );
+      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDateTime::currentDateTime().toString( QStringLiteral("yyyyMMddhhmmss") ), fi.fileName() );
       break;
 
     // For now, fall through for all other options.
