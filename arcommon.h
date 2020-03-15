@@ -17,4 +17,6 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include "returncodes.h"
 #include "qcout.h"
 
+const int UNSET_INT_VALUE = -1;
+
 
