@@ -27,7 +27,7 @@ CRandomizer::~CRandomizer() {
 
 QString CRandomizer::alphanumeric5() {
   QChar c1( 65 + _rng.bounded( 26 ) );
-  QChar c2( 65+ _rng.bounded( 26 ) );
+  QChar c2( 65 + _rng.bounded( 26 ) );
   int i = _rng.bounded( 1000 );
 
   return QStringLiteral( "%1%2%3" ).arg( c1 ).arg( c2 ).arg( paddedInt( i, 3 ) );
@@ -35,8 +35,22 @@ QString CRandomizer::alphanumeric5() {
 
 
 QString CRandomizer::alphanumeric( const int length ) {
-  Q_UNUSED( length );
-  return QStringLiteral("FIXMEWriteThisFunction");
+  if( 7 > length ) {
+    QChar c1( 65 + _rng.bounded( 26 ) );
+    QChar c2( 65 + _rng.bounded( 26 ) );
+    int i = _rng.bounded( pow( 10, (length - 2) ) );
+
+    return QStringLiteral( "%1%2%3" ).arg( c1 ).arg( c2 ).arg( paddedInt( i, length - 2 ) );
+  }
+  else {
+    QChar c1( 65 + _rng.bounded( 26 ) );
+    QChar c2( 65 + _rng.bounded( 26 ) );
+    QChar c3( 65 + _rng.bounded( 26 ) );
+    QChar c4( 65 + _rng.bounded( 26 ) );
+    int i = _rng.bounded( pow( 10, (length - 4) ) );
+
+    return QStringLiteral( "%1%2%3%4%5" ).arg( c1 ).arg( c2 ).arg( c3 ).arg( c4 ).arg( paddedInt( i, length - 4 ) );
+  }
 }
 
 

@@ -30,7 +30,7 @@ class CRandomizer {
     QStringList randPlanetsExt( const int length ) { return randList( length, _allPlanetsExt ); }
 
     QStringList randAlphanumeric5s( const int length );
-    QList<int> randInts( const int length , const int min, const int max );
+    QList<int> randInts( const int length, const int min, const int max );
 
   protected:
     QStringList randList( const int length, const QStringList& sourceList );
