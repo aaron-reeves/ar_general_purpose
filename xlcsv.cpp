@@ -196,7 +196,7 @@ bool CXlCsv::open() {
 
 
 bool CXlCsv::openXls() {
-  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::Format97_2003, this->filename() );
+  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::ModeOpenExisting, this->filename(), CSpreadsheetWorkBook::Format97_2003 );
 
   if( _useSheetname ) {
     if( !wb.hasSheet( _sheetname ) ) {

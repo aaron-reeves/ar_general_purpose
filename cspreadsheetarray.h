@@ -273,23 +273,22 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 class CSpreadsheetWorkBook : public QObject {
   Q_OBJECT
   public:
-    enum  SpreadsheetFileFormat {
+    enum SpreadsheetFileFormat {
       FormatUnknown,
       Format2007,   // *.xlsx format, Excel 2007 onward
       Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
     };
 
-    CSpreadsheetWorkBook(
-      const SpreadsheetFileFormat fileFormat,
-      const QString& fileName,
-      QObject* parent = nullptr
-      #ifdef DEBUG
-        , const bool displayVerboseOutput = false
-      #endif
-    );
+    enum WorkBookOpenMode {
+      ModeUnspecified,
+      ModeOpenExisting,
+      ModeCreate
+    };
 
     CSpreadsheetWorkBook(
-      const QString& fileName,
+      const WorkBookOpenMode mode,
+      const QString& fileName = QString(),
+      const SpreadsheetFileFormat fileFormat = FormatUnknown,
       QObject* parent = nullptr
       #ifdef DEBUG
         , const bool displayVerboseOutput = false
@@ -350,6 +349,8 @@ class CSpreadsheetWorkBook : public QObject {
     bool saveAs( const QString& filename );
     QString sourcePathName() const { return _srcPathName; }
 
+    QXlsx::Document* xlsx() { return _xlsx; }
+
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
 
   signals:
@@ -376,6 +377,7 @@ class CSpreadsheetWorkBook : public QObject {
     void initialize();
 
     void openWorkbook();
+    void createWorkbook();
     SpreadsheetFileFormat guessFileFormat();
 
     bool openXlsWorkbook();

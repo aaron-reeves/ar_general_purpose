@@ -1601,64 +1601,108 @@ void CSpreadsheet::appendRow( const QStringList& values ) {
 
 
 CSpreadsheetWorkBook::CSpreadsheetWorkBook(
-  const SpreadsheetFileFormat fileFormat,
-  const QString& fileName,
+  const WorkBookOpenMode mode,
+  const QString& fileName /* = QString() */,
+  const SpreadsheetFileFormat fileFormat /* = FormatUnknown */,
   QObject* parent /* = nullptr */
   #ifdef DEBUG
-    , const bool displayVerboseOutput /* = false */
+    , const bool displayVerboseOutput = false
   #endif
 ) : QObject( parent ) {
   initialize();
-
-  _srcPathName = fileName;
-  _fileFormat = fileFormat;
 
   #ifdef DEBUG
     _displayVerboseOutput = displayVerboseOutput;
   #endif
 
-  QFileInfo fi( _srcPathName );
+  // If no file name is specified, the file MUST be 2007 format, and MUST be in create mode.
+  if( fileName.isEmpty() ) {
+    if( CSpreadsheetWorkBook::ModeCreate != mode ) {
+      _ok = false;
+      _errMsg = QStringLiteral( "Cannot open an existing workbook without a file name." );
+    }
 
-  if( fi.exists() )
-    _isWritable = fi.isWritable();
-  else
-    _isWritable = QFileInfo( fi.path() ).isWritable();
-
-  _isReadable = ( fi.exists() && fi.isReadable() );
-
-  if( _isReadable )
-    openWorkbook();
-}
-
-
-CSpreadsheetWorkBook::CSpreadsheetWorkBook(
-  const QString& fileName,
-  QObject* parent /* = nullptr */
-  #ifdef DEBUG
-    , const bool displayVerboseOutput /* = false */
-  #endif
-) : QObject( parent ) {
-  initialize();
-
-  _srcPathName = fileName;
-
-  #ifdef DEBUG
-    _displayVerboseOutput = displayVerboseOutput;
-  #endif
-
-  QFileInfo fi( _srcPathName );
-
-  if( fi.exists() )
-    _isWritable = fi.isWritable();
-  else
-    _isWritable = QFileInfo( fi.path() ).isWritable();
-
-  _isReadable = ( fi.exists() && fi.isReadable() );
-
-  if( _isReadable ) {
-    _fileFormat = guessFileFormat();
-    openWorkbook();
+    if( CSpreadsheetWorkBook::Format2007 != fileFormat ) {
+      _ok = false;
+      _errMsg = QStringLiteral( "Only XLSX-formatted files can be created." );
+    }
+    else {
+      _fileFormat = fileFormat;
+      _isWritable = true; // FIXME: Should this be set differently by default?
+      _isReadable = false;
+    }
   }
+
+  // If a file name is specified, then the format and the file's readability and writeability can be determined.
+  else {
+    _srcPathName = fileName;
+
+    QFileInfo fi( _srcPathName );
+
+    if( fi.exists() )
+      _isWritable = fi.isWritable();
+    else
+      _isWritable = QFileInfo( fi.path() ).isWritable();
+
+    _isReadable = ( fi.exists() && fi.isReadable() );
+
+    if( CSpreadsheetWorkBook::FormatUnknown == fileFormat ) {
+      if( !_isReadable ) {
+        _ok = false;
+        _errMsg = QStringLiteral( "Cannot determine file format: file '%1' cannot be read." ).arg( _srcPathName );
+      }
+      else {
+        _fileFormat = guessFileFormat();
+      }
+    }
+    else {
+      _fileFormat = fileFormat;
+    }
+  }
+
+  if( FormatUnknown == _fileFormat ) {
+    _ok = false;
+    _errMsg.prepend( QStringLiteral( "Cannot determine file format. " ) );
+  }
+
+  if( ModeUnspecified == mode ) {
+    _ok = false;
+    _errMsg = QStringLiteral( "Cannot determine file mode." );
+  }
+
+  if( !_ok ) {
+    return;
+  }
+
+  switch( mode ) {
+    // Readable files in either mode can be opened
+    case ModeOpenExisting:
+      if( _isReadable  ) {
+        openWorkbook();
+      }
+      else {
+        _ok = false;
+        _errMsg = QStringLiteral( "File is unreadable and cannot be opened." );
+      }
+      break;
+
+    // Only files in XLSX mode can be created.
+    case ModeCreate:
+      if( Format2007 == _fileFormat  ) {
+        createWorkbook();
+      }
+      else {
+        _ok = false;
+        _errMsg = QStringLiteral( "File cannot be created." );
+      }
+      break;
+
+    // Anything else will have been addressed above.
+    case ModeUnspecified:
+      Q_UNREACHABLE();
+      break;
+  }
+
 }
 
 
@@ -1669,6 +1713,8 @@ void CSpreadsheetWorkBook::initialize() {
   _fileFormat = FormatUnknown;
 
   _isOpen = false;
+  _isReadable = false;
+  _isWritable = false;
 
   _ok = true;
   _errMsg = QString();
@@ -1694,6 +1740,29 @@ void CSpreadsheetWorkBook::openWorkbook() {
       break;
     case Format2007:
       _ok = openXlsxWorkbook();
+      break;
+    default:
+      _errMsg = QStringLiteral("Spreadsheet file format cannot be determined.");
+      _ok = false;
+      break;
+  }
+
+  _isOpen = _ok;
+}
+
+
+void CSpreadsheetWorkBook::createWorkbook() {
+  Q_ASSERT( nullptr == _xlsx );
+  Q_ASSERT( nullptr == _pWB );
+
+  switch( _fileFormat ) {
+    case  Format97_2003:
+      _errMsg = QStringLiteral("Cannot create an XLS format file.");
+      _ok = false;
+      break;
+    case Format2007:
+      _ok = true;
+      _xlsx = new QXlsx::Document();
       break;
     default:
       _errMsg = QStringLiteral("Spreadsheet file format cannot be determined.");
@@ -2146,6 +2215,7 @@ bool CSpreadsheetWorkBook::addSheet( const QString& sheetName /* = QString() */ 
 
   return _ok;
 }
+
 
 
 bool CSpreadsheetWorkBook::deleteSheet( const int sheetIdx ) {
