@@ -190,6 +190,9 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
         , const bool displayVerboseOutput = false
       #endif
     );
+
+    // These functions are for writing single sheets.
+    // To generate a multisheet workbook, it's currently necessary to use the QXLSX classes directly.
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
 
