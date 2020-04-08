@@ -85,7 +85,7 @@ const QString ReturnCode::codeDescr( const int val ) {
     if( val & CHECKSUM_PROBLEM )
       result.append( "CHECKSUM_PROBLEM: There is a mismatch between actual and expected file contents.  Please check with the developers.\n" );
     if( val & UNKNOWN_RESULT )
-      result.append( "UNKNOWN_RESULT: The outcome is not yet known.  Has the process run?" );
+      result.append( "UNKNOWN_RESULT: The outcome is not yet known.  Has the process run?\n" );
     if( val & NETWORK_PROBLEM )
       result.append( "NETWORK_PROBLEM: A required network seems to be unreachable, or the required network service cannot be run.\n" );
 
