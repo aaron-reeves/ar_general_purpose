@@ -151,6 +151,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
   public:
     CSpreadsheet( QObject* parent = nullptr );
     CSpreadsheet( CSpreadsheetWorkBook* wb, QObject* parent = nullptr );
+    CSpreadsheet( const QString& fileName, const int sheetIdx = 0, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent = nullptr );
@@ -170,6 +171,13 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     bool compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
     bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
+
+    void appendColumn( const QVariant& defaultVal );
+    void appendColumn( const QVector<QVariant>& values );
+    void appendColumn( const QList<QVariant>& values );
+    void appendColumn( const QString& colName, const QVariant& defaultVal );
+    void appendColumn( const QString& colName, const QVector<QVariant>& values );
+    void appendColumn( const QString& colName, const QList<QVariant>& values );
 
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber ) const;
@@ -220,6 +228,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
 
+    bool error() const { return !_errMsg.isEmpty(); }
     QString errorMessage() const { return _errMsg; }
 
     void debug( const int padding = 10 ) const;

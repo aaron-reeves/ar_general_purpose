@@ -132,6 +132,32 @@ CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb, QObject* parent ) : 
 }
 
 
+CSpreadsheet::CSpreadsheet( const QString& fileName, const int sheetIdx, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
+  initialize();
+
+  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::ModeOpenExisting, fileName );
+  if( wb.error() ) {
+    _errMsg.append( "Spreadsheet file format is unrecognized.  Please contact the application developers.\n" );
+    _errMsg.append( "Error message: " );
+    _errMsg.append( wb.errorMessage() );
+    return;
+  }
+  else if( 0 == wb.sheetCount() ) {
+    _errMsg.append( "Spreadsheet appears to have no sheets. Please double-check the file format." );
+    return;
+  }
+  else {
+    if( !wb.readSheet( sheetIdx ) ) {
+      _errMsg.append( QStringLiteral( "Spreadsheet could not be read. There may be a problem with the file." ) );
+      return;
+    }
+    else {
+      this->assign( wb.sheet( sheetIdx ) );
+    }
+  }
+}
+
+
 CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
   initialize();
 }
@@ -195,6 +221,8 @@ CSpreadsheet& CSpreadsheet::operator=( const CSpreadsheet& other ) {
 
 
 void CSpreadsheet::assign( const CSpreadsheet& other ) {
+  CTwoDArray<CSpreadsheetCell>::assign( other );
+
   _wb = other._wb;
   setParent( nullptr );
 
@@ -270,6 +298,110 @@ bool CSpreadsheet::compareCellValue( const int c, const int r, const QString& st
 
 bool CSpreadsheet::compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens /* = Qt::CaseInsensitive */ ) {
   return( 0 == this->cellValue( cellLabel ).toString().trimmed().compare( str, caseSens ) );
+}
+
+
+
+void CSpreadsheet::appendColumn( const QVariant& defaultVal ) {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = CSpreadsheetCell( defaultVal );
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+void CSpreadsheet::appendColumn( const QVector<QVariant>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = CSpreadsheetCell( values.at(i) );
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+void CSpreadsheet::appendColumn( const QList<QVariant>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = CSpreadsheetCell( values.at(i) );
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+void CSpreadsheet::appendColumn( const QString& colName, const QVariant& defaultVal ) {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    if( _useDefaultVal ) {
+      _data[i][_nCols] = CSpreadsheetCell( defaultVal );
+    }
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+void CSpreadsheet::appendColumn( const QString& colName, const QVector<QVariant>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = CSpreadsheetCell( values.at(i) );
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+void CSpreadsheet::appendColumn( const QString& colName, const QList<QVariant>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = CSpreadsheetCell( values.at(i) );
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
 }
 
 
@@ -549,6 +681,9 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
     if( containsHeaderRow ) {
       csv = QCsv( firstRow, data );
     }
+    else if( this->hasColNames() ) {
+      csv = QCsv( this->colNames(), data );
+    }
     else {
       csv = QCsv( data );
     }
@@ -576,6 +711,20 @@ bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStri
   format.setHorizontalAlignment( QXlsx::Format::AlignLeft );
   format.setVerticalAlignment( QXlsx::Format::AlignTop );
 
+  int firstColIdx = 0;
+  int firstRowIdx = 0;
+
+  if( this->hasColNames() ) {
+    for( int c = 0; c < this->nCols(); ++c ) {
+      xlsx.write( 1, c+1, this->colNames().at(c) );
+    }
+    ++firstRowIdx;
+  }
+
+  if( this->hasRowNames() ) {
+    ++firstColIdx;
+  }
+
   for( int c = 0; c < this->nCols(); ++c ) {
     for( int r = 0; r < this->nRows(); ++r ) {
       QVariant tmp;
@@ -584,7 +733,11 @@ bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStri
         tmp = this->value( c, r ).value();
       }
 
-      xlsx.write( r+1, c+1, tmp );
+      if( this->hasRowNames() ) {
+        xlsx.write( r+1, c+firstColIdx+1, this->rowNames().at(r) );
+      }
+
+      xlsx.write( r+firstRowIdx+1, c+firstColIdx+1, tmp );
 
       if( this->value(c, r).hasSpan() ) {
         xlsx.mergeCells( this->value(c, r).mergedRange(c, r), format );
