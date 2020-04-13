@@ -225,6 +225,13 @@ class QCsv {
     QCsv filter( const int index, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
     QCsv filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
 
+    QCsv sort( const int index );
+    QCsv sort( const QString& fieldName );
+
+    // Returns a subset of this object, containing only rows that are distinct.
+    // This function currently works only in entire-file mode.
+    QCsv distinct();
+
     // Functions for modifying a CSV object in memory. These work only for read mode qCSV_EntireFile.
     bool appendField( const QString& fieldName ); // Add a new field/column with the name 'fieldName'.  The field will be empty, but can be added to with setField.
     bool removeField( const QString& fieldName ); // Remove the field/column 'fieldName' (as well as all data in the column!)
