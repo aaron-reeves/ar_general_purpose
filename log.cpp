@@ -630,7 +630,7 @@ QString CLogFileContents::processLine( const QString& line, const bool useDetail
 
   msg.replace( QRegExp( "line\\s[0-9]+" ), QStringLiteral("line x") );
 
-  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), QStringLiteral("(detail: x)") );
+  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-,]+[)]" ), QStringLiteral("(detail: x)") );
 
   return msg;
 }
