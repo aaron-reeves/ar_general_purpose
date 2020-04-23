@@ -70,6 +70,8 @@ CSpreadsheetCell::~CSpreadsheetCell() {
 
 
 void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
+  Q_ASSERT( other._originCell == nullptr );
+
   _value = other._value;
   _colSpan = other._colSpan;
   _rowSpan = other._rowSpan;
@@ -93,6 +95,19 @@ const QXlsx::CellRange CSpreadsheetCell::mergedRange( const int col, const int r
   result.setLastRow( row + _rowSpan );
 
   return result;
+}
+
+
+bool CSpreadsheetCell::isNumeric() const {
+  QVariant::Type type = this->value().type();
+
+  return(
+    ( QVariant::Int == type )
+    || ( QVariant::Double == type )
+    || ( QVariant::UInt == type )
+    || ( QVariant::LongLong == type )
+    || ( QVariant::ULongLong == type )
+  );
 }
 
 void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) const {
@@ -135,24 +150,43 @@ CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb, QObject* parent ) : 
 CSpreadsheet::CSpreadsheet( const QString& fileName, const int sheetIdx, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
 
-  CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::ModeOpenExisting, fileName );
-  if( wb.error() ) {
-    _errMsg.append( "Spreadsheet file format is unrecognized.  Please contact the application developers.\n" );
-    _errMsg.append( "Error message: " );
-    _errMsg.append( wb.errorMessage() );
+  QFileInfo fi( fileName );
+  if( !fi.exists() || !fi.isReadable() ) {
+    _errMsg.append( "Selected filed does not exist or is not readable.\n" );
     return;
   }
-  else if( 0 == wb.sheetCount() ) {
-    _errMsg.append( "Spreadsheet appears to have no sheets. Please double-check the file format." );
+
+  CSpreadsheetWorkBook::SpreadsheetFileFormat fmt = CSpreadsheetWorkBook::guessFileFormat( fileName, &_errMsg );
+
+  if( !_errMsg.isEmpty() ) {
     return;
+  }
+  else if( CSpreadsheetWorkBook::FormatCSV == fmt ) {
+    if( !this->readCsv( fileName ) ) {
+      _errMsg.append( "CSV file could not be opened.\n" );
+      return;
+    }
   }
   else {
-    if( !wb.readSheet( sheetIdx ) ) {
-      _errMsg.append( QStringLiteral( "Spreadsheet could not be read. There may be a problem with the file." ) );
+    CSpreadsheetWorkBook wb( CSpreadsheetWorkBook::ModeOpenExisting, fileName, fmt );
+    if( wb.error() ) {
+      _errMsg.append( "Spreadsheet file format is unrecognized.  Please contact the application developers.\n" );
+      _errMsg.append( "Error message: " );
+      _errMsg.append( wb.errorMessage() );
+      return;
+    }
+    else if( 0 == wb.sheetCount() ) {
+      _errMsg.append( "Spreadsheet appears to have no sheets. Please double-check the file format." );
       return;
     }
     else {
-      this->assign( wb.sheet( sheetIdx ) );
+      if( !wb.readSheet( sheetIdx ) ) {
+        _errMsg.append( QStringLiteral( "Spreadsheet could not be read. There may be a problem with the file." ) );
+        return;
+      }
+      else {
+        this->assign( wb.sheet( sheetIdx ) );
+      }
     }
   }
 }
@@ -439,6 +473,197 @@ void CSpreadsheet::setData( const CTwoDArray<QVariant>& data ) {
 }
 
 
+bool CSpreadsheet::setDataType( const QMetaType::Type type, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      result = ( result && this->at(c,r).setDataType( type ) );
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::addCellValues( const CSpreadsheet& other, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() && other.value( c, r ).isNumeric() ) {
+        switch( this->cellValue( c, r ).type() ) {
+          case QVariant::Int:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toInt() + other.cellValue( c, r ).toInt() ) );
+            break;
+          case QVariant::Double:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toDouble() + other.cellValue( c, r ).toDouble() ) );
+            break;
+          case QVariant::UInt:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toUInt() + other.cellValue( c, r ).toUInt() ) );
+            break;
+          case QVariant::LongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toLongLong() + other.cellValue( c, r ).toLongLong() ) );
+            break;
+          case QVariant::ULongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toULongLong() + other.cellValue( c, r ).toULongLong() ) );
+            break;
+          default:
+            Q_UNREACHABLE();
+            _errMsg = "Numeric data type not yet implemented.";
+            break;
+        }
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::subtractCellValues( const CSpreadsheet& other, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() && other.value( c, r ).isNumeric() ) {
+        switch( this->cellValue( c, r ).type() ) {
+          case QVariant::Int:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toInt() - other.cellValue( c, r ).toInt() ) );
+            break;
+          case QVariant::Double:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toDouble() - other.cellValue( c, r ).toDouble() ) );
+            break;
+          case QVariant::UInt:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toUInt() - other.cellValue( c, r ).toUInt() ) );
+            break;
+          case QVariant::LongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toLongLong() - other.cellValue( c, r ).toLongLong() ) );
+            break;
+          case QVariant::ULongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toULongLong() - other.cellValue( c, r ).toULongLong() ) );
+            break;
+          default:
+            Q_UNREACHABLE();
+            _errMsg = "Numeric data type not yet implemented.";
+            break;
+        }
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::multiplyCellValues( const CSpreadsheet& other, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() && other.value( c, r ).isNumeric() ) {
+        this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toDouble() * other.cellValue( c, r ).toDouble() ) );
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::divideCellValues( const CSpreadsheet& other, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() && other.value( c, r ).isNumeric() ) {
+        this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toDouble() / other.cellValue( c, r ).toDouble() ) );
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::roundCellValues( const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() ) {
+        if( QVariant::Double == this->cellValue( c, r ).type() ) {
+          this->setValue( c, r, CSpreadsheetCell( int( round( this->cellValue( c, r ).toDouble() ) ) ) );
+        }
+        else {
+          // Don't do anything: it's already an integer.
+        }
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::addToCellValues( const int val, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  bool result = true;
+
+  for( int c = firstCol; c < this->nCols(); ++c ) {
+    for( int r = firstRow; r < this->nRows(); ++r ) {
+      if(  this->value( c, r ).isNumeric() ) {
+        switch( this->cellValue( c, r ).type() ) {
+          case QVariant::Int:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toInt() + val ) );
+            break;
+          case QVariant::Double:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toDouble() + val ) );
+            break;
+          case QVariant::UInt:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toUInt() + val ) );
+            break;
+          case QVariant::LongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toLongLong() + val ) );
+            break;
+          case QVariant::ULongLong:
+            this->setValue( c, r, CSpreadsheetCell( this->cellValue( c, r ).toULongLong() + val ) );
+            break;
+          default:
+            Q_UNREACHABLE();
+            _errMsg = "Numeric data type not yet implemented.";
+            break;
+        }
+      }
+      else {
+        result = false;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+bool CSpreadsheet::subtractFromCellValues( const int val, const int firstCol /* = 0 */, const int firstRow /* = 0 */ ) {
+  return addToCellValues( -1 * val, firstCol, firstRow );
+}
+
+
 CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
   CTwoDArray<QVariant> result;
 
@@ -562,7 +787,7 @@ QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) const {
   QVariantList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
-    list.append( this->at( c, rowNumber).value() );
+    list.append( this->at( c, rowNumber ).value() );
   }
 
   return list;
@@ -574,9 +799,34 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) const {
 
   for( int c = 0; c < this->nCols(); ++c ) {
     if( QVariant::DateTime == this->at( c, rowNumber ).value().type() )
-      list.append( this->at( c, rowNumber).value().toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") ) );
+      list.append( this->at( c, rowNumber ).value().toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") ) );
     else
-      list.append( this->at( c, rowNumber).value().toString().trimmed() );
+      list.append( this->at( c, rowNumber ).value().toString().trimmed() );
+  }
+
+  return list;
+}
+
+
+QStringList CSpreadsheet::columnAsStringList( const int colNumber ) const {
+  QStringList list;
+
+  for( int r = 0; r < this->nRows(); ++r ) {
+    if( QVariant::DateTime == this->at( colNumber, r ).value().type() )
+      list.append( this->at( colNumber, r ).value().toDateTime().toString( QStringLiteral("yyyy-MM-dd hh:mm:ss") ) );
+    else
+      list.append( this->at( colNumber, r ).value().toString().trimmed() );
+  }
+
+  return list;
+}
+
+
+QVariantList CSpreadsheet::columnAsVariantList( const int colNumber ) const {
+  QVariantList list;
+
+  for( int r = 0; r < this->nRows(); ++r ) {
+    list.append( this->at( colNumber, r ).value() );
   }
 
   return list;
@@ -1182,6 +1432,39 @@ QVariant CSpreadsheet::processCellXls(
   return val;
 }
 
+
+bool CSpreadsheet::readCsv(
+  const QString& fileName
+  #ifdef DEBUG
+    , const bool displayVerboseOutput /* = false */
+  #endif
+) {
+  QCsv csv( fileName, true, true, QCsv::EntireFile );
+
+  return readCsv( csv );
+}
+
+
+bool CSpreadsheet::readCsv(
+  QCsv& csv
+  #ifdef DEBUG
+    , const bool displayVerboseOutput /* = false */
+  #endif
+) {
+  if( !csv.open() ) {
+    return false;
+  }
+
+  this->setSize( csv.fieldCount(), csv.rowCount() );
+  this->setColNames( csv.fieldNames() );
+  for( int c = 0; c < csv.fieldCount(); ++c ) {
+    for( int r = 0; r < csv.rowCount(); ++r ) {
+      this->setValue( c, r, CSpreadsheetCell( csv.field( c, r ) ) );
+    }
+  }
+
+  return true;
+}
 
 
 void CSpreadsheet::flagMergedCells() {
@@ -1949,10 +2232,15 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
 
   if( error ) {
     if( nullptr != errMsg )
-      *errMsg = QStringLiteral("File type cannot be determined: there is a problem with the filemagic library.");
+      *errMsg = QStringLiteral( "File type cannot be determined: there is a problem with the filemagic library." );
 
     if( nullptr != ok )
       *ok = false;
+  }
+
+  // CSV files look like plain text
+  else if( magicStringShowsAsciiTextFile( fileType ) ) {
+    fileFormat = FormatCSV;
   }
 
   // Excel (*.xls) files look like this to FileMagic
@@ -2077,6 +2365,7 @@ QString CSpreadsheetWorkBook::fileFormatAsString( const SpreadsheetFileFormat fm
     case FormatUnknown: result = QStringLiteral( "Format unknown" ); break;
     case Format2007   : result = QStringLiteral( "Microsoft Excel 2007 or later (xlsx)" ); break;
     case Format97_2003: result = QStringLiteral( "Microsoft Excel 97 - 2003 (xls, BIFF5 or BIFF8)" ); break;
+    case FormatCSV    : result = QStringLiteral( "CSV file" ); break;
   }
 
   return result;

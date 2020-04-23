@@ -87,6 +87,12 @@ class CSpreadsheetCell {
     CSpreadsheetCell();
     CSpreadsheetCell( const QVariant& val );
     CSpreadsheetCell( const QVariant& val, const int colSpan, const int rowSpan );
+
+    // WARNING: These will fail if merged cells exist in the spreadsheet!
+    // See notes below on _originCell
+    CSpreadsheetCell( const CSpreadsheetCell& other );
+    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
+
     ~CSpreadsheetCell();
 
     bool isNull() const { return this->value().isNull(); }
@@ -114,13 +120,12 @@ class CSpreadsheetCell {
     void setValue( const QVariant& value ) { _value = value; }
     const QVariant value() const { return _value; }
 
+    bool setDataType( const QMetaType::Type type ) { return _value.convert( type ); }
+    bool isNumeric() const;
+
     void debug( const int c = -1, const int r = -1 ) const;
 
   protected:
-    // Long story short, these are protected, because _originCell is a pointer which can only be set by CSpreadsheet.
-    CSpreadsheetCell( const CSpreadsheetCell& other );
-    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
-
     void assign( const CSpreadsheetCell& other );
 
     QVariant _value;
@@ -141,6 +146,23 @@ class CSpreadsheetCell {
 
     QSet<CCellRef> _linkedCellRefs;
 };
+
+
+inline bool operator==( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( (lhs.value() == rhs.value()) && (lhs.colSpan() == rhs.colSpan()) && (lhs.rowSpan() == rhs.rowSpan()) );
+}
+inline bool operator!=( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {return !(lhs == rhs);}
+inline bool operator<( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( lhs.value().toString() < rhs.value().toString() );
+}
+inline bool operator>( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( lhs.value().toString() > rhs.value().toString() );
+}
+
+// Hashing function that allows the use of CSpreadsheetCell as a key type for a QHash or QSet
+inline uint qHash( const CSpreadsheetCell &key, uint seed ) {
+  return qHash( key.value().toString(), seed );
+}
 
 
 class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
@@ -167,7 +189,12 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     const CSpreadsheetCell& cell( const CCellRef& cellRef ) const { return this->value( cellRef.col, cellRef.row ); }
 
     QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
+    QVariant cellValue( const QString& colName, const int r ) const { return this->value( colName, r ).value(); }
     QVariant cellValue( const QString& cellLabel ) const;
+
+    QVariant field( const int c, const int r ) const { return cellValue( c, r ); }
+    QVariant field( const QString& colName, const int r ) const { return cellValue( colName, r ); }
+    QVariant field( const QString& cellLabel ) const { return cellValue( cellLabel ); }
 
     bool compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
     bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
@@ -182,6 +209,9 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     bool isTidy( const bool containsHeaderRow );
     QStringList rowAsStringList( const int rowNumber ) const;
     QVariantList rowAsVariantList( const int rowNumber ) const;
+    QStringList columnAsStringList( const int colNumber ) const;
+    QVariantList columnAsVariantList( const int colNumber ) const;
+
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
     bool readXls(
@@ -194,6 +224,18 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     bool readXlsx(
       const QString& sheetName,
       QXlsx::Document* xlsx
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
+    bool readCsv(
+      const QString& fileName
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
+    bool readCsv(
+      QCsv& csv
       #ifdef DEBUG
         , const bool displayVerboseOutput = false
       #endif
@@ -237,6 +279,18 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     void setData( const CTwoDArray<QVariant>& data );
     CTwoDArray<QVariant> data( const bool containsHeaderRow );
+
+    bool setDataType( const QMetaType::Type type, const int firstCol = 0, const int firstRow = 0 );
+
+    bool addCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool subtractCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool multiplyCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool divideCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+
+    bool roundCellValues( const int firstCol = 0, const int firstRow = 0 );
+
+    bool addToCellValues( const int val, const int firstCol = 0, const int firstRow = 0 );
+    bool subtractFromCellValues( const int val, const int firstCol = 0, const int firstRow = 0 );
 
     CSpreadsheetWorkBook* workbook() const { return _wb; }
 
@@ -287,8 +341,9 @@ class CSpreadsheetWorkBook : public QObject {
   public:
     enum SpreadsheetFileFormat {
       FormatUnknown,
-      Format2007,   // *.xlsx format, Excel 2007 onward
-      Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
+      Format2007,    // *.xlsx format, Excel 2007 onward
+      Format97_2003, // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
+      FormatCSV
     };
 
     enum WorkBookOpenMode {
