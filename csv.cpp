@@ -1128,7 +1128,7 @@ QCsv QCsv::filter( const QString& fieldName, const QString& value, const Qt::Cas
 }
 
 
-QCsv QCsv::sort( const int index ) {
+QCsv QCsv::sorted( const int index ) {
   // This function will not work with qCSV_LineByLine mode.
   Q_ASSERT( EntireFile == _mode );
   clearError();
@@ -1164,7 +1164,7 @@ QCsv QCsv::sort( const int index ) {
 }
 
 
-QCsv QCsv::sort( const QString& fieldName ) {
+QCsv QCsv::sorted( const QString& fieldName ) {
   QCsv result;
 
   // This function will not work with qCSV_LineByLine mode.
@@ -1186,7 +1186,7 @@ QCsv QCsv::sort( const QString& fieldName ) {
      result.setError( _error, _errorMsg );
   }
   else {
-    result = sort( _fieldsLookup.value( fieldName.trimmed().toLower() ) );
+    result = sorted( _fieldsLookup.value( fieldName.trimmed().toLower() ) );
   }
 
   return result;

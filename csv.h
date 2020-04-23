@@ -225,8 +225,8 @@ class QCsv {
     QCsv filter( const int index, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
     QCsv filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
 
-    QCsv sort( const int index );
-    QCsv sort( const QString& fieldName );
+    QCsv sorted( const int index );
+    QCsv sorted( const QString& fieldName );
 
     // Returns a subset of this object, containing only rows that are distinct.
     // This function currently works only in entire-file mode.
