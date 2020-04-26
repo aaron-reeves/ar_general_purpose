@@ -267,6 +267,61 @@ bool CCmdLine::isSwitch( const QString& pParam ) {
 }
 
 
+void CCmdLine::setValidSwitches( const QStringList& list ) {
+  _validSwitches.clear();
+
+  for( int i = 0; i < list.count(); ++i ) {
+    _validSwitches.append( formatArg( list.at(i) ) );
+  }
+}
+
+
+bool CCmdLine::switchesAreValid() const {
+  bool result = true; // until shown otherwise
+
+  QStringList switches = _arguments.keys();
+
+  for( int i = 0; i < switches.count(); ++i ) {
+    if( !_validSwitches.contains( switches.at(i) ) ) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+QStringList CCmdLine::validSwitches() const {
+  QStringList result;
+
+  QStringList switches = _arguments.keys();
+
+  for( int i = 0; i < switches.count(); ++i ) {
+    if( _validSwitches.contains( switches.at(i) ) ) {
+      result.append( switches.at(i) );
+    }
+  }
+
+  return result;
+}
+
+
+QStringList CCmdLine::invalidSwitches() const {
+  QStringList result;
+
+  QStringList switches = _arguments.keys();
+
+  for( int i = 0; i < switches.count(); ++i ) {
+    if( !_validSwitches.contains( switches.at(i) ) ) {
+      result.append( switches.at(i) );
+    }
+  }
+
+  return result;
+}
+
+
 /*------------------------------------------------------
    bool CCmdLine::HasSwitch(const QString& pSwitch)
 
