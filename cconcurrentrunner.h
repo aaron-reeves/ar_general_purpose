@@ -95,19 +95,21 @@ class CConcurrentContainer {
       return result;
     }
 
-    virtual QHash<QString, int> mergeResult( const QHash<QString, int>& result1, const QHash<QString, int>& result2 ) const {
-      int returnCode = result1.value( QStringLiteral("returnCode") ) | result2.value( QStringLiteral("returnCode") );
-      int totalRecords = result1.value( QStringLiteral("totalRecords") ) + result2.value( QStringLiteral("totalRecords") );
-      int totalProcessed = result1.value( QStringLiteral("totalProcessed") ) + result2.value( QStringLiteral("totalProcessed") );
-      int insertFailures = result1.value( QStringLiteral("insertFailures") ) + result2.value( QStringLiteral("insertFailures") );
+    virtual QHash<QString, int> mergeResults( const QHash<QString, int>& results1, const QHash<QString, int>& results2 ) const {
+      QHash<QString, int> results;
 
-      QHash<QString, int> result;
-      result.insert( QStringLiteral("returnCode"), returnCode );
-      result.insert( QStringLiteral("totalRecords"), totalRecords );
-      result.insert( QStringLiteral("totalProcessed"), totalProcessed );
-      result.insert( QStringLiteral("insertFailures"), insertFailures );
+      QList<QString> keys = results1.keys();
 
-      return result;
+      foreach( QString key, keys ) {
+        if( "returnCode" == key ) {
+          results.insert( key, ( results1.value( key ) | results2.value( key ) ) );
+        }
+        else {
+          results.insert( key, ( results1.value( key ) + results2.value( key ) ) );
+        }
+      }
+
+      return results;
     }
 };
 
@@ -238,7 +240,7 @@ class CConcurrentProcessor : public QList<CConcurrentRunner*> {
       this->waitForFinished();
 
       for( int i = 0; i < this->count(); ++i ) {
-        results = v.mergeResult( results, this->at(i)->result() );
+        results = v.mergeResults( results, this->at(i)->result() );
       }
 
       return results;
@@ -283,7 +285,7 @@ class CConcurrentProcessor : public QList<CConcurrentRunner*> {
       this->waitForFinished();
 
       for( int i = 0; i < this->count(); ++i ) {
-        results = h.mergeResult( results, this->at(i)->result() );
+        results = h.mergeResults( results, this->at(i)->result() );
       }
 
       return results;
@@ -328,7 +330,7 @@ class CConcurrentProcessor : public QList<CConcurrentRunner*> {
       this->waitForFinished();
 
       for( int i = 0; i < this->count(); ++i ) {
-        results = h.mergeResult( results, this->at(i)->result() );
+        results = h.mergeResults( results, this->at(i)->result() );
       }
 
       return results;
