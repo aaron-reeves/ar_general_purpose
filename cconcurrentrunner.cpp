@@ -4,7 +4,7 @@ cconcurrentrunner.h/cpp
 Begin: 2019-06-18
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 ---------------------------------------------------
-Copyright (C) 2019 Scotland's Rural College (SRUC)
+Copyright (C) 2019 - 2020 Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -13,6 +13,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "cconcurrentrunner.h"
 
+#include <ar_general_purpose/log.h>
 
 //-------------------------------------------------------------------------------------
 // Class CConcurrentList
@@ -39,7 +40,7 @@ QHash<QString, int> CConcurrencyManager::populateDatabase( const CConfigDatabase
 
 
 //-------------------------------------------------------------------------------------
-// Class CCtsRunner
+// Class CConcurrentRunner
 //-------------------------------------------------------------------------------------
 CConcurrentRunner::CConcurrentRunner( CConcurrencyManager* list, const QFuture< QHash<QString, int> >& f ) {
   _timer.start();
@@ -49,6 +50,13 @@ CConcurrentRunner::CConcurrentRunner( CConcurrencyManager* list, const QFuture< 
   _future = f;
 }
 
+CConcurrentRunner::CConcurrentRunner( const QFuture< QHash<QString, int> >& f ) {
+  _timer.start();
+  _timeInMsec = 0;
+  _hasFinished = false;
+  _list = nullptr;
+  _future = f;
+}
 
 CConcurrentRunner::~CConcurrentRunner() {
   if( !_hasFinished ) {
@@ -98,8 +106,10 @@ qint64 CConcurrentRunner::runtime() const {
 
 
 void CConcurrentRunner::cleanup() {
-  delete _list;
-  _list = nullptr;
+  if( nullptr != _list ) {
+    delete _list;
+    _list = nullptr;
+  }
 }
 
 
@@ -167,3 +177,4 @@ void CConcurrentRunner::writeUsage(
   Q_UNUSED( threadsInUse );
 }
 //-------------------------------------------------------------------------------------
+
