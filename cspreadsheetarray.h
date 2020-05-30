@@ -87,6 +87,12 @@ class CSpreadsheetCell {
     CSpreadsheetCell();
     CSpreadsheetCell( const QVariant& val );
     CSpreadsheetCell( const QVariant& val, const int colSpan, const int rowSpan );
+
+    // WARNING: These will fail if merged cells exist in the spreadsheet!
+    // See notes below on _originCell
+    CSpreadsheetCell( const CSpreadsheetCell& other );
+    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
+
     ~CSpreadsheetCell();
 
     bool isNull() const { return this->value().isNull(); }
@@ -114,13 +120,12 @@ class CSpreadsheetCell {
     void setValue( const QVariant& value ) { _value = value; }
     const QVariant value() const { return _value; }
 
+    bool setDataType( const QMetaType::Type type ) { return _value.convert( type ); }
+    bool isNumeric() const;
+
     void debug( const int c = -1, const int r = -1 ) const;
 
   protected:
-    // Long story short, these are protected, because _originCell is a pointer which can only be set by CSpreadsheet.
-    CSpreadsheetCell( const CSpreadsheetCell& other );
-    CSpreadsheetCell& operator=( const CSpreadsheetCell& other );
-
     void assign( const CSpreadsheetCell& other );
 
     QVariant _value;
@@ -143,6 +148,23 @@ class CSpreadsheetCell {
 };
 
 
+inline bool operator==( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( (lhs.value() == rhs.value()) && (lhs.colSpan() == rhs.colSpan()) && (lhs.rowSpan() == rhs.rowSpan()) );
+}
+inline bool operator!=( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {return !(lhs == rhs);}
+inline bool operator<( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( lhs.value().toString() < rhs.value().toString() );
+}
+inline bool operator>( const CSpreadsheetCell& lhs, const CSpreadsheetCell& rhs ) {
+  return( lhs.value().toString() > rhs.value().toString() );
+}
+
+// Hashing function that allows the use of CSpreadsheetCell as a key type for a QHash or QSet
+inline uint qHash( const CSpreadsheetCell &key, uint seed ) {
+  return qHash( key.value().toString(), seed );
+}
+
+
 class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
   Q_OBJECT
 
@@ -151,6 +173,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
   public:
     CSpreadsheet( QObject* parent = nullptr );
     CSpreadsheet( CSpreadsheetWorkBook* wb, QObject* parent = nullptr );
+    CSpreadsheet( const QString& fileName, const int sheetIdx = 0, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent = nullptr );
     CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent = nullptr );
@@ -166,14 +189,29 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     const CSpreadsheetCell& cell( const CCellRef& cellRef ) const { return this->value( cellRef.col, cellRef.row ); }
 
     QVariant cellValue( const int c, const int r ) const { return this->value( c, r ).value(); }
+    QVariant cellValue( const QString& colName, const int r ) const { return this->value( colName, r ).value(); }
     QVariant cellValue( const QString& cellLabel ) const;
+
+    QVariant field( const int c, const int r ) const { return cellValue( c, r ); }
+    QVariant field( const QString& colName, const int r ) const { return cellValue( colName, r ); }
+    QVariant field( const QString& cellLabel ) const { return cellValue( cellLabel ); }
 
     bool compareCellValue( const int c, const int r, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
     bool compareCellValue( const QString& cellLabel, const QString& str, Qt::CaseSensitivity caseSens = Qt::CaseInsensitive );
 
+    void appendColumn( const QVariant& defaultVal );
+    void appendColumn( const QVector<QVariant>& values );
+    void appendColumn( const QList<QVariant>& values );
+    void appendColumn( const QString& colName, const QVariant& defaultVal );
+    void appendColumn( const QString& colName, const QVector<QVariant>& values );
+    void appendColumn( const QString& colName, const QList<QVariant>& values );
+
     bool isTidy( const bool containsHeaderRow );
-    QStringList rowAsStringList( const int rowNumber );
-    QVariantList rowAsVariantList( const int rowNumber );
+    QStringList rowAsStringList( const int rowNumber ) const;
+    QVariantList rowAsVariantList( const int rowNumber ) const;
+    QStringList columnAsStringList( const int colNumber ) const;
+    QVariantList columnAsVariantList( const int colNumber ) const;
+
     QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
 
     bool readXls(
@@ -190,6 +228,21 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
         , const bool displayVerboseOutput = false
       #endif
     );
+    bool readCsv(
+      const QString& fileName
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
+    bool readCsv(
+      QCsv& csv
+      #ifdef DEBUG
+        , const bool displayVerboseOutput = false
+      #endif
+    );
+
+    // These functions are for writing single sheets.
+    // To generate a multisheet workbook, it's currently necessary to use the QXLSX classes directly.
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
 
@@ -202,21 +255,22 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void unmergeCellsInRow( const int r, const bool duplicateValues );
 
     bool columnIsEmpty( const int c, const bool excludeHeaderRow = false );
-    bool rowIsEmpty( const int r );
+    bool rowIsEmpty( const int r, const bool trimStrings = false );
     bool hasEmptyColumns( const bool excludeHeaderRow = false );
-    bool hasEmptyRows();
+    bool hasEmptyRows( const bool trimStrings = false );
     void removeEmptyColumns( const bool excludeHeaderRow = false );
-    void removeEmptyRows();
+    void removeEmptyRows( const bool trimStrings = false );
     void removeRow( const int rowIdx ) override;
     void removeColumn( const int colIdx ) override;
 
     // Remove empty rows/columns from the start and end of the file
-    void trimEmptyRows();
+    void trimEmptyRows( const bool trimStrings = false );
     void trimEmptyColumns();
 
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
 
+    bool error() const { return !_errMsg.isEmpty(); }
     QString errorMessage() const { return _errMsg; }
 
     void debug( const int padding = 10 ) const;
@@ -225,6 +279,18 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     void setData( const CTwoDArray<QVariant>& data );
     CTwoDArray<QVariant> data( const bool containsHeaderRow );
+
+    bool setDataType( const QMetaType::Type type, const int firstCol = 0, const int firstRow = 0 );
+
+    bool addCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool subtractCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool multiplyCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+    bool divideCellValues( const CSpreadsheet& other, const int firstCol = 0, const int firstRow = 0 );
+
+    bool roundCellValues( const int firstCol = 0, const int firstRow = 0 );
+
+    bool addToCellValues( const int val, const int firstCol = 0, const int firstRow = 0 );
+    bool subtractFromCellValues( const int val, const int firstCol = 0, const int firstRow = 0 );
 
     CSpreadsheetWorkBook* workbook() const { return _wb; }
 
@@ -273,23 +339,23 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 class CSpreadsheetWorkBook : public QObject {
   Q_OBJECT
   public:
-    enum  SpreadsheetFileFormat {
+    enum SpreadsheetFileFormat {
       FormatUnknown,
-      Format2007,   // *.xlsx format, Excel 2007 onward
-      Format97_2003 // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
+      Format2007,    // *.xlsx format, Excel 2007 onward
+      Format97_2003, // *.xls format (BIFF5 or BIFF8), Excel 97 - 2003
+      FormatCSV
+    };
+
+    enum WorkBookOpenMode {
+      ModeUnspecified,
+      ModeOpenExisting,
+      ModeCreate
     };
 
     CSpreadsheetWorkBook(
-      const SpreadsheetFileFormat fileFormat,
-      const QString& fileName,
-      QObject* parent = nullptr
-      #ifdef DEBUG
-        , const bool displayVerboseOutput = false
-      #endif
-    );
-
-    CSpreadsheetWorkBook(
-      const QString& fileName,
+      const WorkBookOpenMode mode,
+      const QString& fileName = QString(),
+      const SpreadsheetFileFormat fileFormat = FormatUnknown,
       QObject* parent = nullptr
       #ifdef DEBUG
         , const bool displayVerboseOutput = false
@@ -350,6 +416,8 @@ class CSpreadsheetWorkBook : public QObject {
     bool saveAs( const QString& filename );
     QString sourcePathName() const { return _srcPathName; }
 
+    QXlsx::Document* xlsx() { return _xlsx; }
+
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
 
   signals:
@@ -376,6 +444,7 @@ class CSpreadsheetWorkBook : public QObject {
     void initialize();
 
     void openWorkbook();
+    void createWorkbook();
     SpreadsheetFileFormat guessFileFormat();
 
     bool openXlsWorkbook();

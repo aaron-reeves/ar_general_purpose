@@ -11,10 +11,17 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
+#ifndef ARCOMMON_H
+#define ARCOMMON_H
+
 #include "log.h"
 #include "strutils.h"
 #include "datetimeutils.h"
 #include "returncodes.h"
 #include "qcout.h"
+
+const int UNSET_INT_VALUE = -1;
+
+#endif // ARCOMMON_H
 
 

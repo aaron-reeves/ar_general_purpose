@@ -705,13 +705,67 @@ void CTwoDArray<T>::removeColumn( const QString& colName ) {
 //----------------------------------------------------------------------------------------------
 
 
+//----------------------------------------------------------------------------------------------
+// Sorting, etc.
+//----------------------------------------------------------------------------------------------
+template <class T>
+bool CTwoDArray<T>::sortOnColumn( const int colIdx ) {
+
+  CTwoDArray<T> newArray( this->nCols(), 0 );
+  newArray.setColNames( this->colNames() );
+
+  QStringList newRowNames;
+
+
+  QVector<T> values = this->column( colIdx );
+  QMultiHash<T, int> mhash;
+  for( int i = 0; i < values.count(); ++i ) {
+    mhash.insert( values.at(i), i );
+  }
+
+  QList<T> sortOrder = mhash.keys();
+  std::sort( sortOrder.begin(), sortOrder.end() );
+
+  for( int i = 0; i < sortOrder.count(); ++i ) {
+    QList<int> rows = mhash.values( sortOrder.at(i) );
+    std::sort( rows.begin(), rows.end() );
+    for( int j = 0; j < rows.count(); ++j ) {
+      newArray.appendRow( this->row( rows.at(j) ) );
+      if( this->hasRowNames() ) {
+        newRowNames.append( this->rowNames().at( rows.at(j) ) );
+      }
+    }
+  }
+
+  newArray.updateRowNames();
+  newArray.updateColNames();
+
+  this->assign( newArray );
+
+  return true;
+}
+
+template <class T>
+bool CTwoDArray<T>::sortOnColumn( const QString& colName ) {
+  if( !_colNamesLookup.contains( colName.toLower().trimmed() ) )
+    return false;
+  else
+    return sortOnColumn( _colNamesLookup.value( colName.toLower().trimmed() ) );
+}
+//----------------------------------------------------------------------------------------------
+
 
 //----------------------------------------------------------------------------------------------
 // Row/column names
 //----------------------------------------------------------------------------------------------
 template <class T>
 void CTwoDArray<T>::setColNames( const QStringList& names ) {
-  Q_ASSERT( names.count() == _nCols );
+  if( ( 0 != _nCols ) || ( 0 != _nRows ) ) {
+    Q_ASSERT( names.count() == _nCols );
+  }
+  else {
+    this->setSize( names.count(), 0 );
+  }
 
   for( int i = 0; i < names.count(); ++i ) {
     QString name = names.at(i).trimmed();
@@ -730,7 +784,12 @@ void CTwoDArray<T>::setColNames( const QStringList& names ) {
 
 template <class T>
 void CTwoDArray<T>::setRowNames( const QStringList& names ) {
-  Q_ASSERT( names.count() == _nRows );
+  if( ( 0 != _nCols ) || ( 0 != _nRows ) ) {
+    Q_ASSERT( names.count() == _nRows );
+  }
+  else {
+    this->setSize( 0, names.count() );
+  }
 
   for( int i = 0; i < names.count(); ++i ) {
     QString name = names.at(i).trimmed();

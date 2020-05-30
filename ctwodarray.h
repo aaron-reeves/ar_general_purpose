@@ -76,6 +76,11 @@ class CTwoDArray {
     virtual void removeColumn( const int colIdx );
     void removeColumn( const QString& colName );
 
+    // Sorting, etc.
+    //--------------
+    bool sortOnColumn( const int colIdx );
+    bool sortOnColumn( const QString& colName );
+
     // Basic setter and getters
     //-------------------------
     void setValue( const int c, const int r, const T val );

@@ -207,6 +207,8 @@ bool strToBool( QString val, bool* ok /* = nullptr */ ) {
     || "true" == val
     || "1" == val
     || "-1" == val
+    || "positive" == val
+    || "pos" == val
   ) {
     if( nullptr != ok )
       *ok = true;
@@ -217,6 +219,8 @@ bool strToBool( QString val, bool* ok /* = nullptr */ ) {
     || "f" == val
     || "false" == val
     || "0" == val
+    || "negative" == val
+    || "neg" == val
   ) {
     if( nullptr != ok )
       *ok = true;
@@ -579,6 +583,22 @@ QString prettyPrint( const QString& srcStr, int prefLineLen, bool usePunct, bool
 
   return result;
 }
+
+
+QString truncate( const QString& srcStr, const int prefLineLen, const bool usePunct ) {
+  if( srcStr.length() <= prefLineLen ) {
+    return srcStr;
+  }
+  else {
+    QStringList destLines;
+    QString result;
+
+    destLines = prettyPrintedList( srcStr, prefLineLen - 3, usePunct, true, 0 );
+
+    return QString( "%1..." ).arg( destLines.at(0) );
+  }
+}
+
 
 QStringList stringsFromVariants( const QList<QVariant>& variants ) {
   QStringList result;
