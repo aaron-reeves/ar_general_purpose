@@ -75,7 +75,8 @@ class CAppLog : public QObject {
   public:   
     enum FileFrequency {
       OneFile,
-      DailyFiles
+      DailyFile,
+      NewFileEveryTime
     };
 
     // Creates a log that won't actually record anything.
