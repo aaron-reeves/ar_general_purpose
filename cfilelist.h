@@ -210,13 +210,24 @@ class CFileList : public QList<CPathString> {
         */
         CFileList directories() const;
 
+
+        /**
+         * This will sort out any subdirectory names that might have made it into the list.
+         *
+         * @return A CFileList containing only files
+         */
         CFileList files() const;
+
+        /**
+         * @brief containsShortFileName
+         * @return True if the short file name (see CPathString::shortFileName()) is contained in the list.  Otherwise false.
+         */
+        bool containsShortFileName( const QString& shortFileName ) const;
 
         /**
         Displays all of the items in 'this' list by printing them to the debug stream.
         */
-        void debugList();
-        void debug() { debugList(); }
+        void debug() const;
 
         void toStream(QTextStream* stream, const bool abbrevPath );
 
@@ -228,9 +239,11 @@ class CFileList : public QList<CPathString> {
         void append( const QString& file ) { QList<CPathString>::append( CPathString( file ) ); }
 
         void omitDir( const QString& dir );
-        void removeDir( const QString& dir );
+        void removeFilesInDir( const QString& dir );
+        void removeDirectory( const QString& dirname );
         void removeFile( const QString& filename );
         void removeFiles( const CFileList& toRemove );
+
 
         /**
         This function does all of the actual work associated with generating list items and adding them to the list.
@@ -241,7 +254,14 @@ class CFileList : public QList<CPathString> {
         @param filter QString indicating the file name filter to match (e.g., "*.txt").  Use "*.*" to match all files.  More than one filter may be used, if semicolon-delimited (e.g., "*.cpp;*.h").
         @param recurse bool indicating whether to list directory contents recursively
         */
-        void getFileNames(const QString& path, const QString& filter, const bool recurse );
+        void getFileNames( const QString& dirName, const QString& filter, const bool recurse );
+
+        /**
+         * @brief getDirectoryNames Generates a list of directories within the indicated directory
+         * @param dirName QString indicating the directory whose contents will be listed
+         * @param recurse bool indicating whether to list directory contents recursively
+         */
+        void getDirectoryNames( const QString& dirName, const bool recurse );
 
 
         /**
@@ -250,7 +270,7 @@ class CFileList : public QList<CPathString> {
          */
         QStringList toStringList() const;
 
-    private:
+    protected:
 				QString _startingDir;
         QString _filter;
 

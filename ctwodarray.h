@@ -46,13 +46,40 @@ class CTwoDArray {
     void appendRow(const QList<T>& values );
     void appendRow( const QString& rowName, const QList<T>& values );
 
+    void appendColumn();
+    void appendColumn( const T defaultVal );
+    void appendColumn( const QString& colName );
+    void appendColumn( const QString& colName, const T defaultVal );
+
+    void appendColumn( const QVector<T>& values );
+    void appendColumn( const QString& colName, const QVector<T>& values );
+    void appendColumn( const QList<T>& values );
+    void appendColumn( const QString& colName, const QList<T>& values );
+
     void append( const CTwoDArray<T> array );
+
+    void prependRow();
+    void prependRow( const T defaultVal );
+    void prependRow( const QString& rowName );
+    void prependRow( const QString& rowName, const T defaultVal );
+
+    void prependRow( const QVector<T>& values );
+    void prependRow( const QString& rowName, const QVector<T>& values );
+    void prependRow( const QList<T>& values );
+    void prependRow( const QString& rowName, const QList<T>& values );
+
+    void prepend( const CTwoDArray<T> array );
 
     virtual void removeRow( const int rowIdx );
     void removeRow( const QString& rowName );
 
     virtual void removeColumn( const int colIdx );
     void removeColumn( const QString& colName );
+
+    // Sorting, etc.
+    //--------------
+    bool sortOnColumn( const int colIdx );
+    bool sortOnColumn( const QString& colName );
 
     // Basic setter and getters
     //-------------------------
@@ -77,15 +104,14 @@ class CTwoDArray {
     bool hasColNames() const { return !_colNames.isEmpty(); }
     bool hasRowNames() const { return !_rowNames.isEmpty(); }
 
-    bool hasRowName( const QString& rowName ) const { return _rowNames.contains( rowName ); }
-    bool hasColumnName( const QString& colName ) const { return _colNames.contains( colName ); }
+    bool hasRowName( const QString& rowName ) const { return _rowNamesLookup.contains( rowName.toLower().trimmed() ); }
+    bool hasColumnName( const QString& colName ) const { return _colNamesLookup.contains( colName.toLower().trimmed() ); }
 
     void setColNames( const QStringList& names );
     void setRowNames( const QStringList& names );
 
     const QStringList& colNames() const { return _colNames; }
     const QStringList& rowNames() const { return _rowNames; }
-
 
     // Setters, getters, and at() for use with cell and row names
     //-----------------------------------------------------------
@@ -130,6 +156,13 @@ class CTwoDArray {
     bool _hasRowNames;
     QStringList _colNames;
     QStringList _rowNames;
+
+    // Key is the column/row name, converted to lower case.
+    // Value is the position of the field in the file (i.e., the column/row number), starting from 0.
+    void updateRowNames();
+    void updateColNames();
+    QHash<QString, int> _colNamesLookup;
+    QHash<QString, int> _rowNamesLookup;
 
     // Each vector represents a column with size of _nRows.
     // The list represents the columns.

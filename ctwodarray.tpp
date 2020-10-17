@@ -62,6 +62,9 @@ void CTwoDArray<T>::assign( const CTwoDArray& other ) {
 
   _colNames = other._colNames;
   _rowNames = other._rowNames;
+
+  _colNamesLookup = other._colNamesLookup;
+  _rowNamesLookup = other._rowNamesLookup;
 }
 
 template <class T>
@@ -71,6 +74,9 @@ void CTwoDArray<T>::initialize() {
 
   _colNames.clear();
   _rowNames.clear();
+
+  _colNamesLookup.clear();
+  _rowNamesLookup.clear();
 
   _useDefaultVal = false;
 }
@@ -113,8 +119,8 @@ QVector<T> CTwoDArray<T>::row( const int rowIdx ) const {
 
 template <class T>
 QVector<T> CTwoDArray<T>::row( const QString& rowName ) const {
-  Q_ASSERT( _rowNames.contains( rowName ) );
-  return row( _rowNames.indexOf( rowName ) );
+  Q_ASSERT( _rowNamesLookup.contains( rowName.toLower().trimmed() ) );
+  return row( _rowNamesLookup.value( rowName.toLower().trimmed() ) );
 }
 
 template <class T>
@@ -131,8 +137,8 @@ QVector<T> CTwoDArray<T>::column( const int colIdx ) const {
 
 template <class T>
 QVector<T> CTwoDArray<T>::column( const QString& colName ) const {
-  Q_ASSERT( _rowNames.contains( colName ) );
-  return column( _colNames.indexOf( colName ) );
+  Q_ASSERT( _colNamesLookup.contains( colName.toLower().trimmed() ) );
+  return column( _colNamesLookup.value( colName.toLower().trimmed() ) );
 }
 //----------------------------------------------------------------------------------------------
 
@@ -190,6 +196,152 @@ void CTwoDArray<T>::fillRow( const int rowIdx, const T val ) {
 
 
 template <class T>
+void CTwoDArray<T>::appendColumn() {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    if( _useDefaultVal ) {
+      _data[i][_nCols] = _defaultVal;
+    }
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const T defaultVal ) {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = defaultVal;
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QString& colName ) {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    if( _useDefaultVal ) {
+      _data[i][_nCols] = _defaultVal;
+    }
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QString& colName, const T defaultVal ) {
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    if( _useDefaultVal ) {
+      _data[i][_nCols] = defaultVal;
+    }
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = values.at(i);
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QString& colName, const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = values.at(i);
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = values.at(i);
+  }
+
+  ++_nCols;
+
+  if( this->hasColNames() ) {
+    QString newColName = QStringLiteral( "Column_%1" ).arg( _nCols );
+    Q_ASSERT( !_colNamesLookup.contains( newColName.toLower().trimmed() ) );
+    _colNames.append( newColName );
+    _colNamesLookup.insert( newColName.toLower().trimmed(), _nCols - 1 );
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::appendColumn( const QString& colName, const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nRows() );
+
+  for( int i = 0; i < this->nRows(); ++i ) {
+    _data[i].resize( _nCols + 1 );
+    _data[i][_nCols] = values.at(i);
+  }
+
+  ++_nCols;
+
+  Q_ASSERT( !_colNamesLookup.contains( colName.toLower().trimmed() ) );
+  _colNames.append( colName );
+  _colNamesLookup.insert( colName.toLower().trimmed(), _nCols - 1 );
+}
+
+
+template <class T>
 void CTwoDArray<T>::appendRow() {
   QVector<T> row( _nCols );
 
@@ -202,8 +354,9 @@ void CTwoDArray<T>::appendRow() {
 
   if( this->hasRowNames() ) {
     QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
-    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
     _rowNames.append( newRowName );
+    _rowNamesLookup.insert( newRowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -214,7 +367,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName ) {
     Q_ASSERT( !_rowNames.isEmpty() );
   }
 
-  Q_ASSERT( !_rowNames.contains( rowName ) );
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
 
   if( rowName.isEmpty() ) {
     appendRow();
@@ -229,6 +382,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName ) {
     _data.append( row );
     ++_nRows;
     _rowNames.append( rowName );
+    _rowNamesLookup.insert( rowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -258,8 +412,9 @@ void CTwoDArray<T>::appendRow(const QVector<T>& values ) {
 
   if( this->hasRowNames() ) {
     QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
-    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
     _rowNames.append( newRowName );
+    _rowNamesLookup.insert( newRowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -273,8 +428,9 @@ void CTwoDArray<T>::appendRow( const QList<T>& values ) {
 
   if( this->hasRowNames() ) {
     QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
-    Q_ASSERT( !_rowNames.contains( newRowName ) );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
     _rowNames.append( newRowName );
+    _rowNamesLookup.insert( newRowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -287,7 +443,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName, const QVector<T>& values 
     Q_ASSERT( !_rowNames.isEmpty() );
   }
 
-  Q_ASSERT( !_rowNames.contains( rowName ) );
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
 
   if( rowName.isEmpty() ) {
     appendRow( values );
@@ -296,6 +452,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName, const QVector<T>& values 
     _data.append( values );
     ++_nRows;
     _rowNames.append( rowName );
+    _rowNamesLookup.insert( rowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -308,7 +465,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName, const QList<T>& values ) 
     Q_ASSERT( !_rowNames.isEmpty() );
   }
 
-  Q_ASSERT( !_rowNames.contains( rowName ) );
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
 
   if( rowName.isEmpty() ) {
     appendRow( values );
@@ -317,6 +474,7 @@ void CTwoDArray<T>::appendRow( const QString& rowName, const QList<T>& values ) 
     _data.append( values.toVector() );
     ++_nRows;
     _rowNames.append( rowName );
+    _rowNamesLookup.insert( rowName.toLower().trimmed(), _nRows - 1 );
   }
 }
 
@@ -330,22 +488,188 @@ void CTwoDArray<T>::append( const CTwoDArray<T> array ) {
 
 
 template <class T>
+void CTwoDArray<T>::prependRow() {
+  QVector<T> row( _nCols );
+
+  if( _useDefaultVal ) {
+    row.fill( _defaultVal );
+  }
+
+  _data.prepend( row );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
+    _rowNames.prepend( newRowName );
+    updateRowNames();
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName ) {
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow();
+  }
+  else {
+    QVector<T> row( _nCols );
+
+    if( _useDefaultVal ) {
+      row.fill( _defaultVal );
+    }
+
+    _data.prepend( row );
+    ++_nRows;
+
+    if( this->hasRowNames() ) {
+      _rowNames.prepend( rowName );
+      updateRowNames();
+    }
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const T defaultVal ) {
+  _useDefaultVal = true;
+  _defaultVal = defaultVal;
+  prependRow();
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow(  const QString& rowName, const T defaultVal ) {
+  _useDefaultVal = true;
+  _defaultVal = defaultVal;
+  prependRow( rowName );
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow(const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.prepend( values );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
+    _rowNames.prepend( newRowName );
+    updateRowNames();
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  _data.prepend( values.toVector() );
+  ++_nRows;
+
+  if( this->hasRowNames() ) {
+    QString newRowName = QStringLiteral( "Row_%1" ).arg( _nRows );
+    Q_ASSERT( !_rowNamesLookup.contains( newRowName.toLower().trimmed() ) );
+    _rowNames.prepend( newRowName );
+    updateRowNames();
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName, const QVector<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow( values );
+  }
+  else {
+    _data.prepend( values );
+    ++_nRows;
+
+    if( this->hasRowNames() ) {
+      _rowNames.prepend( rowName );
+      updateRowNames();
+    }
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prependRow( const QString& rowName, const QList<T>& values ) {
+  Q_ASSERT( values.count() == this->nCols() );
+
+  if( 0 < _nRows ) {
+    Q_ASSERT( !_rowNames.isEmpty() );
+  }
+
+  Q_ASSERT( !_rowNamesLookup.contains( rowName.toLower().trimmed() ) );
+
+  if( rowName.isEmpty() ) {
+    prependRow( values );
+  }
+  else {
+    _data.prepend( values.toVector() );
+    ++_nRows;
+
+    if( this->hasRowNames() ) {
+      _rowNames.prepend( rowName );
+      updateRowNames();
+    }
+  }
+}
+
+
+template <class T>
+void CTwoDArray<T>::prepend( const CTwoDArray<T> array ) {
+  for( int r = array.nRows() - 1; r >= 0 ; --r ) {
+    this->prependRow( array.row( r ) );
+  }
+}
+
+
+template <class T>
 void CTwoDArray<T>::removeRow( const int rowIdx ) {
   Q_ASSERT( (rowIdx >= 0) && (rowIdx < _nRows) );
   _data.removeAt( rowIdx );
   if( this->hasRowNames() ) {
+    QString name = _rowNames.at( rowIdx );
+
     _rowNames.removeAt( rowIdx );
+    updateRowNames();
   }
   --_nRows;
 }
 
 
 template <class T>
-void CTwoDArray<T>::removeRow( const QString& rowName ) {
-  Q_ASSERT( !_rowNames.contains( rowName ) );
-  int rowIdx = _rowNames.indexOf( rowName );
-  this->removeRow( rowIdx );
+void CTwoDArray<T>::updateRowNames() {
+  _rowNamesLookup.clear();
+  for( int i = 0; i < _rowNames.count(); ++i ) {
+    _rowNamesLookup.insert( _rowNames.at(i).toLower().trimmed(), i );
+  }
 }
+
+
+template <class T>
+void CTwoDArray<T>::removeRow( const QString& rowName ) {
+  removeRow( _rowNamesLookup.value( rowName.toLower().trimmed() ) );
+}
+
 
 template <class T>
 void CTwoDArray<T>::removeColumn( const int colIdx ) {
@@ -356,21 +680,79 @@ void CTwoDArray<T>::removeColumn( const int colIdx ) {
   }
 
   if( this->hasColNames() ) {
+    QString colName = _colNames.at( colIdx );
     _colNames.removeAt( colIdx );
+    updateColNames();
   }
   --_nCols;
 }
 
 
 template <class T>
-void CTwoDArray<T>::removeColumn( const QString& colName ) {
-  Q_ASSERT( !_colNames.contains( colName ) );
-  int colIdx = _colNames.indexOf( colName );
-  this->removeRow( colIdx );
+void CTwoDArray<T>::updateColNames() {
+  _colNamesLookup.clear();
+  for( int i = 0; i < _colNames.count(); ++i ) {
+    _colNamesLookup.insert( _colNames.at(i).toLower().trimmed(), i );
+  }
 }
 
+
+template <class T>
+void CTwoDArray<T>::removeColumn( const QString& colName ) {
+  Q_ASSERT( _colNamesLookup.contains( colName.toLower().trimmed() ) );
+  removeColumn( _colNamesLookup.value( colName.toLower().trimmed() ) );
+}
 //----------------------------------------------------------------------------------------------
 
+
+//----------------------------------------------------------------------------------------------
+// Sorting, etc.
+//----------------------------------------------------------------------------------------------
+template <class T>
+bool CTwoDArray<T>::sortOnColumn( const int colIdx ) {
+
+  CTwoDArray<T> newArray( this->nCols(), 0 );
+  newArray.setColNames( this->colNames() );
+
+  QStringList newRowNames;
+
+
+  QVector<T> values = this->column( colIdx );
+  QMultiHash<T, int> mhash;
+  for( int i = 0; i < values.count(); ++i ) {
+    mhash.insert( values.at(i), i );
+  }
+
+  QList<T> sortOrder = mhash.keys();
+  std::sort( sortOrder.begin(), sortOrder.end() );
+
+  for( int i = 0; i < sortOrder.count(); ++i ) {
+    QList<int> rows = mhash.values( sortOrder.at(i) );
+    std::sort( rows.begin(), rows.end() );
+    for( int j = 0; j < rows.count(); ++j ) {
+      newArray.appendRow( this->row( rows.at(j) ) );
+      if( this->hasRowNames() ) {
+        newRowNames.append( this->rowNames().at( rows.at(j) ) );
+      }
+    }
+  }
+
+  newArray.updateRowNames();
+  newArray.updateColNames();
+
+  this->assign( newArray );
+
+  return true;
+}
+
+template <class T>
+bool CTwoDArray<T>::sortOnColumn( const QString& colName ) {
+  if( !_colNamesLookup.contains( colName.toLower().trimmed() ) )
+    return false;
+  else
+    return sortOnColumn( _colNamesLookup.value( colName.toLower().trimmed() ) );
+}
+//----------------------------------------------------------------------------------------------
 
 
 //----------------------------------------------------------------------------------------------
@@ -378,14 +760,49 @@ void CTwoDArray<T>::removeColumn( const QString& colName ) {
 //----------------------------------------------------------------------------------------------
 template <class T>
 void CTwoDArray<T>::setColNames( const QStringList& names ) {
-  Q_ASSERT( names.count() == _nCols );
-  _colNames = names;
+  if( ( 0 != _nCols ) || ( 0 != _nRows ) ) {
+    Q_ASSERT( names.count() == _nCols );
+  }
+  else {
+    this->setSize( names.count(), 0 );
+  }
+
+  for( int i = 0; i < names.count(); ++i ) {
+    QString name = names.at(i).trimmed();
+
+    int j = 2;
+    while( _colNamesLookup.contains( name.toLower() ) ) {
+      name = QStringLiteral("%1_%2").arg( names.at(i).trimmed() ).arg( j );
+      ++j;
+    }
+
+    _colNames.append( name );
+    _colNamesLookup.insert( name.toLower(), i );
+  }
 }
+
 
 template <class T>
 void CTwoDArray<T>::setRowNames( const QStringList& names ) {
-  Q_ASSERT( names.count() == _nRows );
-  _rowNames = names;
+  if( ( 0 != _nCols ) || ( 0 != _nRows ) ) {
+    Q_ASSERT( names.count() == _nRows );
+  }
+  else {
+    this->setSize( 0, names.count() );
+  }
+
+  for( int i = 0; i < names.count(); ++i ) {
+    QString name = names.at(i).trimmed();
+
+    int j = 2;
+    while( _rowNamesLookup.contains( name.toLower() ) ) {
+      name = QStringLiteral("%1_%2").arg( names.at(i).trimmed() ).arg( j );
+      ++j;
+    }
+
+    _rowNames.append( name );
+    _rowNamesLookup.insert( name.toLower(), i );
+  }
 }
 //----------------------------------------------------------------------------------------------
 
@@ -396,60 +813,60 @@ void CTwoDArray<T>::setRowNames( const QStringList& names ) {
 //----------------------------------------------------------------------------------------------
 template <class T>
 void CTwoDArray<T>::setValue( const QString& colName, const int r, const T val ) {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  setValue( _colNames.indexOf( colName ), r, val );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  setValue( _colNamesLookup.value( colName.toLower().trimmed() ), r, val );
 }
 
 template <class T>
 void CTwoDArray<T>::setValue( const int c, const QString& rowName, const T val ) {
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  setValue( c, _rowNames.indexOf( rowName ), val );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  setValue( c, _rowNamesLookup.value( rowName.toLower().trimmed() ), val );
 }
 
 template <class T>
 void CTwoDArray<T>::setValue( const QString& colName, const QString& rowName, const T val ) {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  setValue( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ), val );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::setValue", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  setValue( _colNamesLookup.value( colName.toLower().trimmed() ), _rowNamesLookup.value( rowName.toLower().trimmed() ), val );
 }
 
 
 template <class T>
 T& CTwoDArray<T>::value( const QString& colName, const int r ) {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  return this->value( _colNames.indexOf( colName ), r );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  return this->value( _colNamesLookup.value( colName.toLower().trimmed() ), r );
 }
 
 template <class T>
 T& CTwoDArray<T>::value( const int c, const QString& rowName ) {
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  return this->value( c, _rowNames.indexOf( rowName ) );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  return this->value( c, _rowNamesLookup.value( rowName.toLower().trimmed() ) );
 }
 
 template <class T>
 T& CTwoDArray<T>::value( const QString& colName, const QString& rowName ) {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  return this->value( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ) );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  return this->value( _colNamesLookup.value( colName.toLower().trimmed() ), _rowNamesLookup.value( rowName.toLower().trimmed() ) );
 }
 
 
 template <class T>
 const T& CTwoDArray<T>::value( const QString& colName, const int r ) const {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  return this->value( _colNames.indexOf( colName ), r );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  return this->value( _colNamesLookup.value( colName.toLower().trimmed() ), r );
 }
 
 template <class T>
 const T& CTwoDArray<T>::value( const int c, const QString& rowName ) const {
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  return this->value( c, _rowNames.indexOf( rowName ) );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  return this->value( c, _rowNamesLookup.value( rowName.toLower().trimmed() ) );
 }
 
 template <class T>
 const T& CTwoDArray<T>::value( const QString& colName, const QString& rowName ) const {
-  Q_ASSERT_X( _colNames.contains( colName ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
-  Q_ASSERT_X( _rowNames.contains( rowName ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
-  return this->value( _colNames.indexOf( colName ), _rowNames.indexOf( rowName ) );
+  Q_ASSERT_X( _colNamesLookup.contains( colName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing column name: %1" ).arg( colName ).toLatin1().data() );
+  Q_ASSERT_X( _rowNamesLookup.contains( rowName.toLower().trimmed() ), " CTwoDArray<T>::value", QStringLiteral( "Missing row name: %1" ).arg( rowName ).toLatin1().data() );
+  return this->value( _colNamesLookup.value( colName.toLower().trimmed() ), _rowNamesLookup.value( rowName.toLower().trimmed() ) );
 }
 //----------------------------------------------------------------------------------------------

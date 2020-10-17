@@ -1045,6 +1045,35 @@ QStringList QCsv::fieldValues( const int index, const bool unique /* = false */ 
 }
 
 
+QCsv QCsv::distinct() {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( EntireFile == _mode );
+  clearError();
+
+  QCsv result;
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, QStringLiteral("Only EntireFile mode may be used with this function.") );
+    result.setError( ERROR_WRONG_MODE, QStringLiteral("Filtered CSVs can only be created from CSVs in EntireFile mode.") );
+  }
+  else {
+    result = QCsv( this->fieldNames() );
+
+    QSet<QStringList> data;
+
+    for( int i = 0; i < _data.count(); ++i ) {
+      if( !data.contains( this->rowData( i ) ) ) {
+        data.insert( this->rowData( i ) );
+        result.append( _data.at(i) );
+      }
+    }
+  }
+
+  result.toFront();
+  return result;
+}
+
+
+
 QCsv QCsv::filter( const int index, const QString& value, const Qt::CaseSensitivity cs /* = Qt::CaseSensitive */ ) {
   // This function will not work with qCSV_LineByLine mode.
   Q_ASSERT( EntireFile == _mode );
@@ -1093,6 +1122,71 @@ QCsv QCsv::filter( const QString& fieldName, const QString& value, const Qt::Cas
   }
   else {
     result = filter( _fieldsLookup.value( fieldName.trimmed().toLower() ), value, cs );
+  }
+
+  return result;
+}
+
+
+QCsv QCsv::sorted( const int index ) {
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( EntireFile == _mode );
+  clearError();
+
+  QCsv result;
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, QStringLiteral("Only EntireFile mode may be used with this function.") );
+    result.setError( ERROR_WRONG_MODE, QStringLiteral("Filtered CSVs can only be created from CSVs in EntireFile mode.") );
+  }
+  else {
+    result = QCsv( this->fieldNames() );
+
+    QStringList values = this->fieldValues( index, false );
+    QMultiHash<QString, int> mhash;
+    for( int i = 0; i < values.count(); ++i ) {
+      mhash.insert( values.at(i), i );
+    }
+
+    QStringList sortOrder = mhash.keys();
+    std::sort( sortOrder.begin(), sortOrder.end() );
+
+    for( int i = 0; i < sortOrder.count(); ++i ) {
+      QList<int> rows = mhash.values( sortOrder.at(i) );
+      std::sort( rows.begin(), rows.end() );
+      for( int j = 0; j < rows.count(); ++j ) {
+        result.append( _data.at( rows.at(j) ) );
+      }
+    }
+  }
+
+  result.toFront();
+  return result;
+}
+
+
+QCsv QCsv::sorted( const QString& fieldName ) {
+  QCsv result;
+
+  // This function will not work with qCSV_LineByLine mode.
+  Q_ASSERT( EntireFile == _mode );
+  clearError();
+
+  if( LineByLine == _mode ) {
+    setError( ERROR_WRONG_MODE, QStringLiteral("Only EntireFile mode may be used with this function.") );
+    result.setError( ERROR_WRONG_MODE, QStringLiteral("Filtered CSVs can only be created from CSVs in EntireFile mode.") );
+  }
+  else if( !_containsFieldList ) {
+    _error = ERROR_NO_FIELDLIST;
+    _errorMsg = QStringLiteral("The current settings do not include a field list.");
+    result.setError( _error, _errorMsg );
+  }
+  else if( !_fieldsLookup.contains( fieldName.trimmed().toLower() ) ) {
+    _error = ERROR_INVALID_FIELD_NAME;
+    _errorMsg = "Invalid Field Name: " + fieldName;
+     result.setError( _error, _errorMsg );
+  }
+  else {
+    result = sorted( _fieldsLookup.value( fieldName.trimmed().toLower() ) );
   }
 
   return result;

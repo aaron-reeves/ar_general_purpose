@@ -140,7 +140,7 @@ class QCsv {
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator
 
-    ~QCsv(); // Destroys the object.
+    virtual ~QCsv(); // Destroys the object.
 
     // Parses a CSV-formatted multi-line string, breaking it into its component parts
     // which can then be accessed via the various qCSV functions.
@@ -170,11 +170,13 @@ class QCsv {
 
     // Field/column names are case-insensitive.
     QString fieldName( const int index ) const; // Returns the field/column name of field/column index.
-    QStringList fieldNames() const {return _fieldNames; } // Returns a list of all field/column names.
     int fieldIndexOf( const QString& fieldName ); // Returns the field/column number of the specified field name.
     bool renameFields( const QStringList& newFieldNames ); // Rename all fields/columns with the names in the list.  The number of new names provided must match the number of existing names.
     bool renameField( QString oldName, QString newName ); // Change the name of field 'oldName' to 'newName'.
     bool containsFieldName( const QString& fieldName ); // Is there a field called 'fieldName'?
+
+    // Original field names are case-sensitive, so it's generally better to use one of the accessor functions above than to use fieldNames directly
+    QStringList fieldNames() const {return _fieldNames; } // Returns a list of all field/column names.
 
     // The field at position index (starting from 0) or with the name 'fieldName' of the current line.
     // May be used with either line-by-line or entire-file mode.
@@ -222,6 +224,13 @@ class QCsv {
     // These functions work only in entire-file mode.
     QCsv filter( const int index, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
     QCsv filter( const QString& fieldName, const QString& value, const Qt::CaseSensitivity cs = Qt::CaseSensitive );
+
+    QCsv sorted( const int index );
+    QCsv sorted( const QString& fieldName );
+
+    // Returns a subset of this object, containing only rows that are distinct.
+    // This function currently works only in entire-file mode.
+    QCsv distinct();
 
     // Functions for modifying a CSV object in memory. These work only for read mode qCSV_EntireFile.
     bool appendField( const QString& fieldName ); // Add a new field/column with the name 'fieldName'.  The field will be empty, but can be added to with setField.
@@ -299,7 +308,7 @@ class QCsv {
 
   protected:
     void initialize();
-    int readNext();
+    virtual int readNext();
     void assign( const QCsv& other );
 
     bool openFileAndReadHeader();
@@ -356,7 +365,7 @@ class QCsv {
  * This signal, nBytesRead, indicates the number of bytes of data read from a file,
  * and can be handled in the same way any other Qt signal might be treated.
  */
-class QCsvObject : public QObject, QCsv {
+class QCsvObject : public QObject, public QCsv {
   Q_OBJECT
 
   public:
@@ -378,9 +387,9 @@ class QCsvObject : public QObject, QCsv {
 
     //qCSV( const qCSV& other );
 
-    ~QCsvObject();
+    ~QCsvObject() override;
 
-    int readNext();
+    int readNext() override;
 
   signals:
     void nBytesRead( const int val );

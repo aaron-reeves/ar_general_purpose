@@ -1,3 +1,16 @@
+/*
+cconfigfile.h/cpp
+-----------------
+Begin: 2015-06-24
+Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
+---------------------------------------------------
+Copyright (C) 2015 - 2019 Scotland's Rural College (SRUC)
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
 #include "cconfigfile.h"
 
 #include <ar_general_purpose/arcommon.h>
@@ -30,27 +43,28 @@ QString ConfigReturnCode::resultString( const int returnCode ) {
 }
 
 
-CConfigBlock::CConfigBlock( const QString& name ) : QMap<QString, QString>() {
+CConfigBlock::CConfigBlock( const QString& name ) {
   _name = name;
   _removed = false;
 }
 
 
-CConfigBlock::CConfigBlock( const CConfigBlock& other ) : QMap<QString, QString>( other ) {
+CConfigBlock::CConfigBlock( const CConfigBlock& other ) {
   assign( other );
 }
 
 
 CConfigBlock& CConfigBlock::operator=( const CConfigBlock& other ) {
-  QMap<QString, QString>::operator=( other );
-
   assign( other );
   return *this;
 }
 
+
 void CConfigBlock::assign( const CConfigBlock& other ) {
   _name = other._name;
   _removed = other._removed;
+  _itemList = other._itemList;
+  _itemHash = other._itemHash;
 }
 
 
@@ -58,27 +72,78 @@ CConfigBlock::~CConfigBlock() {
   // Do nothing.
 }
 
+
+void CConfigBlock::insert( const CConfigItem& item ) {
+  _itemList.append( item );
+  _itemHash.insert( item.key().trimmed().toLower(), item );
+}
+
+
+// Does the block contain AT LEAST one value with the specified key?
+bool CConfigBlock::contains( const QString& key ) {
+  return _itemHash.contains( key.trimmed().toLower() );
+}
+
+
+// How many values with the specified key?
+int CConfigBlock::multiContains( const QString& key ) const {
+  return _itemHash.count( key.trimmed().toLower() );
+}
+
+
+// Return the FIRST value with the specified key
+QString CConfigBlock::value( const QString& key ) const {
+  QString result;
+
+  for( int i = 0; i < _itemList.count(); ++i ) {
+    if( 0 == _itemList.at(i).key().compare( key.trimmed().toLower() ) ) {
+      result = _itemList.at(i).value();
+      break;
+    }
+  }
+
+  return result;
+}
+
+
+// Return a list of ALL values with the specified key, in the order in which they appear in the block
+QStringList CConfigBlock::values( const QString& key ) const {
+  QStringList result;
+
+  for( int i = 0; i < _itemList.count(); ++i ) {
+    if( 0 == _itemList.at(i).key().compare( key.trimmed().toLower() ) ) {
+      result.append( _itemList.at(i).value() );
+    }
+  }
+
+  return result;
+}
+
+
 void CConfigBlock::writeToStream( QTextStream* stream ) {
   *stream << "[" << this->name() << "]" << endl;
 
-  QStringList keys = this->keys();
-  foreach( const QString& key, keys ) {
-    *stream << "  " << key << " <- " << this->value( key ) << endl;
+  for( int i = 0; i < _itemList.count(); ++i ) {
+    *stream << "  " << _itemList.at(i).key() << " <- " << _itemList.at(i).value() << endl;
   }
 }
 
 
 void CConfigBlock::debug() const {
-  qDb() << QStringLiteral( "Block '%1':" ).arg( this->name() ) << this->count();
+  qDb() << QStringLiteral( "Block '%1':" ).arg( this->name() ) << _itemList.count();
 
-  QStringList keys = this->keys();
-  for( const QString& key : keys ) {
-    qDb() << key << this->value( key );
+  for( int i = 0; i < _itemList.count(); ++i ) {
+    qDb() << "  " << _itemList.at(i).key() << _itemList.at(i).value();
   }
 }
 
 
 CConfigFile::CConfigFile() {
+  initialize();
+}
+
+void CConfigFile::initialize() {
+  _allowRepeatedKeys = false;
   _fileName = QString();
   _errorMessage = QString();
   _returnValue = ConfigReturnCode::Success;
@@ -86,6 +151,8 @@ CConfigFile::CConfigFile() {
 
 
 CConfigFile::CConfigFile( QStringList* args ) {
+  initialize();
+
   _fileName = QString();
 
   if( 1 != args->count() )
@@ -95,7 +162,11 @@ CConfigFile::CConfigFile( QStringList* args ) {
 }
 
 
-CConfigFile::CConfigFile( const QString& configFileName ) {
+CConfigFile::CConfigFile( const QString& configFileName, const bool allowRepeatedKeys /* = false */ ) {
+  initialize();
+
+  _allowRepeatedKeys = allowRepeatedKeys;
+
   _fileName = configFileName;
 
   buildBasic( configFileName );
@@ -230,7 +301,7 @@ QStringList CConfigFile::values( const QString& blockName, const QString& key ) 
   QStringList result;
    QString keyX = key.trimmed().toLower();
 
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
+  QList<CConfigBlock*> blocks = this->blocks( blockName );
   for( int i = 0; i < blocks.count(); ++i ) {
     CConfigBlock* block = blocks.at(i);
 
@@ -273,7 +344,7 @@ int CConfigFile::multiContains( const QString& blockName ) const {
 
 
 CConfigBlock* CConfigFile::block( const QString& blockName ) const {
-  QList<CConfigBlock*> blocks = _blockHash.values( blockName.trimmed().toLower() );
+  QList<CConfigBlock*> blocks = this->blocks( blockName );
   for( int i = 0; i < blocks.count(); ++i ) {
     if( !blocks.at(i)->removed() ) {
       return blocks.at(i);
@@ -285,7 +356,15 @@ CConfigBlock* CConfigFile::block( const QString& blockName ) const {
 
 
 QList<CConfigBlock*> CConfigFile::blocks( const QString& blockName ) const {
-  return _blockHash.values( blockName.trimmed().toLower() );
+  QList<CConfigBlock*> list;
+
+  for( int i = 0; i < _blockList.count(); ++i ) {
+    if( 0 == _blockList.at(i)->name().compare( blockName.trimmed(), Qt::CaseInsensitive ) ) {
+      list.append( _blockList.at(i) );
+    }
+  }
+
+  return list;
 }
 
 
@@ -333,12 +412,13 @@ int CConfigFile::fillBlock( CConfigBlock* block, const QStringList& strList ) {
       key = lineParts.at(0).trimmed().toLower();
       val = lineParts.at(1).trimmed();
 
-     if( block->contains( key ) ) {
-       qDb() << "Duplicated block key";
-       result = ConfigReturnCode::BadConfiguration;
-     }
-     else
-      block->insert( key, val );
+      if( block->contains( key ) && !_allowRepeatedKeys ) {
+        qDb() << "Duplicated block key:" << key;
+        result = ConfigReturnCode::BadConfiguration;
+      }
+      else {
+        block->insert( CConfigItem( key, val ) );
+      }
     }
   }
 

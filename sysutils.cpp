@@ -1,13 +1,26 @@
+/*
+sysutils.h/cpp
+--------------
+Begin: 2019-02-05
+Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
+---------------------------------------------------
+Copyright (C) 2019 Scotland's Rural College (SRUC)
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
 #include "sysutils.h"
 
-#if defined(_WIN32) || defined(WIN32)
+#ifdef PSAPI_USED
   #include <windows.h>
   #include <stdio.h>
   #include <psapi.h>
-#endif // _WIN32
+#endif
 
 void PrintMemoryInfo( /*DWORD processID*/ ) {
-  #if defined(_WIN32) || defined(WIN32)
+  #ifdef PSAPI_USED
     PROCESS_MEMORY_COUNTERS pmc;
 
     if ( GetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) )  {
@@ -21,21 +34,21 @@ void PrintMemoryInfo( /*DWORD processID*/ ) {
       printf( "\tPagefileUsage: %lu\n", pmc.PagefileUsage );
       printf( "\tPeakPagefileUsage: %lu\n", pmc.PeakPagefileUsage );
     }
-  #endif // _WIN32
+  #endif
 }
 
 
 unsigned long procWorkingSet() {
   unsigned long result = 0;
 
-  #if defined(_WIN32) || defined(WIN32)
+  #ifdef PSAPI_USED
     PROCESS_MEMORY_COUNTERS pmc;
 
     if ( GetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) )  {
       result = pmc.WorkingSetSize;
     }
 
-  #endif // _WIN32
+  #endif
 
   return result;
 }
@@ -44,14 +57,14 @@ unsigned long procWorkingSet() {
 unsigned long procPrivateWorkingSet() {
   unsigned long result = 0;
 
-  #if defined(_WIN32) || defined(WIN32)
+  #ifdef PSAPI_USED
     PROCESS_MEMORY_COUNTERS_EX pmc;
 
     if ( GetProcessMemoryInfo( GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmc), sizeof(pmc)) )  {
       result = pmc.PrivateUsage;
     }
 
-  #endif // _WIN32
+  #endif
 
   return result;
 }

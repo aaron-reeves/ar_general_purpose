@@ -35,6 +35,8 @@ QString removeLineBreaks( QString str1 );
 QString removeDelimiters( const QString& val, QChar delim );
 QString removeWhiteSpace( QString str1 );
 QString removeWhiteSpace( const char* str1 );
+QString removePunct( QString str );
+
 QString trimPunct( QString str );
 QString leftTrimmed( QString str );
 QString rightTrimmed( QString str );
@@ -61,6 +63,8 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar = '
 QString splitNear( const int pos, QString& str, const int maxLenAdd = 0, const bool usePunct = true, const bool forceBreak = true );
 QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true, const bool forceBreak = true, const int indent = 0 );
 QString prettyPrint( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true, const bool forceBreak = true, const int indent = 0 );
+
+QString truncate( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true );
 
 QStringList stringsFromVariants( const QList<QVariant>& variants );
 QStringList stringsFromVariants( const QVector<QVariant>& variants );

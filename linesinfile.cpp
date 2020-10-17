@@ -97,6 +97,11 @@ size_t safe_read (int fd, char *buf, unsigned int count) {
 }
 
 
+unsigned long long linesInFile( const QString& filename, bool& ok ) {
+  return linesInFile( filename.toLatin1().data(), ok );
+}
+
+
 unsigned long long linesInFile( const char* filename, bool& ok ) {
   unsigned long long nLines = 0;
   bool test = true;

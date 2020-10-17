@@ -126,6 +126,8 @@ class CAppLog : public QObject {
     CAppLog& operator<<( const QString& message );
     CAppLog& operator<<( const char* message );
     CAppLog& operator<<( const int number );
+    CAppLog& operator<<( const double number );
+    CAppLog& operator<<( const long long number );
     CAppLog& operator<<( QTextStream&(*f)(QTextStream&) );
 
     void cout();
@@ -198,9 +200,10 @@ class CLogFileContents {
     const QStringList& logContents() const { return _fullContents; }
     QStringList summary() const;
     void writeSummaryToStream( QTextStream* stream );
+    void writeFilteredToStream( QString filter, QTextStream* stream , const bool useDetails );
 
   protected:
-    void processLine( const QString& line, const bool includeQueryDetails );
+    QString processLine( const QString& line, const bool useDetails );
     QString trimMatch( QString line, const QRegExp& exp );
     void generateSummary();
 

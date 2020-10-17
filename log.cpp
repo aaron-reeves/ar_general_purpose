@@ -214,7 +214,7 @@ void CAppLog::setFileName( const QString& fileName ) {
 
   switch ( _freq ) {
     case DailyFiles:
-      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDate::currentDate().toString( QStringLiteral("yyyyMMdd") ), fi.fileName() );
+      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDateTime::currentDateTime().toString( QStringLiteral("yyyyMMddhhmmss") ), fi.fileName() );
       break;
 
     // For now, fall through for all other options.
@@ -479,6 +479,20 @@ CAppLog& CAppLog::operator<<( const int number ) {
 }
 
 
+CAppLog& CAppLog::operator<<( const long long number ) {
+  _msgInProgress.append( QString::number( number ) );
+
+  return *this;
+}
+
+
+CAppLog& CAppLog::operator<<( const double number ) {
+  _msgInProgress.append( QString::number( number ) );
+
+  return *this;
+}
+
+
 CAppLog& CAppLog::operator<<( QTextStream&(*f)(QTextStream&) ) {
   if( (f == ::endl) || (f == ::flush) ) {
     this->logMessage( _msgInProgress, LoggingTypical );
@@ -578,9 +592,9 @@ QString CLogFileContents::trimMatch( QString line, const QRegExp& exp ) {
 }
 
 
-void CLogFileContents::processLine( const QString& line, const bool includeQueryDetails ) {
+QString CLogFileContents::processLine( const QString& line, const bool useDetails ) {
   if( line.trimmed().isEmpty() )
-    return;
+    return QString();
 
   QString msg;
 
@@ -591,7 +605,7 @@ void CLogFileContents::processLine( const QString& line, const bool includeQuery
   if( line.contains( QLatin1String(">>>") ) ) {
     QStringList list = line.split( '\n' );
 
-    if( includeQueryDetails && ( 2 < list.count() ) ) {
+    if( useDetails && ( 2 < list.count() ) ) {
       msg = QStringLiteral( "%1 | %2" ).arg( list.at(1).trimmed(), list.at(2).trimmed() );
     }
     else {
@@ -616,12 +630,9 @@ void CLogFileContents::processLine( const QString& line, const bool includeQuery
 
   msg.replace( QRegExp( "line\\s[0-9]+" ), QStringLiteral("line x") );
 
-  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-]+[)]" ), QStringLiteral("(detail: x)") );
+  msg.replace( QRegExp( "[(]detail:\\s+[0-9a-zA-Z/\\s:=_.-,]+[)]" ), QStringLiteral("(detail: x)") );
 
-  if( _hash.contains( msg ) )
-    _hash[msg] = _hash.value( msg ) + 1;
-  else
-    _hash.insert( msg, 1 );
+  return msg;
 }
 
 
@@ -655,8 +666,6 @@ void CLogFileContents::generateSummary() {
       _entries.append( items.at(j) );
     }
   }
-
-  _hash.clear();
 }
 
 
@@ -670,11 +679,12 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
   }
 
   QTextStream stream( &f );
-  QString line, line2;
+  QString origLine, origLine2, line, line2;
   do {
     QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
 
-    line = trimMatch( stream.readLine(), timeStamp );
+    origLine = stream.readLine();
+    line = trimMatch( origLine, timeStamp );
 
     if( "(No errors encountered)" == line )
       continue;
@@ -685,16 +695,25 @@ CLogFileContents::CLogFileContents( const QString& filename, const bool saveFull
     //--------------------------------------------------------------------
     if( line.contains( QStringLiteral(">>>") ) ) {
       do {
-        line2 = trimMatch( stream.readLine(), timeStamp );
+        origLine2 = stream.readLine();
+        line2 = trimMatch( origLine2, timeStamp );
         line.append( "\n" );
         line.append( line2 );
+        origLine.append( "\n" );
+        origLine.append( origLine2 );
       } while( !line2.contains( QStringLiteral("<<<") ) );
     }
 
     if( saveFullContents )
-      _fullContents.append( line );
+      _fullContents.append( origLine );
 
-    processLine( line, includeQueryDetails );
+    QString msg = processLine( line, includeQueryDetails );
+
+    if( _hash.contains( msg ) )
+      _hash[msg] = _hash.value( msg ) + 1;
+    else
+      _hash.insert( msg, 1 );
+
   } while( !line.isNull() );
 
   generateSummary();
@@ -707,7 +726,56 @@ void CLogFileContents::writeSummaryToStream( QTextStream* stream ) {
   QString keyStr;
   for( int i = 0; i < _entries.count(); ++i ) {
     keyStr = keyStr = rightPaddedStr( QString::number( _entryCounts.at(i) ), maxLen );
-    *stream << keyStr << ": '" << _entries.at(i) << endl;
+    *stream << keyStr << ": '" << _entries.at(i) << "'" << endl;
+  }
+}
+
+
+void CLogFileContents::writeFilteredToStream( QString filter, QTextStream* stream, const bool useDetails ) {
+  bool useStringFilter = false;
+  int n = 0;
+  bool gt = false;
+  bool lt = false;
+  bool eq = false;
+
+
+  if( QRegExp( "^[<>=][0-9]+$" ).exactMatch( filter ) ) {
+    gt = filter.startsWith( '>' );
+    lt = filter.startsWith( '<' );
+    eq = filter.startsWith( '=' );
+    n = filter.right( filter.length() - 1 ).toInt();
+  }
+  else if( filter.startsWith( '=' ) ) {
+    useStringFilter = true;
+    filter = filter.right( filter.length() - 1 );
+  }
+
+  QString str;
+  QRegExp timeStamp( "^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[\\s][0-9]{2}[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[:]" );
+
+  for( int i = 0; i < _fullContents.count(); ++i ) {    
+    str = processLine( trimMatch( _fullContents.at(i), timeStamp ), useDetails );
+
+    if( useStringFilter ) {
+      if( 0 != filter.compare( str ) ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( gt ) {
+      if( _hash.value( str ) <= n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( lt ) {
+      if( _hash.value( str ) >= n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
+    else if( eq ) {
+      if( _hash.value( str ) != n ) {
+        *stream << _fullContents.at(i) << endl;
+      }
+    }
   }
 }
 
