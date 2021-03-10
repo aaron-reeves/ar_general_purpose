@@ -17,7 +17,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QtCore>
 
 /*
-This is one of the base classes for the various concurrent containers in concurrentcontainers.h/cpp
+This is one of the base classes for the various concurrent containers in concurrentcontainers.h/tpp
 */
 class CConcurrentContainer {
   public:

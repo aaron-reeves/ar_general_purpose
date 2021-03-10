@@ -33,7 +33,7 @@ class CConcurrentVector : public CConcurrentContainer, public QVector<T> {
     virtual ~CConcurrentVector() { /* Nothing else to do here */ }
       
     virtual QHash<QString, int> populateDatabase(
-      CConfigDatabase cfdb,
+      const CConfigDatabase& cfdb,
       const int startIdx,
       const int endIdx,
       const int threadID,
@@ -55,7 +55,7 @@ class CConcurrentStringHash : public CConcurrentContainer, public QHash<QString,
     virtual ~CConcurrentStringHash() { /* Nothing else to do here */ }
 
     virtual QHash<QString, int> populateDatabase(
-      CConfigDatabase cfdb,
+      const CConfigDatabase& cfdb,
       const QList<QString>& list,
       const int threadID,
       const QHash<QString, QVariant>& otherParams
@@ -86,17 +86,33 @@ class CConcurrentIntHash : public CConcurrentContainer, public QHash<int, T> {
 };
 
 
-template <class T>
+
+template <typename T, typename Class>
 class CConcurrentProcessor : public QList<CConcurrentRunner*> {
   public:
     CConcurrentProcessor() : QList<CConcurrentRunner*>() { /* Nothing else to do here */ }
     ~CConcurrentProcessor();
       
-    QHash<QString, int> populateDatabase(const CConcurrentVector<T>& v, const CConfigDatabase& cfdb, const QHash<QString, QVariant>& otherParams );
+    QHash<QString, int> populateDatabase(
+      const CConcurrentVector<T>* v,
+      QHash<QString, int> (Class::*fn)( const CConfigDatabase&, const int, const int, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    );
   
-    QHash<QString, int> populateDatabase(const CConcurrentStringHash<T>& h, const CConfigDatabase& cfdb, const QHash<QString, QVariant>& otherParams );
+    QHash<QString, int> populateDatabase(
+      const CConcurrentStringHash<T>* h,
+      QHash<QString, int> (Class::*fn)( const CConfigDatabase&, const QList<QString>&, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    );
 
-    QHash<QString, int> populateDatabase(const CConcurrentIntHash<T>& h, const CConfigDatabase& cfdb, const QHash<QString, QVariant>& otherParams );
+    QHash<QString, int> populateDatabase(
+      const CConcurrentIntHash<T>* h,
+      QHash<QString, int> (Class::*fn)( CConfigDatabase, const QList<int>&, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    );
 
   protected:
     void waitForFinished();

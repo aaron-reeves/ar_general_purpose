@@ -28,7 +28,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
   template <class T>
   QHash<QString, int> CConcurrentVector<T>::populateDatabase(
-    CConfigDatabase cfdb,
+    const CConfigDatabase& cfdb,
     const int startIdx,
     const int endIdx,
     const int threadID,
@@ -43,16 +43,19 @@ Public License as published by the Free Software Foundation; either version 2 of
   }
   
   
-  template <class T>
-  QHash<QString, int> CConcurrentProcessor<T>::populateDatabase( 
-      const CConcurrentVector<T>& v, 
-      const CConfigDatabase& cfdb, 
-      const QHash<QString, QVariant>& otherParams 
+  template <typename T, typename Class>
+  QHash<QString, int> CConcurrentProcessor<T, Class>::populateDatabase(
+    const CConcurrentVector<T>* v,
+    QHash<QString, int> (Class::*fn)( const CConfigDatabase&, const int, const int, const int, const QHash<QString, QVariant>& ) const,
+    const CConfigDatabase& cfdb,
+    const QHash<QString, QVariant>& otherParams
   ) {
-    QHash<QString, int> results = v.resultsTemplate();
+    QHash<QString, int> results = v->resultsTemplate();
 
     int nThreads = ( QThread::idealThreadCount() - 2 ); // Reserve one thread for management, and one for the last batch
-    int nItemsPerThread = this->count() / nThreads;
+    int nItemsPerThread = v->count() / nThreads;
+
+    qDebug() << v->count() << nThreads << nItemsPerThread;
 
     int threadID = 0;
     int startIdx = 0;
@@ -64,7 +67,7 @@ Public License as published by the Free Software Foundation; either version 2 of
       qDebug() << "Spinning up thread" << threadID << "with list of size" << nItemsPerThread;
       this->append(
         new CConcurrentRunner(
-          QFuture< QHash<QString, int> >( QtConcurrent::run( v, &CConcurrentVector<T>::populateDatabase, cfdb.parameters( threadID ), startIdx, endIdx, threadID, otherParams ) )
+          QFuture< QHash<QString, int> >( QtConcurrent::run( *v, &CConcurrentVector<T>::populateDatabase, cfdb.parameters( threadID ), startIdx, endIdx, threadID, otherParams ) ) // Compiles but doesn't work
         )
       );
       ++threadID;
@@ -75,14 +78,14 @@ Public License as published by the Free Software Foundation; either version 2 of
     ++threadID;
     this->append(
       new CConcurrentRunner(
-        QFuture< QHash<QString, int> >( QtConcurrent::run( v, &CConcurrentVector<T>::populateDatabase, cfdb.parameters( threadID ), startIdx, this->count(), threadID, otherParams ) )
+        QFuture< QHash<QString, int> >( QtConcurrent::run( *v, &CConcurrentVector<T>::populateDatabase, cfdb.parameters( threadID ), startIdx, v->count(), threadID, otherParams ) ) // Compiles but doesn't work
       )
     );
 
     this->waitForFinished();
 
     for( int i = 0; i < this->count(); ++i ) {
-      results = v.mergeResults( results, this->at(i)->result() );
+      results = v->mergeResults( results, this->at(i)->result() );
     }
 
     return results;
@@ -104,11 +107,13 @@ Public License as published by the Free Software Foundation; either version 2 of
 
   template <class T>
   QHash<QString, int> CConcurrentStringHash<T>::populateDatabase(
-    CConfigDatabase cfdb,
+    const CConfigDatabase& cfdb,
     const QList<QString>& list,
     const int threadID,
     const QHash<QString, QVariant>& otherParams
   ) const {
+    qDebug() << "++++++++++++++++ CConcurrentStringHash<T>::populateDatabase()";
+
     Q_UNUSED( cfdb );
     Q_UNUSED( list );
     Q_UNUSED( threadID );
@@ -117,22 +122,25 @@ Public License as published by the Free Software Foundation; either version 2 of
   }
   
   
-  template <class T>
-  QHash<QString, int> CConcurrentProcessor<T>::populateDatabase(
-      const CConcurrentStringHash<T>& h, 
-      const CConfigDatabase& cfdb, 
-      const QHash<QString, QVariant>& otherParams 
+  template <typename T, typename Class>
+  QHash<QString, int> CConcurrentProcessor<T, Class>::populateDatabase(
+    const CConcurrentStringHash<T>* h,
+    QHash<QString, int> (Class::*fn)( const CConfigDatabase&, const QList<QString>&, const int, const QHash<QString, QVariant>& ) const,
+    const CConfigDatabase& cfdb,
+    const QHash<QString, QVariant>& otherParams
   ) {
-    QHash<QString, int> results = h.resultsTemplate();
+    QHash<QString, int> results = h->resultsTemplate();
 
     int nThreads = ( QThread::idealThreadCount() - 2 ); // Reserve one thread for management, and one for the last batch
-    int nItemsPerThread = this->count() / nThreads;
+    int nItemsPerThread = h->count() / nThreads;
+
+    qDebug() << h->count() << nThreads << nItemsPerThread;
 
     int threadID = 0;
     int startIdx = 0;
     QList<QString> list;
 
-    QList<QString> keys = h.keys();
+    QList<QString> keys = h->keys();
 
     for( int i = 0; i < nThreads; ++i ) {
       list = keys.mid( startIdx, nItemsPerThread );
@@ -141,7 +149,7 @@ Public License as published by the Free Software Foundation; either version 2 of
       qDebug() << "Spinning up thread" << threadID << "with list of size" << nItemsPerThread;
       this->append(
         new CConcurrentRunner(
-          QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentStringHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) )
+          QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentStringHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) )  // Compiles but doesn't work
         )
       );
       ++threadID;
@@ -154,14 +162,14 @@ Public License as published by the Free Software Foundation; either version 2 of
 
     this->append(
       new CConcurrentRunner(
-        QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentStringHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) )
+        QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentStringHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) ) // Compiles but doesn't work
       )
     );
 
     this->waitForFinished();
 
     for( int i = 0; i < this->count(); ++i ) {
-      results = h.mergeResults( results, this->at(i)->result() );
+      results = h->mergeResults( results, this->at(i)->result() );
     }
 
     return results;
@@ -194,22 +202,25 @@ Public License as published by the Free Software Foundation; either version 2 of
     return QHash<QString, int>();
   }
   
-  template <class T>
-  QHash<QString, int> CConcurrentProcessor<T>::populateDatabase(
-      const CConcurrentIntHash<T>& h, 
-      const CConfigDatabase& cfdb, 
-      const QHash<QString, QVariant>& otherParams 
+  template <typename T, typename Class>
+  QHash<QString, int> CConcurrentProcessor<T, Class>::populateDatabase(
+    const CConcurrentIntHash<T>* h,
+    QHash<QString, int> (Class::*fn)(CConfigDatabase, const QList<int>&, const int, const QHash<QString, QVariant>&) const,
+    const CConfigDatabase& cfdb,
+    const QHash<QString, QVariant>& otherParams
   ) {
-    QHash<QString, int> results = h.resultsTemplate();
+    QHash<QString, int> results = h->resultsTemplate();
 
     int nThreads = ( QThread::idealThreadCount() - 2 ); // Reserve one thread for management, and one for the last batch
-    int nItemsPerThread = this->count() / nThreads;
+    int nItemsPerThread = h->count() / nThreads;
+
+    qDebug() << h->count() << nThreads << nItemsPerThread;
 
     int threadID = 0;
     int startIdx = 0;
     QList<int> list;
 
-    QList<int> keys = h.keys();
+    QList<int> keys = h->keys();
 
     for( int i = 0; i < nThreads; ++i ) {
       list = keys.mid( startIdx, nItemsPerThread );
@@ -218,7 +229,8 @@ Public License as published by the Free Software Foundation; either version 2 of
       qDebug() << "Spinning up thread" << threadID << "with list of size" << nItemsPerThread;
       this->append(
         new CConcurrentRunner(
-          QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentIntHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) )
+          QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentIntHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) ) // compiles but doesn't work
+          //QFuture< QHash<QString, int> >( QtConcurrent::run( h, fn, cfdb.parameters( threadID ), list, threadID, otherParams ) ) // Doesn't compile
         )
       );
       ++threadID;
@@ -231,14 +243,14 @@ Public License as published by the Free Software Foundation; either version 2 of
 
     this->append(
       new CConcurrentRunner(
-        QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentIntHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) )
+        QFuture< QHash<QString, int> >( QtConcurrent::run( h, &CConcurrentIntHash<T>::populateDatabase, cfdb.parameters( threadID ), list, threadID, otherParams ) ) // compiles but doesn't work
       )
     );
 
     this->waitForFinished();
 
     for( int i = 0; i < this->count(); ++i ) {
-      results = h.mergeResults( results, this->at(i)->result() );
+      results = h->mergeResults( results, this->at(i)->result() );
     }
 
     return results;
@@ -250,16 +262,16 @@ Public License as published by the Free Software Foundation; either version 2 of
 //-------------------------------------------------------------------------------------------------
 // CConcurrentProcessor
 //-------------------------------------------------------------------------------------------------
-  template <class T>
-  CConcurrentProcessor<T>::~CConcurrentProcessor() {
+  template <typename T, typename Class>
+  CConcurrentProcessor<T, Class>::~CConcurrentProcessor() {
     while( !this->isEmpty() ) {
       delete this->takeFirst();
     }
   }
   
   
-  template <class T>
-  void CConcurrentProcessor<T>::waitForFinished() {
+  template <typename T, typename Class>
+  void CConcurrentProcessor<T, Class>::waitForFinished() {
     for( int i = 0; i < this->count(); ++i ) {
       (*this)[i]->waitForFinished();
     }
