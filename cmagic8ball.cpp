@@ -109,8 +109,8 @@ CMagic8Ball::CMagic8Ball( const QString& parameters ) {
 
 
 CMagic8Ball::~CMagic8Ball() {
-  if( nullptr != _rng )
-    RAN_free_generator( _rng );
+//JFD  if( nullptr != _rng )
+//JFD    RAN_free_generator( _rng );
 }
 
 
@@ -118,7 +118,7 @@ void CMagic8Ball::setNumberType( const int number ) {
   _type = Number;
   _number = number;
 
-  _rng = nullptr;
+//JFD  _rng = nullptr;
 
   _error = false;
   _errorMsg = QString();
@@ -129,7 +129,8 @@ void CMagic8Ball::setProportionType( const double proportion ) {
   _type = Proportion;
   _proportion = proportion;
 
-  _rng = RAN_new_generator( -1 );
+  //JFD _rng = RAN_new_generator( -1 );
+  _rng = QRandomGenerator(-1);
 
   _error = false;
   _errorMsg = QString();
@@ -146,7 +147,8 @@ bool CMagic8Ball::answer( const int number ) {
       break;
 
     case Proportion:
-      ran = RAN_num( _rng );
+      //JFD ran = RAN_num( _rng );
+      ran = _rng.generateDouble();
       result = ( _proportion > ran );
       break;
 

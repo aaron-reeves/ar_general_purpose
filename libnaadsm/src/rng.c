@@ -26,34 +26,40 @@ extern "C"
 #  include <config.h>
 #endif
 
-#include <naadsm/rng.h>
-#include <sprng.h>
 
-TRngVoid_1_Int rng_read_seed;
+//JFD #include <naadsm/rng.h>
+//JFD #include <sprng.h>
+
+//JFD TRngVoid_1_Int rng_read_seed;
+
+/*JFD
+ * Replace the naadsm random number generator with the C++ 11 standard
+ */
+#include <QRandomGenerator>
 
 /**
  * Wraps sprng() in a function that can be stored in a gsl_rng_type object.
  */
-double
-sprng_as_get_double (void *state)
-{
-  RAN_gen_t *rng;
-
-  rng = (RAN_gen_t *) state;
-  return RAN_num (rng);
-}
+//JFD double
+//JFD sprng_as_get_double (void *state)
+//JFD {
+//JFD   RAN_gen_t *rng;
+//JFD
+//JFD   rng = (RAN_gen_t *) state;
+//JFD   return RAN_num (rng);
+//JFD }
 
 
 
 /**
  * Wraps isprng() in a function that can be stored in a gsl_rng_type object.
  */
-unsigned long int
-sprng_as_get (void *dummy)
-{
-  if( dummy ) {} // Avoid a compiler warning.
-  return (unsigned long int)( isprng () );
-}
+//JFD unsigned long int
+//JFD sprng_as_get (void *dummy)
+//JFD {
+//JFD   if( dummy ) {} // Avoid a compiler warning.
+//JFD   return (unsigned long int)( isprng () );
+//JFD }
 
 
 
@@ -64,36 +70,36 @@ sprng_as_get (void *dummy)
  *  automatically.
  * @return a random number generator.
  */
-RAN_gen_t *
-RAN_new_generator (int seed)
-{
-  RAN_gen_t *self;
-
-  if (seed == -1)
-    seed = make_sprng_seed ();
-    
-  if (NULL != rng_read_seed)
-    rng_read_seed (seed);  
-  
-  g_assert (init_sprng (SPRNG_LFG, seed, SPRNG_DEFAULT) != NULL);
-
-  self = g_new (RAN_gen_t, 1);
-  self->fixed = FALSE;
-
-  /* Fill in the GSL-compatibility fields. */
-  self->as_gsl_rng_type.name = "SPRNG2.0";
-  self->as_gsl_rng_type.max = 2147483647;
-  self->as_gsl_rng_type.min = 0;
-  self->as_gsl_rng_type.size = 0;
-  self->as_gsl_rng_type.set = NULL;
-  self->as_gsl_rng_type.get = sprng_as_get;
-  self->as_gsl_rng_type.get_double = sprng_as_get_double;
-
-  self->as_gsl_rng.type = &(self->as_gsl_rng_type);
-  self->as_gsl_rng.state = self;
-
-  return self;
-}
+//JFD RAN_gen_t *
+//JFD RAN_new_generator (int seed)
+//JFD {
+//JFD   RAN_gen_t *self;
+//JFD
+//JFD   if (seed == -1)
+//JFD     seed = make_sprng_seed ();
+//JFD
+//JFD   if (NULL != rng_read_seed)
+//JFD     rng_read_seed (seed);
+//JFD
+//JFD   g_assert (init_sprng (SPRNG_LFG, seed, SPRNG_DEFAULT) != NULL);
+//JFD
+//JFD   self = g_new (RAN_gen_t, 1);
+//JFD   self->fixed = FALSE;
+//JFD
+//JFD   /* Fill in the GSL-compatibility fields. */
+//JFD   self->as_gsl_rng_type.name = "SPRNG2.0";
+//JFD   self->as_gsl_rng_type.max = 2147483647;
+//JFD   self->as_gsl_rng_type.min = 0;
+//JFD   self->as_gsl_rng_type.size = 0;
+//JFD   self->as_gsl_rng_type.set = NULL;
+//JFD   self->as_gsl_rng_type.get = sprng_as_get;
+//JFD   self->as_gsl_rng_type.get_double = sprng_as_get_double;
+//JFD
+//JFD   self->as_gsl_rng.type = &(self->as_gsl_rng_type);
+//JFD   self->as_gsl_rng.state = self;
+//JFD
+//JFD   return self;
+//JFD }
 
 
 
@@ -113,12 +119,12 @@ RAN_num (RAN_gen_t * gen)
 }
 
 
-unsigned long int
-RAN_int (RAN_gen_t * rng, const unsigned long int min, const unsigned long int max )
-{
-  unsigned long int range = max - min + 1;
-  return gsl_rng_uniform_int (RAN_generator_as_gsl (rng), range) + min;
-}
+//JFD unsigned long int
+//JFD RAN_int (RAN_gen_t * rng, const unsigned long int min, const unsigned long int max )
+//JFD {
+//JFD   unsigned long int range = max - min + 1;
+//JFD   return gsl_rng_uniform_int (RAN_generator_as_gsl (rng), range) + min;
+//JFD }
 
 
 
@@ -129,11 +135,11 @@ RAN_int (RAN_gen_t * rng, const unsigned long int min, const unsigned long int m
  * @param gen a random number generator.
  * @return a GSL random number generator.
  */
-gsl_rng *
-RAN_generator_as_gsl (RAN_gen_t * gen)
-{
-  return &(gen->as_gsl_rng);
-}
+//JFD gsl_rng *
+//JFD RAN_generator_as_gsl (RAN_gen_t * gen)
+//JFD {
+//JFD   return &(gen->as_gsl_rng);
+//JFD }
 
 
 
@@ -143,12 +149,12 @@ RAN_generator_as_gsl (RAN_gen_t * gen)
  * @param gen a random number generator.
  * @param value the value to fix.
  */
-void
-RAN_fix (RAN_gen_t * gen, double value)
-{
-  gen->fixed = TRUE;
-  gen->fixed_value = value;
-}
+//JFD void
+//JFD RAN_fix (RAN_gen_t * gen, double value)
+//JFD {
+//JFD   gen->fixed = TRUE;
+//JFD   gen->fixed_value = value;
+//JFD }
 
 
 
@@ -158,11 +164,11 @@ RAN_fix (RAN_gen_t * gen, double value)
  *
  * @param gen a random number generator.
  */
-void
-RAN_unfix (RAN_gen_t * gen)
-{
-  gen->fixed = FALSE;
-}
+//JFD void
+//JFD RAN_unfix (RAN_gen_t * gen)
+//JFD {
+//JFD   gen->fixed = FALSE;
+//JFD }
 
 
 
@@ -179,18 +185,18 @@ RAN_free_generator (RAN_gen_t * gen)
 }
 
 
-DLL_API void
-set_rng_read_seed (TRngVoid_1_Int fn)
-{
-  rng_read_seed = fn;
-}
+//JFD DLL_API void
+//JFD set_rng_read_seed (TRngVoid_1_Int fn)
+//JFD {
+//JFD   rng_read_seed = fn;
+//JFD }
 
 
-void
-clear_rng_fns (void)
-{
-  set_rng_read_seed (NULL);
-}
+//JFD void
+//JFD clear_rng_fns (void)
+//JFD {
+//JFD   set_rng_read_seed (NULL);
+//JFD }
 
 
 /* end of file rng.c */

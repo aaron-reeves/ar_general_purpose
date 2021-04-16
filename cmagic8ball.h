@@ -15,7 +15,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #define CMAGIC8BALL_H
 
 #include <QtCore>
-#include <naadsm/rng.h>
+//JFD #include <naadsm/rng.h>
+#include <QRandomGenerator>
 
 class CMagic8Ball {
   public:
@@ -39,7 +40,8 @@ class CMagic8Ball {
     void setNumberType( const int number );
     void setProportionType( const double proportion );
 
-    RAN_gen_t* _rng;
+    //JFD    RAN_gen_t* _rng;
+    QRandomGenerator _rng;
 
     int _type;
     int _number;
