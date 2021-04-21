@@ -245,6 +245,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     // To generate a multisheet workbook, it's currently necessary to use the QXLSX classes directly.
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
+    bool displayTable( QTextStream* stream );
 
     bool hasMergedCells() const { return !_mergedCellRefs.isEmpty(); }
     int mergedRangeCount() const { return _mergedCellRefs.count(); }

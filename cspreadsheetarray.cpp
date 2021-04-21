@@ -849,37 +849,12 @@ bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderR
   else {
     QCsv csv = this->asCsv( containsHeaderRow, delimiter );
     return csv.writeFile( fileName );
-
-    //QFile file( fileName );
-    //if( !file.open( QIODevice::WriteOnly ) ) {
-    //  _errMsg = QStringLiteral("Could not open file for writing.");
-    //  return false;
-    //}
-    //
-    //// Determine how many empty columns to trim from the right end of the sheet
-    ////-------------------------------------------------------------------------
-    //QStringList firstRow = this->rowAsStringList(0);
-    //
-    //bool ok = false;
-    //while( !ok ) {
-    //  if( 0 < firstRow.last().trimmed().length() ) {
-    //    ok = true;
-    //  }
-    //  else {
-    //    firstRow.removeLast();
-    //  }
-    //}
-    //
-    //// Write the file
-    ////---------------
-    //QTextStream out( &file );
-    //for( int i = 0; i < this->nRows(); ++i ) {
-    //  out << CSV::writeLine( this->rowAsStringList(i).mid( 0, firstRow.length() ), delimiter, CSV::OriginalCase ) << endl;
-    //}
-    //
-    //file.close();
-    //return true;
   }
+}
+
+bool CSpreadsheet::displayTable( QTextStream* stream ) {
+  QCsv csv = this->asCsv( this->hasColNames() );
+  return csv.displayTable( stream );
 }
 
 

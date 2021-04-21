@@ -219,6 +219,7 @@ class QCsv {
     bool setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
 
     bool writeFile( const QString &filename, const QString &codec = QString() ); // Write contents of the CSV object to a file.
+    bool displayTable( QTextStream* stream ); // Write a nicely formatted plain-text table to the stream.
 
     // Generates a subset of this object, with only rows in which the indicated field contains the indicated value (which may or may not be case-sensitive).
     // These functions work only in entire-file mode.

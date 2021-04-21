@@ -1266,6 +1266,12 @@ bool QCsv::writeFile( const QString &filename, const QString &codec ) {
 }
 
 
+bool QCsv::displayTable( QTextStream* stream ) {
+  stringListListAsTable( _data, stream, true );
+  return true;
+}
+
+
 //  Mutators
 void QCsv::setContainsFieldList ( const bool setVal ){
   clearError();
