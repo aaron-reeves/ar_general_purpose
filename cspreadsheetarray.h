@@ -206,13 +206,13 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void appendColumn( const QString& colName, const QVector<QVariant>& values );
     void appendColumn( const QString& colName, const QList<QVariant>& values );
 
-    bool isTidy( const bool containsHeaderRow );
+    bool isTidy( const bool containsHeaderRow, const int firstRowIdx = 0, const int nRows = -1 );
     QStringList rowAsStringList( const int rowNumber ) const;
     QVariantList rowAsVariantList( const int rowNumber ) const;
     QStringList columnAsStringList( const int colNumber ) const;
     QVariantList columnAsVariantList( const int colNumber ) const;
 
-    QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',' );
+    QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',', const int firstRowIdx = 0, const int nRows = -1 );
 
     bool readXls(
       const int sheetIdx,
@@ -246,13 +246,26 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
 
+    // Dealing with merged cells
+    //--------------------------
     bool hasMergedCells() const { return !_mergedCellRefs.isEmpty(); }
     int mergedRangeCount() const { return _mergedCellRefs.count(); }
-    void unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
-    void unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
-    void unmergeColumnsAndRows( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
+
+    // Unmerge all cells that span multiple rows within a column.  Column-spanning will not be altered.
+    void unmergeRowSpans( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr );
+
+    // Unmerge all cells that span multiple columns within a row.  Row spanning will not be altered.
+    void unmergeColSpans( const bool duplicateValues, QSet<int>* rowsWithMergedCells = nullptr );
+
+    // Unmerge all cells in the sheet.
+    void unmergeColAndRowSpans( const bool duplicateValues, QSet<int>* colsWithMergedCells = nullptr, QSet<int>* rowsWithMergedCells = nullptr );
+
+    // Unmerges a cell completely, i.e., columns AND rows
     void unmergeCell( const int c, const int r, const bool duplicateValues );
+
+    // Completely unmerges all cells within a given row
     void unmergeCellsInRow( const int r, const bool duplicateValues );
+
 
     bool columnIsEmpty( const int c, const bool excludeHeaderRow = false );
     bool rowIsEmpty( const int r, const bool trimStrings = false );

@@ -917,7 +917,7 @@ bool QCsv::append( const QStringList& values ) {
 }
 
 
-bool QCsv::identicalFieldNames( const QStringList& otherNames ) const {
+bool QCsv::identicalFieldNames( const QStringList& otherNames ) {
   bool result = ( this->fieldCount() == otherNames.count() );
 
   if( result ) {
@@ -949,7 +949,7 @@ bool QCsv::append( const QCsv& other ) {
   }
 
   bool result = true;
-  for( int i = 0; i < other.rowCount(); ++i ) {
+  for( int i = 0; i < other.nRows(); ++i ) {
     result = ( result && this->append( other.rowData( i ) ) );
   }
 
@@ -980,7 +980,7 @@ bool QCsv::merge( const QCsv& other ) {
   }
 
   bool result = true;
-  for( int i = 0; i < other.rowCount(); ++i ) {
+  for( int i = 0; i < other.nRows(); ++i ) {
     QString needle =  other.rowData(i).join( '|' );
     if( !haystack.contains( needle ) ) {
       result = ( result && this->append( other.rowData( i ) ) );
@@ -1193,7 +1193,7 @@ QCsv QCsv::sorted( const QString& fieldName ) {
 }
 
 
-int QCsv::fieldCount() const {
+int QCsv::fieldCount() {
   if( _containsFieldList )
     return _fieldNames.count();
   else if( LineByLine == _mode )
@@ -1217,7 +1217,8 @@ int QCsv::rowCount() {
   return result;
 }
 
-int QCsv::rowCount() const {
+
+int QCsv::nRows() const {
   int result;
 
   if( LineByLine == _mode )
