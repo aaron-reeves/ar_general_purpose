@@ -386,7 +386,7 @@ class CSpreadsheetWorkBook : public QObject {
     bool isOpen() const { return _isOpen; }
     bool ok() const { return _ok; }
     bool error() const { return !_ok; }
-    QString errorMessage() const { return _errMsg; }
+    QString errorMessage() const { return _errMsg.trimmed(); }
     QString magicFileTypeDescr() const { return _fileTypeDescr; }
     SpreadsheetFileFormat fileFormat() const { return _fileFormat; }
     QString fileFormatAsString() const;
@@ -415,6 +415,9 @@ class CSpreadsheetWorkBook : public QObject {
 
     bool writeSheet( const int sheetIdx, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull );
     bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull );
+
+    // Splits data with more than 1M rows into multiple sheets
+    bool writeBigSheet( const QString& sheetName, const CTwoDArray<QVariant>& data, const bool treatEmptyStringsAsNull );
 
     // Consider writing these functions some day...
     //bool writeSheet( const int sheetIdx, QCsv* data );
@@ -462,6 +465,8 @@ class CSpreadsheetWorkBook : public QObject {
 
     bool openXlsWorkbook();
     bool openXlsxWorkbook();
+
+    bool writeSheet( const QString& sheetName, const CTwoDArray<QVariant>& data, const int startRow, const int nRows, const bool treatEmptyStringsAsNull );
 
     QString _srcPathName;
     SpreadsheetFileFormat _fileFormat;
