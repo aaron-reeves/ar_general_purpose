@@ -13,7 +13,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <ar_general_purpose/filemagic.h>
 
-#include <magic.h>
+//#include <magic.h>
 
 #include <qcoreapplication.h>
 #include <qdebug.h>
