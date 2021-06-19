@@ -1101,6 +1101,21 @@ bool stringListContainsBlanks( const QStringList& list ) {
 }
 
 
+bool stringlistToFile( const QString& fileName, const QList<QString>& list ) {
+  QFile f( fileName );
+  if( f.open( QFile::WriteOnly | QFile::Truncate ) ) {
+    QTextStream out(&f);
+    for( int i = 0; i < list.count(); ++i ) {
+      out << list.at(i) << endl;
+    }
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+
 #if defined(_WIN32) || defined(WIN32)
 // The following functions are adapted from
 // http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/dnarppc2k/html/ppc_ode.asp
