@@ -19,6 +19,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/strutils.h>
 #include <ar_general_purpose/qcout.h>
 #include <ar_general_purpose/filemagic.h>
+#include <ar_general_purpose/log.h>
 
 typedef uint16_t xlsWORD;
 
@@ -668,7 +669,7 @@ CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
   CTwoDArray<QVariant> result;
 
   if(!this->isTidy( containsHeaderRow ) ) {
-    qDebug() << "Tidy check failed.";
+    appLog << "Tidy check failed.";
   }
   else {
     int nCols = this->nCols();
@@ -714,11 +715,10 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
   if( this->isEmpty() ) {
     // An empty sheet can be tidy if it does not contain a header row.
     // If an empty sheet should have contained a header row, then it isn't tidy.
-    qDebug() << "Empty sheet";
     return !containsHeaderRow;
   }
   else if( this->hasMergedCells() ) {
-    qDebug() << "Not tidy: Merged cells.";
+    appLog << "Worksheet is not tidy: Merged cells are present.";
     result = false;
   }
   else if( containsHeaderRow ) {
@@ -759,7 +759,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
     }
 
     if( false == result ) {
-      qDebug() << "Not tidy: Header row problem.";
+      appLog << "Worksheet is not tidy: There is a problem with the header row.";
       return result;
     }
 
@@ -780,8 +780,6 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
           data.append( this->at( c, r ).value().toString() );
         }
 
-        //qDebug() << data;
-
         bool ok = false;
         while( !ok && !data.isEmpty() ) {
           if( 0 < data.last().trimmed().length() ) {
@@ -792,10 +790,8 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
           }
         }
 
-        //qDebug() << data.length() << headers.length();
-
         if( data.length() > headers.length() ) {
-          qDebug() <<"Not tidy: Mismatched header and data row lengths.";
+          appLog <<"Worksheet is not tidy: Header and data row lengths do not match.";
           result = false;
           break;
         }
@@ -862,12 +858,10 @@ bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderR
   _errMsg.clear();
 
   if( this->isEmpty() ) {
-    qDebug() << "is empty";
     _errMsg.append( QStringLiteral("Specified worksheet is empty.\n") );
     return false;
   }
   else if( !this->isTidy( containsHeaderRow ) ) {
-    qDebug() << "Not tidy";
     _errMsg.append( QStringLiteral("Specified worksheet does not have a tidy CSV format.\n") );
     return false;
   }
@@ -882,11 +876,9 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
   QCsv csv;
 
   if( this->isEmpty() ) {
-    qDebug() << "is empty";
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet is empty.") );
   }
   else if( !this->isTidy( containsHeaderRow, firstRowIdx, nRows ) ) {
-    qDebug() << "Not tidy";
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet does not have a tidy CSV format.") );
   }
   else {
@@ -1839,6 +1831,9 @@ bool CSpreadsheet::rowIsEmpty( const int r, const bool trimStrings /* = false */
 
   for( int c = 0; c < this->nCols(); ++c ) {
     QVariant v = this->cellValue( c, r );
+
+    //qDebug() << v;
+
     if( !v.isNull() ) {
       if( QVariant::String == v.type() ) {
         QString s = v.toString();
@@ -2748,7 +2743,6 @@ bool CSpreadsheetWorkBook::writeBigSheet( const QString& sheetName, const CTwoDA
     while( true ) {
       int lastRow = std::min( startRow+1000000, data.rowCount() );
       int nRows = lastRow - startRow;
-      qDebug() << "Big sheet:" << data.rowCount() << startRow << lastRow << nRows;
       result = result && writeSheet( QStringLiteral("%1_%2").arg( sheetName ).arg( sheetCounter ), data, startRow, nRows, treatEmptyStringsAsNull );
       startRow = startRow + 1000000;
       ++sheetCounter;
@@ -2850,7 +2844,6 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
         // Write the data
         //---------------
         _ok = true;
-        //qDebug() << "Data dimensions:" << data.hasRowNames() << data.hasColNames() << data.rowCount() << data.colCount();
 
         int row = 0;
         for( int dataRowIdx = startRow; dataRowIdx < (startRow + nRows); ++dataRowIdx ) {
@@ -2862,7 +2855,7 @@ bool CSpreadsheetWorkBook::writeSheet( const QString& sheetName, const CTwoDArra
             }
             _ok = _xlsx->write( row + rowOffset, col + colOffset, tmp );
             if( !_ok ) {
-              //qDebug() << "Could not write data to cell" << row << rowOffset << col << colOffset << tmp;
+              qDebug() << "Could not write data to cell" << row << rowOffset << col << colOffset << tmp;
               break;
             }
           }
