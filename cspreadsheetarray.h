@@ -394,10 +394,12 @@ class CSpreadsheetWorkBook : public QObject {
 
     int sheetCount() const { return _sheetNames.count(); }
     int nSheets() const { return _sheetNames.count(); }
-    bool hasSheet( const int idx );
-    bool hasSheet( const QString& sheetName );
-    int sheetIndex( const QString& sheetName );
-    QString sheetName( const int idx );
+    bool hasSheet( const int idx ) const;
+    bool hasSheet( const QString& sheetName ) const;
+    int sheetIndex( const QString& sheetName ) const;
+    QString sheetName( const int idx ) const;
+    QStringList sheetNames() const;
+
     CSpreadsheet& sheet( const int idx );
     CSpreadsheet& sheet( const QString& sheetName );
 

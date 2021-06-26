@@ -2374,26 +2374,30 @@ QString CSpreadsheetWorkBook::fileFormatAsString( const SpreadsheetFileFormat fm
 }
 
 
-bool CSpreadsheetWorkBook::hasSheet( const int idx ) {
+bool CSpreadsheetWorkBook::hasSheet( const int idx ) const {
   return _sheetNames.containsKey( idx );
 }
 
-bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) {
+bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) const {
   return _sheetNames.containsValue( sheetName );
 }
 
-int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) {
+int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) const {
   if( this->hasSheet( sheetName ) )
     return _sheetNames.retrieveKey( sheetName );
   else
     return -1;
 }
 
-QString CSpreadsheetWorkBook::sheetName( const int idx ) {
+QString CSpreadsheetWorkBook::sheetName( const int idx ) const {
   if( this->hasSheet( idx ) )
     return _sheetNames.retrieveValue( idx );
   else
     return QString();
+}
+
+QStringList CSpreadsheetWorkBook::sheetNames() const {
+  return _sheetNames.values();
 }
 
 CSpreadsheet& CSpreadsheetWorkBook::sheet( const int idx ) {
