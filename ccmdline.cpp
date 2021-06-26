@@ -412,13 +412,29 @@ QString CCmdLine::argument( const QString& pSwitch, const QString& name ) const 
 }
 
 
-QString CCmdLine::argument( const QStringList& pSwitches, int iIdx ) {
+QString CCmdLine::argument( const QStringList& pSwitches, const int iIdx ) {
   QString result;
 
   if( !isAmbiguous( pSwitches ) ) {
     for( int i = 0; i < pSwitches.count(); ++i ) {
       if( this->hasSwitch( pSwitches.at(i) ) ) {
         result = this->argument( pSwitches.at(i), iIdx );
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+QString CCmdLine::safeArgument( const QStringList& pSwitches, const int iIdx, const QString& pDefault ) {
+  QString result = pDefault;
+
+  if( !isAmbiguous( pSwitches ) ) {
+    for( int i = 0; i < pSwitches.count(); ++i ) {
+      if( this->hasSwitch( pSwitches.at(i) ) ) {
+        result = this->safeArgument( pSwitches.at(i), iIdx, pDefault );
         break;
       }
     }

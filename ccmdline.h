@@ -179,7 +179,8 @@ class CCmdLine {
     QString value( const QString& pSwitch, const int iIdx, const QString& defaultVal ) { return safeArgument( pSwitch, iIdx, defaultVal ); }
     QString value( const char* pSwitch, const int iIdx, const char* defaultVal ) { return safeArgument( QString( pSwitch ), iIdx, QString( defaultVal ) ); }
 
-    QString argument( const QStringList& pSwitches, int iIdx );
+    QString argument( const QStringList& pSwitches, const int iIdx );
+    QString safeArgument( const QStringList& pSwitches, const int iIdx, const QString& pDefault );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
     int argumentCount(const char* pSwitch ) const { return argumentCount( QString( pSwitch ) ); }
