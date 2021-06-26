@@ -80,7 +80,7 @@ class CReverseLookupMap {
         return forwardMap.find( key ).value();
       }
 
-      inline K retrieveKey( const T& value ) {
+      inline K retrieveKey( const T& value ) const {
         return reverseMap.find( value ).value();
       }
 
@@ -112,7 +112,7 @@ class CReverseLookupMap {
       QList<K> keys() const { return forwardMap.keys(); }
       QList<T> values() const { return forwardMap.values(); }
 
-      void debug() {
+      void debug() const {
         int i;
         qDebug() << "Forward:";
         for( i = 0; i < forwardMap.count(); ++i )
