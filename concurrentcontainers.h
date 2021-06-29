@@ -56,6 +56,11 @@ class CConcurrentStringHash : public CConcurrentContainer, public QHash<QString,
 
     virtual QHash<QString, int> populateDatabase(
       const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    ) const = 0;
+
+    virtual QHash<QString, int> populateDatabase(
+      const CConfigDatabase& cfdb,
       const QList<QString>& list,
       const int threadID,
       const QHash<QString, QVariant>& otherParams
@@ -120,6 +125,35 @@ class CConcurrentProcessor : public QList<CConcurrentRunner*> {
   private:
     Q_DISABLE_COPY( CConcurrentProcessor )
 };
+
+
+template <typename Class, typename Key, typename T>
+class CConcurrentHashProcessor : public QList<CConcurrentRunner*> {
+  public:
+    CConcurrentHashProcessor() : QList<CConcurrentRunner*>() { /* Nothing else to do here */ }
+    ~CConcurrentHashProcessor();
+
+    QHash<QString, int> populateDatabase(
+      const CConcurrentStringHash<T>* h,
+      QHash<QString, int> (Class::*fn)( const CConfigDatabase&, const QList<QString>&, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    );
+
+    QHash<QString, int> populateDatabase(
+      const CConcurrentIntHash<T>* h,
+      QHash<QString, int> (Class::*fn)( CConfigDatabase, const QList<int>&, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& cfdb,
+      const QHash<QString, QVariant>& otherParams
+    );
+
+  protected:
+    void waitForFinished();
+
+  private:
+    Q_DISABLE_COPY( CConcurrentHashProcessor )
+};
+
 
 #include "concurrentcontainers.tpp"
 
