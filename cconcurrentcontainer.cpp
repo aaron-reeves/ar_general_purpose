@@ -3,8 +3,8 @@ cconcurrentcontainer.h/cpp
 --------------------------
 Begin: 2020-04-24
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
----------------------------------------------------
-Copyright (C) 2020 Scotland's Rural College (SRUC)
+---------------------------------------------------------
+Copyright (C) 2020 - 2021 Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or

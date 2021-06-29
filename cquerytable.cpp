@@ -4,7 +4,7 @@ cquerytable.h/cpp
 Begin: 2018-09-02
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 ---------------------------------------------------
-Copyright (C) 2018 - 2019 Epidemiology Research Unit, Scotland's Rural College (SRUC)
+Copyright (C) 2018 - 2021 Epidemiology Research Unit, Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
