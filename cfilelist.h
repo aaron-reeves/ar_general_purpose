@@ -254,7 +254,14 @@ class CFileList : public QList<CPathString> {
         @param filter QString indicating the file name filter to match (e.g., "*.txt").  Use "*.*" to match all files.  More than one filter may be used, if semicolon-delimited (e.g., "*.cpp;*.h").
         @param recurse bool indicating whether to list directory contents recursively
         */
-        void getFileNames(const QString& path, const QString& filter, const bool recurse );
+        void getFileNames( const QString& dirName, const QString& filter, const bool recurse );
+
+        /**
+         * @brief getDirectoryNames Generates a list of directories within the indicated directory
+         * @param dirName QString indicating the directory whose contents will be listed
+         * @param recurse bool indicating whether to list directory contents recursively
+         */
+        void getDirectoryNames( const QString& dirName, const bool recurse );
 
 
         /**

@@ -311,6 +311,48 @@ void CFileList::getFileNames( const QString& dirName, const QString& filter, con
 }
 
 
+void CFileList::getDirectoryNames( const QString& dirName, const bool recurse ) {
+  QFileInfo finfo;
+  QString completePath;
+  QString str;
+  CPathString listItem;
+  QStringList tmp, filters;
+
+  _recurse = recurse;
+
+
+  bool dirIsOmitted = ( _omittedDirs.contains( dirName ) || _omittedDirs.contains( QFileInfo( dirName ).fileName() ) );
+  if( dirIsOmitted ) {
+    return;
+  }
+
+  QDir dir( dirName );
+  dir.setFilter( QDir::Dirs | QDir::Hidden );
+
+  for( int i = 0; i < dir.entryList().count(); ++i ) {
+    //qDb() << dir[i];
+
+    // Skip the directories "." and ".."
+    if( ( ".." == dir[i] ) || ( "." == dir[i] ) ) {
+      continue;
+    }
+    else {
+      completePath = dir.absolutePath() + "/" + dir[i];
+      //qDb() << QString( "Complete path is %1" ).arg( completePath );
+
+      finfo = QFileInfo( completePath );
+
+      if( finfo.isDir() ) {
+        this->append( completePath );
+        if( recurse ) {
+          getDirectoryNames( finfo.filePath(), recurse );
+        }
+      }
+    }
+  }
+}
+
+
 bool CFileList::containsShortFileName( const QString& shortFileName ) const {
   bool result = false;
 

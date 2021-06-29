@@ -75,7 +75,8 @@ class CAppLog : public QObject {
   public:   
     enum FileFrequency {
       OneFile,
-      DailyFiles
+      DailyFile,
+      NewFileEveryTime
     };
 
     // Creates a log that won't actually record anything.
@@ -179,6 +180,10 @@ class CLockFile {
     bool exists();
     bool write();
     bool remove();
+
+    QString fileName() const { return _fileName; }
+    QString path() const { return _path; }
+    bool used() const { return _useLockFile; }
 
   protected:
     bool _useLockFile;

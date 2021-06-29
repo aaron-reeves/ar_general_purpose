@@ -166,9 +166,10 @@ class QCsv {
     bool toFront(); // Resets to the top of the file, so that moveNext() will return the first row of data.
     int moveNext();  // Moves to the next row of data.  Returns the number of fields encountered, or -1 if the row is empty or does not exist.
 
-    int fieldCount() const; // The number of fields/columns in the CSV object
+    int fieldCount(); // The number of fields/columns in the CSV object
+    int nCols() { return fieldCount(); }
     int rowCount(); // The number of rows in the CSV object.  Not available in line-by-line mode.
-    int rowCount() const;
+    int nRows() const;
 
     // The index of the current row.  Line 0 is the first row of data.  A current row number of
     // -1 is used internally to indicate that no data has yet been read from a file.
@@ -322,7 +323,7 @@ class QCsv {
     int readHeader();
     QString readLine();
 
-    bool identicalFieldNames( const QStringList& otherNames ) const;
+    bool identicalFieldNames( const QStringList& otherNames );
 
     void clearError();
 

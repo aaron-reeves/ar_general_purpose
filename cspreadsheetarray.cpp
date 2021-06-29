@@ -70,7 +70,7 @@ CSpreadsheetCell::~CSpreadsheetCell() {
 
 
 void CSpreadsheetCell::assign( const CSpreadsheetCell& other ) {
-  Q_ASSERT( other._originCell == nullptr );
+  //Q_ASSERT( other._originCell == nullptr );
 
   _value = other._value;
   _colSpan = other._colSpan;
@@ -701,7 +701,7 @@ CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
 }
 
 
-bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
+bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
   bool result = true;
 
   // Criteria for tidy spreadsheets:
@@ -714,9 +714,11 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
   if( this->isEmpty() ) {
     // An empty sheet can be tidy if it does not contain a header row.
     // If an empty sheet should have contained a header row, then it isn't tidy.
+    qDebug() << "Empty sheet";
     return !containsHeaderRow;
   }
   else if( this->hasMergedCells() ) {
+    qDebug() << "Not tidy: Merged cells.";
     result = false;
   }
   else if( containsHeaderRow ) {
@@ -724,7 +726,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
     //---------------------
     QStringList headers;
     for( int c = 0; c < this->nCols(); ++c ) {
-      headers.append( this->at( c, 0 ).value().toString() );
+      headers.append( this->at( c, firstRowIdx ).value().toString() );
     }
 
     bool ok = false;
@@ -738,27 +740,47 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
     }
 
     for( int c = 0; c < headers.length(); ++c ) {
+
+      //qDebug()
+      //  << c
+      //  << this->at( c, firstRowIdx ).value()
+      //  << this->at( c, firstRowIdx ).value().isNull()
+      //  << ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
+      //  << this->at( c, firstRowIdx ).value().toString().length()
+      //;
+
       if(
-         this->at( c, 0 ).value().isNull()
-         || ( QVariant::String != this->at( c, 0 ).value().type() )
-         || ( 0 == this->at( c, 0 ).value().toString().length() )
+            this->at( c, firstRowIdx ).value().isNull()
+         || ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
+         || ( 0 == this->at( c, firstRowIdx ).value().toString().length() )
        ) {
         result = false;
       }
     }
 
     if( false == result ) {
+      qDebug() << "Not tidy: Header row problem.";
       return result;
     }
 
     // Check all subsequent rows
     //--------------------------
+    int lastRowIdxPlusOne;
+
+    if( -1 == nRows )
+      lastRowIdxPlusOne = this->nRows();
+    else
+      lastRowIdxPlusOne = firstRowIdx + nRows;
+
+
     if( 1 < this->nRows() ) {
-      for( int r = 1; r < this->nRows(); ++r ) {
+      for( int r = firstRowIdx+1; r < lastRowIdxPlusOne; ++r ) {
         QStringList data;
         for( int c = 0; c < this->nCols(); ++c ) {
           data.append( this->at( c, r ).value().toString() );
         }
+
+        //qDebug() << data;
 
         bool ok = false;
         while( !ok && !data.isEmpty() ) {
@@ -770,7 +792,10 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow ) {
           }
         }
 
+        //qDebug() << data.length() << headers.length();
+
         if( data.length() > headers.length() ) {
+          qDebug() <<"Not tidy: Mismatched header and data row lengths.";
           result = false;
           break;
         }
@@ -852,20 +877,21 @@ bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderR
   }
 }
 
+
 bool CSpreadsheet::displayTable( QTextStream* stream ) {
   QCsv csv = this->asCsv( this->hasColNames() );
   return csv.displayTable( stream );
 }
 
 
-QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /* = ',' */ ) {
+QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /* = ',' */, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
   QCsv csv;
 
   if( this->isEmpty() ) {
     qDebug() << "is empty";
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet is empty.") );
   }
-  else if( !this->isTidy( containsHeaderRow ) ) {
+  else if( !this->isTidy( containsHeaderRow, firstRowIdx, nRows ) ) {
     qDebug() << "Not tidy";
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet does not have a tidy CSV format.") );
   }
@@ -875,7 +901,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 
     // Determine how many empty columns to trim from the right end of the sheet
     //-------------------------------------------------------------------------
-    firstRow = this->rowAsStringList( 0 );
+    firstRow = this->rowAsStringList( firstRowIdx );
 
     bool ok = false;
     while( !ok ) {
@@ -889,7 +915,14 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 
     // Build the csv object
     //----------------------
-    for( int i = 1; i < this->nRows(); ++i ) {
+    int lastRowIdxPlusOne;
+
+    if( -1 == nRows )
+      lastRowIdxPlusOne = this->nRows();
+    else
+      lastRowIdxPlusOne = firstRowIdx + nRows;
+
+    for( int i = firstRowIdx+1; i < lastRowIdxPlusOne; ++i ) {
       QStringList tmp = this->rowAsStringList( i );
       data.append( tmp.mid( 0, firstRow.length() ) );
     }
@@ -1554,13 +1587,13 @@ void CSpreadsheet::debugMerges() {
 }
 
 
-void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithMergedCells /* = nullptr */) {
+void CSpreadsheet::unmergeColSpans( const bool duplicateValues, QSet<int>* rowsWithMergedCells /* = nullptr */) {
   int firstCol, lastCol, firstRow, lastRow;
 
   QVector<CCellRef> refsToRemove;
   QVector<CCellRef> refsToAdd;
 
-  // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
+  // Look for cells that are SPAN MULTIPLE COLUMNS, and duplicate their values across all columns.
 
   foreach( const CCellRef ref, _mergedCellRefs ) {
     int c = ref.col;
@@ -1630,13 +1663,13 @@ void CSpreadsheet::unmergeRows( const bool duplicateValues, QSet<int>* rowsWithM
 
 
 
-void CSpreadsheet::unmergeColumns( const bool duplicateValues, QSet<int>* colsWithMergedCells /* = nullptr */ ) {
+void CSpreadsheet::unmergeRowSpans( const bool duplicateValues, QSet<int>* colsWithMergedCells /* = nullptr */ ) {
   int firstCol, lastCol, firstRow, lastRow;
 
   QVector<CCellRef> refsToRemove;
   QVector<CCellRef> refsToAdd;
 
-  // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all columns.
+  // Look for cells that are SPAN MULTIPLE ROWS, and duplicate their values across all rows.
   foreach( const CCellRef ref, _mergedCellRefs ) {
     int c = ref.col;
     int r = ref.row;
@@ -1704,17 +1737,17 @@ void CSpreadsheet::unmergeColumns( const bool duplicateValues, QSet<int>* colsWi
 }
 
 
-void CSpreadsheet::unmergeColumnsAndRows(
+void CSpreadsheet::unmergeColAndRowSpans(
   const bool duplicateValues,
   QSet<int>* colsWithMergedCells /* = nullptr */,
   QSet<int>* rowsWithMergedCells /* = nullptr */
 ) {
-  unmergeRows( duplicateValues, rowsWithMergedCells );
-  unmergeColumns( duplicateValues, colsWithMergedCells );
+  unmergeColSpans( duplicateValues, rowsWithMergedCells );
+  unmergeRowSpans( duplicateValues, colsWithMergedCells );
 }
 
 
-void CSpreadsheet::unmergeCell( const int c, const int r , const bool duplicateValues ) {
+void CSpreadsheet::unmergeCell( const int c, const int r, const bool duplicateValues ) {
   // This should unmerge every linked cell.
   CSpreadsheetCell* parentCell;
 
@@ -2347,26 +2380,30 @@ QString CSpreadsheetWorkBook::fileFormatAsString( const SpreadsheetFileFormat fm
 }
 
 
-bool CSpreadsheetWorkBook::hasSheet( const int idx ) {
+bool CSpreadsheetWorkBook::hasSheet( const int idx ) const {
   return _sheetNames.containsKey( idx );
 }
 
-bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) {
+bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) const {
   return _sheetNames.containsValue( sheetName );
 }
 
-int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) {
+int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) const {
   if( this->hasSheet( sheetName ) )
     return _sheetNames.retrieveKey( sheetName );
   else
     return -1;
 }
 
-QString CSpreadsheetWorkBook::sheetName( const int idx ) {
+QString CSpreadsheetWorkBook::sheetName( const int idx ) const {
   if( this->hasSheet( idx ) )
     return _sheetNames.retrieveValue( idx );
   else
     return QString();
+}
+
+QStringList CSpreadsheetWorkBook::sheetNames() const {
+  return _sheetNames.values();
 }
 
 CSpreadsheet& CSpreadsheetWorkBook::sheet( const int idx ) {

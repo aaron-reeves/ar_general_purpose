@@ -213,13 +213,14 @@ void CAppLog::setFileName( const QString& fileName ) {
   QFileInfo fi( fn );
 
   switch ( _freq ) {
-    case DailyFiles:
+    case NewFileEveryTime:
       fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDateTime::currentDateTime().toString( QStringLiteral("yyyyMMddhhmmss") ), fi.fileName() );
       break;
-
-    // For now, fall through for all other options.
+    case DailyFile:
+      fn = QStringLiteral( "%1/%2-%3" ).arg( fi.absolutePath(), QDateTime::currentDateTime().toString( QStringLiteral("yyyyMMdd") ), fi.fileName() );
+      break;
     case OneFile:
-      // Nothing to do here//
+      fn = QStringLiteral( "%1/%2" ).arg( fi.absolutePath(), fi.fileName() );
       break;
   }
 
