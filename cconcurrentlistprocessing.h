@@ -23,7 +23,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <epic_general_purpose/cepicconfigfile.h>
 
-#include "cdatabaseresults.h"
+#include <ar_general_purpose/cdatabaseresults.h>
 
 
 template <class T>
