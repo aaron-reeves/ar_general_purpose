@@ -19,7 +19,13 @@ Public License as published by the Free Software Foundation; either version 2 of
 // Class CConcurrentProcessingManager
 //-------------------------------------------------------------------------------------
 template <class T>
-CConcurrentProcessingManager<T>::CConcurrentProcessingManager( const int initialMaxListSize /* = 0 */, const bool autoAdjustMaxListSize /* = true */ ) {
+CConcurrentProcessingManager<T>::CConcurrentProcessingManager(
+    const QHash<QString, int>& resultsTemplate,
+    const int initialMaxListSize /* = 0 */,
+    const bool autoAdjustMaxListSize /* = true */
+) {
+  _results = resultsTemplate;
+
   _threadID = 0;
   _idealThreadCount = QThread::idealThreadCount() - 1; // Keep a thread free to deal with this stuff...
   _autoAdjustMaxListSize = autoAdjustMaxListSize;
@@ -35,15 +41,103 @@ CConcurrentProcessingManager<T>::CConcurrentProcessingManager( const int initial
 
 
 template <class T>
-void CConcurrentProcessingManager<T>::appendListForDatabasePopulation(
+void CConcurrentProcessingManager<T>::mergeResults( QHash<QString, int> results2 ) {
+  QList<QString> keys = _results.keys();
+
+  foreach( QString key, keys ) {
+    if( "returnCode" == key ) {
+      _results.insert( key, ( _results.value( key ) | results2.value( key ) ) );
+    }
+    else {
+      _results.insert( key, ( _results.value( key ) + results2.value( key ) ) );
+    }
+  }
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processList(
   CConcurrentProcessingList<T>* list,
-  QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, int ),
+  QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
   CConfigDatabase* dbConfig
 ) {
-  ++_threadID;
-
   // If all threads are in use, wait until one finishes before starting another one.
   //--------------------------------------------------------------------------------
+  checkThreadsForUse();
+
+  // Put the new batch of data in the queue for processing
+  //------------------------------------------------------
+  //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+  _runners.append(
+    new CConcurrentProcessingRunner<T>(
+      list,
+      QFuture< QHash<QString, int> >( QtConcurrent::run( list, fn, dbConfig, _threadID ) )
+    )
+  );
+
+  // See if any items in the queue are finished
+  //-------------------------------------------
+  checkForFinishedThreads();
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processVector(
+  CConcurrentProcessingVector<T>* vector,
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int ),
+  CConfigDatabase* dbConfig
+) {
+  // If all threads are in use, wait until one finishes before starting another one.
+  //--------------------------------------------------------------------------------
+  checkThreadsForUse();
+
+  // Put the new batch of data in the queue for processing
+  //------------------------------------------------------
+  //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+  _runners.append(
+    new CConcurrentProcessingRunner<T>(
+      vector,
+      QFuture< QHash<QString, int> >( QtConcurrent::run( vector, fn, dbConfig, _threadID ) )
+    )
+  );
+
+  // See if any items in the queue are finished
+  //-------------------------------------------
+  checkForFinishedThreads();
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processVector(
+  CConcurrentProcessingVector<T>* vector,
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int, const QHash<QString, QVariant>& ),
+  CConfigDatabase* dbConfig,
+  const QHash<QString, QVariant>& params
+) {
+  // If all threads are in use, wait until one finishes before starting another one.
+  //--------------------------------------------------------------------------------
+  checkThreadsForUse();
+
+  // Put the new batch of data in the queue for processing
+  //------------------------------------------------------
+  //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+  _runners.append(
+    new CConcurrentProcessingRunner<T>(
+      vector,
+      QFuture< QHash<QString, int> >( QtConcurrent::run( vector, fn, dbConfig, _threadID, params ) )
+    )
+  );
+
+  // See if any items in the queue are finished
+  //-------------------------------------------
+  checkForFinishedThreads();
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::checkThreadsForUse() {
+  ++_threadID;
+
   _threadsFull = false;
 
   if( QThreadPool::globalInstance()->activeThreadCount() == QThread::idealThreadCount() ) {
@@ -73,26 +167,19 @@ void CConcurrentProcessingManager<T>::appendListForDatabasePopulation(
   }
 
   _threadsInUse.append( QThreadPool::globalInstance()->activeThreadCount() );
+}
 
-  // Put the new batch of data in the queue for processing
-  //------------------------------------------------------
-  //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
-  _runners.append(
-    new CConcurrentProcessingRunner<T>(
-      list,
-      QFuture< QHash<QString, int> >( QtConcurrent::run( list, fn, dbConfig, _threadID ) )
-    )
-  );
 
-  // See if any items in the queue are finished
-  //-------------------------------------------
+template <class T>
+void CConcurrentProcessingManager<T>::checkForFinishedThreads() {
   QList<int> runnersToDelete;
   for( int runnerIdx = 0; runnerIdx < _runners.count(); ++runnerIdx ) {
     if( _runners[runnerIdx]->isFinished() ) {
       if( ReturnCode::SUCCESS != _runners.at(runnerIdx)->result().value( QStringLiteral("ReturnCode") ) ) {
         logMsg( QStringLiteral( "Error encountered in runner %1: %2" ).arg( runnerIdx ).arg( ReturnCode::codeDescr( _runners.at(runnerIdx)->result().value( QStringLiteral("ReturnCode") ) ) ) );
-      }
-      _results = CDatabaseResults::mergeHash( _results, _runners.at(runnerIdx)->result() );
+      }   
+      mergeResults( _runners.at(runnerIdx)->result() );
+
       runnersToDelete.append( runnerIdx );
     }
   }
@@ -118,7 +205,7 @@ void CConcurrentProcessingManager<T>::waitForFinished() {
     if( ReturnCode::SUCCESS != _runners.at(runnerIdx)->result().value( QStringLiteral("ReturnCode") ) ) {
       logMsg( QStringLiteral( "Error encountered in runner %1: %2" ).arg( runnerIdx ).arg( ReturnCode::codeDescr( _runners.at(runnerIdx)->result().value( QStringLiteral("ReturnCode") ) ) ) );
     }
-    _results = CDatabaseResults::mergeHash( _results, _runners.at(runnerIdx)->result() );
+    mergeResults( _runners.at(runnerIdx)->result() );
   }
   while( !_runners.isEmpty() ) {
     delete _runners.takeFirst();
@@ -192,8 +279,21 @@ CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( CConcurrentProcessi
   _timeInMsec = 0;
   _hasFinished = false;
   _list = list;
+  _vector = nullptr;
   _future = f;
 }
+
+
+template <class T>
+CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( CConcurrentProcessingVector<T>* vector, const QFuture< QHash<QString, int> >& f ) {
+  _timer.start();
+  _timeInMsec = 0;
+  _hasFinished = false;
+  _list = nullptr;
+  _vector = vector;
+  _future = f;
+}
+
 
 
 template <class T>
@@ -202,6 +302,7 @@ CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( const QFuture< QHas
   _timeInMsec = 0;
   _hasFinished = false;
   _list = nullptr;
+  _vector = nullptr;
   _future = f;
 }
 
@@ -211,10 +312,12 @@ CConcurrentProcessingRunner<T>::~CConcurrentProcessingRunner() {
   if( !_hasFinished ) {
     qDb() << "CConcurrentRunner::~CConcurrentRunner(): _hasFinished is false.  Is this really what you want to do?";
     delete _list;
+    delete _vector;
   }
-  else if( nullptr != _list ) {
-    qDb() << "CConcurrentRunner::~CConcurrentRunner(): Deleting list that's not null.  Did you forget to clean up?";
+  else if( ( nullptr != _list ) || ( nullptr != _vector ) ) {
+    qDb() << "CConcurrentRunner::~CConcurrentRunner(): Deleting container that's not null.  Did you forget to clean up?";
     delete _list;
+    delete _vector;
   }
 }
 
@@ -262,6 +365,10 @@ void CConcurrentProcessingRunner<T>::cleanup() {
   if( nullptr != _list ) {
     delete _list;
     _list = nullptr;
+  }
+  if( nullptr != _vector ) {
+    delete _vector;
+    _vector = nullptr;
   }
 }
 
