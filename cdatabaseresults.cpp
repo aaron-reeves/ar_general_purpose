@@ -29,6 +29,15 @@ void CDatabaseResults::debug() const {
 }
 
 
+CDatabaseResults::CDatabaseResults( const QHash<QString, int>& hash ) {
+  _returnCode = hash.value( "returnCode" );
+  _nTotalRecords = hash.value( "totalRecords" );
+  _nProcessedRecords =  hash.value( "totalProcessed" );
+  _nSuccesses =  hash.value( "successes" );
+  _nFailures =  hash.value( "failures" );
+}
+
+
 QHash<QString, int> CDatabaseResults::asHash() const {
   QHash<QString, int> result;
 
@@ -42,50 +51,16 @@ QHash<QString, int> CDatabaseResults::asHash() const {
 }
 
 
-CDatabaseResults::CDatabaseResults( const QHash<QString, int>& hash ) {
-  _returnCode = hash.value( "returnCode" );
-  _nTotalRecords = hash.value( "totalRecords" );
-  _nProcessedRecords =  hash.value( "totalProcessed" );
-  _nSuccesses =  hash.value( "successes" );
-  _nFailures =  hash.value( "failures" );
+QHash<QString, int> CDatabaseResults::resultsTemplate() {
+  QHash<QString, int> result;
+
+  result.insert( QStringLiteral("returnCode"), ReturnCode::SUCCESS );
+  result.insert( QStringLiteral("totalRecords"), 0 );
+  result.insert( QStringLiteral("totalProcessed"), 0 );
+  result.insert( QStringLiteral("successes"), 0 );
+  result.insert( QStringLiteral("failures"), 0 );
+
+  return result;
 }
 
 
-QHash<QString, int> CDatabaseResults::mergeHash( QHash<QString, int> results1, QHash<QString, int> results2 ) {
-  QHash<QString, int> results;
-
-  if( results1.isEmpty() ) {
-    results1 = CDatabaseResults().asHash();
-  }
-  else {
-    Q_ASSERT( results1.contains( "returnCode" ) );
-    Q_ASSERT( results1.contains( "totalRecords" ) );
-    Q_ASSERT( results1.contains( "totalProcessed" ) );
-    Q_ASSERT( results1.contains( "successes" ) );
-    Q_ASSERT( results1.contains( "failures" ) );
-  }
-
-  if( results2.isEmpty() ) {
-    results2 = CDatabaseResults().asHash();
-  }
-  else {
-    Q_ASSERT( results2.contains( "returnCode" ) );
-    Q_ASSERT( results2.contains( "totalRecords" ) );
-    Q_ASSERT( results2.contains( "totalProcessed" ) );
-    Q_ASSERT( results2.contains( "successes" ) );
-    Q_ASSERT( results2.contains( "failures" ) );
-  }
-
-  QList<QString> keys = results1.keys();
-
-  foreach( QString key, keys ) {
-    if( "returnCode" == key ) {
-      results.insert( key, ( results1.value( key ) | results2.value( key ) ) );
-    }
-    else {
-      results.insert( key, ( results1.value( key ) + results2.value( key ) ) );
-    }
-  }
-
-  return results;
-}
