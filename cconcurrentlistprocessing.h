@@ -26,14 +26,29 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/cdatabaseresults.h>
 
 
+// The basic base class containers
+//--------------------------------
 template <class T>
 class CConcurrentProcessingList : public QList<T> {
   public:
     virtual ~CConcurrentProcessingList() { /* Nothing special to do here */ }
 
     // These functions must be overridden to do anything useful
-    virtual QHash<QString, int> populateDatabaseThreaded( CConfigDatabase* dbConfig, const int threadID ) = 0;
+    virtual QHash<QString, int> process( CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params ) = 0;
+    virtual QHash<QString, int> populateDatabaseThreaded( CConfigDatabase* dbConfig, int threadID ) = 0;
 };
+
+
+template <class T>
+class CConcurrentProcessingVector : public QVector<T> {
+  public:
+    virtual ~CConcurrentProcessingVector() { /* Nothing special to do here */ }
+
+    // These functions must be overridden to do anything useful
+    virtual QHash<QString, int> process( CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params ) = 0;
+    virtual QHash<QString, int> populateDatabaseThreaded( CConfigDatabase* dbConfig, int threadID ) = 0;
+};
+
 
 
 // A forward declaration for the sake of CConcurrentProcessingManager
@@ -44,15 +59,33 @@ class CConcurrentProcessingRunner;
 template <class T>
 class CConcurrentProcessingManager {
   public:
-    CConcurrentProcessingManager( const int initialMaxListSize = 0, const bool autoAdjustMaxListSize = true );
+    CConcurrentProcessingManager( const QHash<QString, int>& resultsTemplate, const int initialMaxListSize = 0, const bool autoAdjustMaxListSize = true );
 
-    void appendListForDatabasePopulation(
+    void processList(
       CConcurrentProcessingList<T>* list,
-      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, int ),
+      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
       CConfigDatabase* dbConfig
     );
 
-    //void appendListForProcessing( CConcurrentProcessingList<T>* list );
+    void processList(
+      CConcurrentProcessingList<T>* list,
+      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
+      CConfigDatabase* dbConfig,
+      const QHash<QString, QVariant>& params
+    );
+
+    void processVector(
+      CConcurrentProcessingVector<T>* vector,
+      QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int ),
+      CConfigDatabase* dbConfig
+    );
+
+    void processVector(
+       CConcurrentProcessingVector<T>* vec,
+       QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int, const QHash<QString, QVariant>& ),
+       CConfigDatabase* dbConfig,
+       const QHash<QString, QVariant>& params
+    );
 
     ~CConcurrentProcessingManager() { /* Nothing to do here */ }
 
@@ -65,7 +98,11 @@ class CConcurrentProcessingManager {
     //void writeUsage();
 
   protected:
+    void checkThreadsForUse();
+    void checkForFinishedThreads();
     void adjustMaxListSize();
+
+    void mergeResults( QHash<QString, int> results2 );
 
     QHash<QString, int> _results;
 
@@ -94,6 +131,9 @@ template <class T>
 class CConcurrentProcessingRunner {
   public:
     CConcurrentProcessingRunner( CConcurrentProcessingList<T>* list, const QFuture<QHash<QString, int> >& f );
+    CConcurrentProcessingRunner( CConcurrentProcessingVector<T>* vector, const QFuture<QHash<QString, int> >& f );
+
+    // FIXME: Is this version of the constructor ever used?  I think it should go away...
     CConcurrentProcessingRunner( const QFuture<QHash<QString, int> >& f );
 
     ~CConcurrentProcessingRunner();
@@ -110,6 +150,7 @@ class CConcurrentProcessingRunner {
 
     QFuture< QHash<QString, int> > _future;
     CConcurrentProcessingList<T>* _list;
+    CConcurrentProcessingVector<T>* _vector;
     bool _hasFinished;
     QElapsedTimer _timer;
     qint64 _timeInMsec;
@@ -117,8 +158,6 @@ class CConcurrentProcessingRunner {
   private:
     Q_DISABLE_COPY( CConcurrentProcessingRunner )
 };
-
-
 
 
 #include "cconcurrentlistprocessing.tpp"
