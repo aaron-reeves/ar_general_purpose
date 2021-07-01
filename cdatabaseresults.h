@@ -13,8 +13,8 @@ class CDatabaseResults {
     CDatabaseResults& operator=( const CDatabaseResults& other ) { assign( other ); return *this; }
     ~CDatabaseResults() { /* Nothing to do here */ }
 
+    static QHash<QString, int> resultsTemplate();
     QHash<QString, int> asHash() const;
-    static QHash<QString, int> mergeHash( QHash<QString, int> results1, QHash<QString, int> results2 );
 
     int returnCode() const { return _returnCode; }
 
