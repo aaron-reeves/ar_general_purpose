@@ -1,6 +1,6 @@
 /*
-cconcurrentlistprocessing.h/tpp
--------------------------------
+cconcurrentprocessing.h/tpp
+---------------------------
 Begin: 2019-06-18
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 ---------------------------------------------------------
@@ -11,7 +11,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
-#include "cconcurrentlistprocessing.h" // For convenience only: this would be a circular reference without guards.
+#include "cconcurrentprocessing.h" // For convenience only: this would be a circular reference without guards.
 
 //-------------------------------------------------------------------------------------
 // Container classes: dummy implementations of virtual functions

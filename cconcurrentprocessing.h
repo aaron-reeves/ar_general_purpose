@@ -1,6 +1,6 @@
 /*
-cconcurrentlistprocessing.h/tpp
--------------------------------
+cconcurrentprocessing.h/tpp
+---------------------------
 Begin: 2019-06-18
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 ---------------------------------------------------------
@@ -11,8 +11,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
-#ifndef CCONCURRENTLISTPROCESSING_H
-#define CCONCURRENTLISTPROCESSING_H
+#ifndef CCONCURRENTPROCESSING_H
+#define CCONCURRENTPROCESSING_H
 
 #include <QtCore>
 #include <QtConcurrent>
@@ -256,6 +256,6 @@ class CConcurrentProcessingRunner {
 };
 
 
-#include "cconcurrentlistprocessing.tpp"
+#include "cconcurrentprocessing.tpp"
 
-#endif // CCONCURRENTLISTPROCESSING_H
+#endif // CCONCURRENTPROCESSING_H
