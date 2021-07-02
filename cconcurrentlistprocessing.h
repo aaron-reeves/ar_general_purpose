@@ -34,8 +34,25 @@ class CConcurrentProcessingList : public QList<T> {
     virtual ~CConcurrentProcessingList() { /* Nothing special to do here */ }
 
     // These functions must be overridden to do anything useful
-    virtual QHash<QString, int> process( CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params ) = 0;
-    virtual QHash<QString, int> populateDatabaseThreaded( CConfigDatabase* dbConfig, int threadID ) = 0;
+    virtual QHash<QString, int> resultsTemplate() const;
+    virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID, const QHash<QString, QVariant>& params );
+    virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID );
+    virtual QHash<QString, int> dbPopulateDynamic( const CConfigDatabase& dbConfig, const int threadID );
+
+    virtual QHash<QString, int> dbPopulateStatic(
+      const CConfigDatabase& dbConfig,
+      const int startIdx,
+      const int endIdx,
+      const int threadID
+    ) const;
+
+    virtual QHash<QString, int> dbPopulateStatic(
+      const CConfigDatabase& dbConfig,
+      const int startIdx,
+      const int endIdx,
+      const int threadID,
+      const QHash<QString, QVariant>& otherParams
+    ) const;
 };
 
 
@@ -45,10 +62,52 @@ class CConcurrentProcessingVector : public QVector<T> {
     virtual ~CConcurrentProcessingVector() { /* Nothing special to do here */ }
 
     // These functions must be overridden to do anything useful
-    virtual QHash<QString, int> process( CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params ) = 0;
-    virtual QHash<QString, int> populateDatabaseThreaded( CConfigDatabase* dbConfig, int threadID ) = 0;
+    virtual QHash<QString, int> resultsTemplate() const;
+    virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID, const QHash<QString, QVariant>& params );
+    virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID );
+    virtual QHash<QString, int> dbPopulateDynamic( const CConfigDatabase& dbConfig, const int threadID );
+
+    virtual QHash<QString, int> dbPopulateStatic(
+      const CConfigDatabase& dbConfig,
+      const int startIdx,
+      const int endIdx,
+      const int threadID
+    ) const;
+
+    virtual QHash<QString, int> dbPopulateStatic(
+      const CConfigDatabase& dbConfig,
+      const int startIdx,
+      const int endIdx,
+      const int threadID,
+      const QHash<QString, QVariant>& otherParams
+    ) const;
 };
 
+
+template <class T>
+class CConcurrentProcessingStringHash : public QHash<QString, T> {
+  public:
+    virtual ~CConcurrentProcessingStringHash() { /* Nothing special to do here */ }
+
+    // These functions must be overridden to do anything useful
+    virtual QHash<QString, int> resultsTemplate() const;
+    virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
+    virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID ) const;
+    virtual QHash<QString, int> dbPopulateStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
+};
+
+
+template <class T>
+class CConcurrentProcessingIntHash : public QHash<int, T> {
+  public:
+    virtual ~CConcurrentProcessingIntHash() { /* Nothing special to do here */ }
+
+    // These functions must be overridden to do anything useful
+    virtual QHash<QString, int> resultsTemplate() const;
+    virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
+    virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID ) const;
+    virtual QHash<QString, int> dbPopulateStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
+};
 
 
 // A forward declaration for the sake of CConcurrentProcessingManager
@@ -63,27 +122,66 @@ class CConcurrentProcessingManager {
 
     void processList(
       CConcurrentProcessingList<T>* list,
-      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
-      CConfigDatabase* dbConfig
+      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( const CConfigDatabase&, const int ),
+      const CConfigDatabase& dbConfig
     );
 
     void processList(
       CConcurrentProcessingList<T>* list,
-      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
-      CConfigDatabase* dbConfig,
+      QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( const CConfigDatabase&, const int, const QHash<QString, QVariant>& ),
+      const CConfigDatabase& dbConfig,
       const QHash<QString, QVariant>& params
     );
 
     void processVector(
       CConcurrentProcessingVector<T>* vector,
-      QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int ),
-      CConfigDatabase* dbConfig
+      QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int ),
+      const CConfigDatabase& dbConfig
     );
 
     void processVector(
        CConcurrentProcessingVector<T>* vec,
-       QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int, const QHash<QString, QVariant>& ),
-       CConfigDatabase* dbConfig,
+       QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const QHash<QString, QVariant>& ),
+       const CConfigDatabase& dbConfig,
+       const QHash<QString, QVariant>& params
+    );
+
+    void processStatic(
+      const CConcurrentProcessingVector<T>& vec,
+      QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const int, const int ) const,
+      const CConfigDatabase& dbConfig
+    );
+
+    void processStatic(
+      const CConcurrentProcessingVector<T>& vec,
+      QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const int, const int, const QHash<QString, QVariant>& ) const,
+      const CConfigDatabase& dbConfig,
+      const QHash<QString, QVariant>& params
+    );
+
+    void processStatic(
+      const CConcurrentProcessingStringHash<T>& stringHash,
+      QHash<QString, int>(CConcurrentProcessingStringHash<T>::*fn)( const CConfigDatabase&, const QList<QString>&, const int ) const,
+      const CConfigDatabase& dbConfig
+    );
+
+    void processStatic(
+       const CConcurrentProcessingStringHash<T>& stringHash,
+       QHash<QString, int>(CConcurrentProcessingStringHash<T>::*fn)( const CConfigDatabase&,  const QList<QString>&, const int, const QHash<QString, QVariant>& ) const,
+       const CConfigDatabase& dbConfig,
+       const QHash<QString, QVariant>& params
+    );
+
+    void processStatic(
+      const CConcurrentProcessingIntHash<T>& intHash,
+      QHash<QString, int>(CConcurrentProcessingIntHash<T>::*fn)( const CConfigDatabase&, const QList<int>&, const int ) const,
+      const CConfigDatabase& dbConfig
+    );
+
+    void processStatic(
+       const CConcurrentProcessingIntHash<T>& intHash,
+       QHash<QString, int>(CConcurrentProcessingIntHash<T>::*fn)( const CConfigDatabase&,  const QList<int>&, const int, const QHash<QString, QVariant>& ) const,
+       const CConfigDatabase& dbConfig,
        const QHash<QString, QVariant>& params
     );
 
@@ -126,14 +224,11 @@ class CConcurrentProcessingManager {
 
 // If everything is working properly, there is no reason for an end user
 // to access CConcurrentProcessingRunner directly.  Just use CConcurrentProcessingManager.
-// FIXME: Consider moving this to the tpp file, so it is treated as a "private" implementation.
 template <class T>
 class CConcurrentProcessingRunner {
   public:
     CConcurrentProcessingRunner( CConcurrentProcessingList<T>* list, const QFuture<QHash<QString, int> >& f );
     CConcurrentProcessingRunner( CConcurrentProcessingVector<T>* vector, const QFuture<QHash<QString, int> >& f );
-
-    // FIXME: Is this version of the constructor ever used?  I think it should go away...
     CConcurrentProcessingRunner( const QFuture<QHash<QString, int> >& f );
 
     ~CConcurrentProcessingRunner();
@@ -148,6 +243,7 @@ class CConcurrentProcessingRunner {
   protected:
     void cleanup();
 
+    bool _ownsContainer;
     QFuture< QHash<QString, int> > _future;
     CConcurrentProcessingList<T>* _list;
     CConcurrentProcessingVector<T>* _vector;

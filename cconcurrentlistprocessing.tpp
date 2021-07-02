@@ -13,6 +13,229 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include "cconcurrentlistprocessing.h" // For convenience only: this would be a circular reference without guards.
 
+//-------------------------------------------------------------------------------------
+// Container classes: dummy implementations of virtual functions
+//-------------------------------------------------------------------------------------
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::resultsTemplate() const {
+  Q_ASSERT_X( false, "CConcurrentProcessingList:resultsTemplate", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID, const QHash<QString, QVariant>& params ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingList::process (3 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingList::dbProcess (2 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::dbPopulateDynamic( const CConfigDatabase& dbConfig, const int threadID ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingList::dbPopulate (2 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::dbPopulateStatic(
+  const CConfigDatabase& dbConfig,
+  const int startIdx,
+  const int endIdx,
+  const int threadID
+) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( startIdx );
+  Q_UNUSED( endIdx );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingList::dbPopulateStatic (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingList<T>::dbPopulateStatic(
+  const CConfigDatabase& dbConfig,
+  const int startIdx,
+  const int endIdx,
+  const int threadID,
+  const QHash<QString, QVariant>& otherParams
+) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( startIdx );
+  Q_UNUSED( endIdx );
+  Q_UNUSED( threadID );
+  Q_UNUSED( otherParams );
+  Q_ASSERT_X( false, "CConcurrentProcessingList::dbPopulateStatic (5 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::resultsTemplate() const {
+  Q_ASSERT_X( false, "CConcurrentProcessingVector:resultsTemplate", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID, const QHash<QString, QVariant>& params ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingVector::process (3 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::dbProcessDynamic( const CConfigDatabase& dbConfig, const int threadID ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingVector::dbProcess (2 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::dbPopulateDynamic( const CConfigDatabase& dbConfig, const int threadID ) {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingVector::dbPopulate (2 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::dbPopulateStatic(
+  const CConfigDatabase& dbConfig,
+  const int startIdx,
+  const int endIdx,
+  const int threadID
+) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( startIdx );
+  Q_UNUSED( endIdx );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingVector::dbPopulateStatic (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingVector<T>::dbPopulateStatic(
+  const CConfigDatabase& dbConfig,
+  const int startIdx,
+  const int endIdx,
+  const int threadID,
+  const QHash<QString, QVariant>& otherParams
+) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( startIdx );
+  Q_UNUSED( endIdx );
+  Q_UNUSED( threadID );
+  Q_UNUSED( otherParams );
+  Q_ASSERT_X( false, "CConcurrentProcessingVector::dbPopulateStatic (5 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingStringHash<T>::resultsTemplate() const {
+  Q_ASSERT_X( false, "CConcurrentProcessingStringHash:resultsTemplate", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingStringHash<T>::dbProcessStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID, const QHash<QString, QVariant>& params ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingStringHash::process (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingStringHash<T>::dbProcessStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingStringHash::dbProcess (3 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingStringHash<T>::dbPopulateStatic( const CConfigDatabase& dbConfig, const QList<QString>& keys, const int threadID, const QHash<QString, QVariant>& params ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingStringHash::dbPopulate (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingIntHash<T>::resultsTemplate() const {
+  Q_ASSERT_X( false, "CConcurrentProcessingIntHash:resultsTemplate", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingIntHash<T>::dbProcessStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingIntHash::process (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingIntHash<T>::dbProcessStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_ASSERT_X( false, "CConcurrentProcessingIntHash::dbProcess (3 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+
+template <class T>
+QHash<QString, int> CConcurrentProcessingIntHash<T>::dbPopulateStatic( const CConfigDatabase& dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const {
+  Q_UNUSED( dbConfig );
+  Q_UNUSED( keys );
+  Q_UNUSED( threadID );
+  Q_UNUSED( params );
+  Q_ASSERT_X( false, "CConcurrentProcessingIntHash::dbPopulate (4 params)", "Function does not exist." );
+
+  return QHash<QString, int>();
+}
+//-------------------------------------------------------------------------------------
+
 
 
 //-------------------------------------------------------------------------------------
@@ -58,8 +281,8 @@ void CConcurrentProcessingManager<T>::mergeResults( QHash<QString, int> results2
 template <class T>
 void CConcurrentProcessingManager<T>::processList(
   CConcurrentProcessingList<T>* list,
-  QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( CConfigDatabase*, const int ),
-  CConfigDatabase* dbConfig
+  QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( const CConfigDatabase&, const int ),
+  const CConfigDatabase& dbConfig
 ) {
   // If all threads are in use, wait until one finishes before starting another one.
   //--------------------------------------------------------------------------------
@@ -80,12 +303,11 @@ void CConcurrentProcessingManager<T>::processList(
   checkForFinishedThreads();
 }
 
-
 template <class T>
 void CConcurrentProcessingManager<T>::processVector(
   CConcurrentProcessingVector<T>* vector,
-  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int ),
-  CConfigDatabase* dbConfig
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int ),
+  const CConfigDatabase& dbConfig
 ) {
   // If all threads are in use, wait until one finishes before starting another one.
   //--------------------------------------------------------------------------------
@@ -108,10 +330,37 @@ void CConcurrentProcessingManager<T>::processVector(
 
 
 template <class T>
+void CConcurrentProcessingManager<T>::processList(
+  CConcurrentProcessingList<T>* list,
+  QHash<QString, int>(CConcurrentProcessingList<T>::*fn)( const CConfigDatabase&, const int, const QHash<QString, QVariant>& ),
+  const CConfigDatabase& dbConfig,
+  const QHash<QString, QVariant>& params
+) {
+  // If all threads are in use, wait until one finishes before starting another one.
+  //--------------------------------------------------------------------------------
+  checkThreadsForUse();
+
+  // Put the new batch of data in the queue for processing
+  //------------------------------------------------------
+  //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+  _runners.append(
+    new CConcurrentProcessingRunner<T>(
+      list,
+      QFuture< QHash<QString, int> >( QtConcurrent::run( list, fn, dbConfig, _threadID, params ) )
+    )
+  );
+
+  // See if any items in the queue are finished
+  //-------------------------------------------
+  checkForFinishedThreads();
+}
+
+
+template <class T>
 void CConcurrentProcessingManager<T>::processVector(
   CConcurrentProcessingVector<T>* vector,
-  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( CConfigDatabase*, const int, const QHash<QString, QVariant>& ),
-  CConfigDatabase* dbConfig,
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const QHash<QString, QVariant>& ),
+  const CConfigDatabase& dbConfig,
   const QHash<QString, QVariant>& params
 ) {
   // If all threads are in use, wait until one finishes before starting another one.
@@ -131,6 +380,199 @@ void CConcurrentProcessingManager<T>::processVector(
   // See if any items in the queue are finished
   //-------------------------------------------
   checkForFinishedThreads();
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingVector<T>& vec,
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const int, const int ) const,
+  const CConfigDatabase& dbConfig
+) {
+  int listSize;
+  int startIdx = 0;
+  int endIdx = 0;
+  while( startIdx < vec.count() - 1 ) {
+    listSize = this->maxListSize();
+    endIdx = min( listSize - 1, vec.count() - 1 );
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( vec, fn, dbConfig, startIdx, endIdx, _threadID ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = endIdx;
+  }
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingVector<T>& vec,
+  QHash<QString, int>(CConcurrentProcessingVector<T>::*fn)( const CConfigDatabase&, const int, const int, const int, const QHash<QString, QVariant>& ) const,
+  const CConfigDatabase& dbConfig,
+  const QHash<QString, QVariant>& params
+) {
+  int listSize;
+  int startIdx = 0;
+  int endIdx = 0;
+  while( startIdx < vec.count() - 1 ) {
+    listSize = this->maxListSize();
+    endIdx = std::min( listSize - 1, vec.count() - 1 );
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( vec, fn, dbConfig, startIdx, endIdx, _threadID, params ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = endIdx;
+  }
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingStringHash<T>& hash,
+  QHash<QString, int>(CConcurrentProcessingStringHash<T>::*fn)( const CConfigDatabase&, const QList<QString>&, const int ) const,
+  const CConfigDatabase& dbConfig
+) {
+  QList<int> keys = hash.keys();
+
+  int listSize;
+  int startIdx = 0;
+  while( startIdx < keys.count() ) {
+    listSize =this->maxListSize();
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( hash, fn, dbConfig, keys, _threadID ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = startIdx + listSize;
+  }
+}
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingStringHash<T>& hash,
+  QHash<QString, int>(CConcurrentProcessingStringHash<T>::*fn)( const CConfigDatabase&, const QList<QString>&, const int, const QHash<QString, QVariant>& ) const,
+  const CConfigDatabase& dbConfig,
+  const QHash<QString, QVariant>& params
+) {
+  QList<QString> keys = hash.keys();
+
+  int listSize;
+  int startIdx = 0;
+  while( startIdx < keys.count() ) {
+    listSize =this->maxListSize();
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( hash, fn, dbConfig, keys, _threadID, params ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = startIdx + listSize;
+  }
+}
+
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingIntHash<T>& hash,
+  QHash<QString, int>(CConcurrentProcessingIntHash<T>::*fn)( const CConfigDatabase&, const QList<int>&, const int ) const,
+  const CConfigDatabase& dbConfig
+) {
+  QList<int> keys = hash.keys();
+
+  int listSize;
+  int startIdx = 0;
+  while( startIdx < keys.count() ) {
+    listSize =this->maxListSize();
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( hash, fn, dbConfig, keys, _threadID ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = startIdx + listSize;
+  }
+}
+
+template <class T>
+void CConcurrentProcessingManager<T>::processStatic(
+  const CConcurrentProcessingIntHash<T>& hash,
+  QHash<QString, int>(CConcurrentProcessingIntHash<T>::*fn)( const CConfigDatabase&, const QList<int>&, const int, const QHash<QString, QVariant>& ) const,
+  const CConfigDatabase& dbConfig,
+  const QHash<QString, QVariant>& params
+) {
+  QList<int> keys = hash.keys();
+
+  int listSize;
+  int startIdx = 0;
+  while( startIdx < keys.count() ) {
+    listSize =this->maxListSize();
+
+    // If all threads are in use, wait until one finishes before starting another one.
+    checkThreadsForUse();
+
+    // Put the new batch of data in the queue for processing
+    //qDebug() << "Spinning up thread" << _threadID << "with list of size" << list->count();
+    _runners.append(
+      new CConcurrentProcessingRunner<T>(
+        QFuture< QHash<QString, int> >( QtConcurrent::run( hash, fn, dbConfig, keys, _threadID, params ) )
+      )
+    );
+
+    // See if any items in the queue are finished
+    checkForFinishedThreads();
+
+    startIdx = startIdx + listSize;
+  }
 }
 
 
@@ -281,6 +723,7 @@ CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( CConcurrentProcessi
   _list = list;
   _vector = nullptr;
   _future = f;
+  _ownsContainer = true;
 }
 
 
@@ -292,18 +735,19 @@ CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( CConcurrentProcessi
   _list = nullptr;
   _vector = vector;
   _future = f;
+  _ownsContainer = true;
 }
 
 
-
 template <class T>
-CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( const QFuture< QHash<QString, int> >& f ) {
+CConcurrentProcessingRunner<T>::CConcurrentProcessingRunner( const QFuture<QHash<QString, int> >& f ) {
   _timer.start();
   _timeInMsec = 0;
   _hasFinished = false;
   _list = nullptr;
   _vector = nullptr;
   _future = f;
+  _ownsContainer = false;
 }
 
 
@@ -311,13 +755,18 @@ template <class T>
 CConcurrentProcessingRunner<T>::~CConcurrentProcessingRunner() {
   if( !_hasFinished ) {
     qDb() << "CConcurrentRunner::~CConcurrentRunner(): _hasFinished is false.  Is this really what you want to do?";
-    delete _list;
-    delete _vector;
+
+    if( _ownsContainer ) {
+      delete _list;
+      delete _vector;
+    }
   }
-  else if( ( nullptr != _list ) || ( nullptr != _vector ) ) {
-    qDb() << "CConcurrentRunner::~CConcurrentRunner(): Deleting container that's not null.  Did you forget to clean up?";
-    delete _list;
-    delete _vector;
+  else if( _ownsContainer ) {
+    if( ( nullptr != _list ) || ( nullptr != _vector ) ) {
+      qDb() << "CConcurrentRunner::~CConcurrentRunner(): Deleting container that's not null.  Did you forget to clean up?";
+      delete _list;
+      delete _vector;
+    }
   }
 }
 
@@ -362,13 +811,15 @@ qint64 CConcurrentProcessingRunner<T>::runtime() const {
 
 template <class T>
 void CConcurrentProcessingRunner<T>::cleanup() {
-  if( nullptr != _list ) {
-    delete _list;
-    _list = nullptr;
-  }
-  if( nullptr != _vector ) {
-    delete _vector;
-    _vector = nullptr;
+  if( _ownsContainer ) {
+    if( nullptr != _list ) {
+      delete _list;
+      _list = nullptr;
+    }
+    if( nullptr != _vector ) {
+      delete _vector;
+      _vector = nullptr;
+    }
   }
 }
 
