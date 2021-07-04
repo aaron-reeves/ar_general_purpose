@@ -30,37 +30,17 @@ class CConcurrentProcessingRunner;
 template <class T>
 class CConcurrentProcessingManager;
 
-//// FIXME: I don't understand the warnings generated without this, but they don't seem to matter.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnon-template-friend"
 
 // The basic base class containers
 //--------------------------------
 template <class T>
 class CConcurrentProcessingList : public QList<T> {
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingList<T> *object,
-      QHash<QString, int> (CConcurrentProcessingList<T>::*fn)(const CConfigDatabase*, const int) const noexcept,
-                                                              const CConfigDatabase*, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingList<T> *object,
-      QHash<QString, int> (CConcurrentProcessingList<T>::*fn)(const CConfigDatabase*, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                              const CConfigDatabase*, const int, const QHash<QString, QVariant>&);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingList<T> *object,
-      QHash<QString, int> (CConcurrentProcessingList<T>::*fn)(const CConfigDatabase*, const int, const int, const int) const noexcept,
-                                                              const CConfigDatabase*, const int, const int, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingList<T> *object,
-      QHash<QString, int> (CConcurrentProcessingList<T>::*fn)(const CConfigDatabase*, const int, const int, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                              const CConfigDatabase*, const int, const int, const int, const QHash<QString, QVariant>&);
-
   public:
     virtual ~CConcurrentProcessingList() { /* Nothing special to do here */ }
 
-  protected:
-    // These functions must be overridden to do anything useful
+    // These functions must be overridden to do anything useful.
+    // You'll likely need resultsTemplate() and at least one of the other functions.
     virtual QHash<QString, int> resultsTemplate() const;
-
     virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase* dbConfig, const int threadID );
     virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params );
     virtual QHash<QString, int> dbPopulateDynamic( const CConfigDatabase* dbConfig, const int threadID );
@@ -72,29 +52,12 @@ class CConcurrentProcessingList : public QList<T> {
 
 template <class T>
 class CConcurrentProcessingVector : public QVector<T> {
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingVector<T> *object,
-      QHash<QString, int> (CConcurrentProcessingVector<T>::*fn)(const CConfigDatabase*, const int) const noexcept,
-                                                                const CConfigDatabase*, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingVector<T> *object,
-      QHash<QString, int> (CConcurrentProcessingVector<T>::*fn)(const CConfigDatabase*, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                                const CConfigDatabase*, const int, const QHash<QString, QVariant>&);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingVector<T> *object,
-      QHash<QString, int> (CConcurrentProcessingVector<T>::*fn)(const CConfigDatabase*, const int, const int, const int) const noexcept,
-                                                                const CConfigDatabase*, const int, const int, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingVector<T> *object,
-      QHash<QString, int> (CConcurrentProcessingVector<T>::*fn)(const CConfigDatabase*, const int, const int, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                                const CConfigDatabase*, const int, const int, const int, const QHash<QString, QVariant>&);
-
   public:
     virtual ~CConcurrentProcessingVector() { /* Nothing special to do here */ }
 
-  protected:
-    // These functions must be overridden to do anything useful
+    // These functions must be overridden to do anything useful.
+    // You'll likely need resultsTemplate() and at least one of the other functions.
     virtual QHash<QString, int> resultsTemplate() const;
-
     virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase* dbConfig, const int threadID );
     virtual QHash<QString, int> dbProcessDynamic( const CConfigDatabase* dbConfig, const int threadID, const QHash<QString, QVariant>& params );
     virtual QHash<QString, int> dbPopulateDynamic( const CConfigDatabase* dbConfig, const int threadID );
@@ -106,21 +69,12 @@ class CConcurrentProcessingVector : public QVector<T> {
 
 template <class T>
 class CConcurrentProcessingStringHash : public QHash<QString, T> {
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingStringHash<T> *object,
-      QHash<QString, int> (CConcurrentProcessingStringHash<T>::*fn)(const CConfigDatabase*, const QList<QString>&, const int) const noexcept,
-                                                                    const CConfigDatabase*, const QList<QString>&, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingStringHash<T> *object,
-      QHash<QString, int> (CConcurrentProcessingStringHash<T>::*fn)(const CConfigDatabase*, const QList<QString>&, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                                    const CConfigDatabase*, const QList<QString>&, const int, const QHash<QString, QVariant>&);
-
   public:
     virtual ~CConcurrentProcessingStringHash() { /* Nothing special to do here */ }
 
-  protected:
-    // These functions must be overridden to do anything useful
+    // These functions must be overridden to do anything useful.
+    // You'll likely need resultsTemplate() and at least one of the other functions.
     virtual QHash<QString, int> resultsTemplate() const;
-
     virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase* dbConfig, const QList<QString>& keys, const int threadID ) const;
     virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase* dbConfig, const QList<QString>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
     virtual QHash<QString, int> dbPopulateStatic( const CConfigDatabase* dbConfig, const QList<QString>& keys, const int threadID ) const;
@@ -130,29 +84,17 @@ class CConcurrentProcessingStringHash : public QHash<QString, T> {
 
 template <class T>
 class CConcurrentProcessingIntHash : public QHash<int, T> {
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingIntHash<T> *object,
-      QHash<QString, int> (CConcurrentProcessingIntHash<T>::*fn)(const CConfigDatabase*, const QList<int>&, const int) const noexcept,
-                                                                 const CConfigDatabase*, const QList<int>&, const int);
-
-    friend QFuture<QHash<QString, int> > run(QThreadPool *pool, const CConcurrentProcessingIntHash<T> *object,
-      QHash<QString, int> (CConcurrentProcessingIntHash<T>::*fn)(const CConfigDatabase*, const QList<int>&, const int, const QHash<QString, QVariant>& ) const noexcept,
-                                                                 const CConfigDatabase*, const QList<int>&, const int, const QHash<QString, QVariant>&);
-
   public:
     virtual ~CConcurrentProcessingIntHash() { /* Nothing special to do here */ }
 
-  protected:
-    // These functions must be overridden to do anything useful
+    // These functions must be overridden to do anything useful.
+    // You'll likely need resultsTemplate() and at least one of the other functions.
     virtual QHash<QString, int> resultsTemplate() const;
-
     virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase* dbConfig, const QList<int>& keys, const int threadID ) const;
     virtual QHash<QString, int> dbProcessStatic( const CConfigDatabase* dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
     virtual QHash<QString, int> dbPopulateStatic( const CConfigDatabase* dbConfig, const QList<int>& keys, const int threadID ) const;
     virtual QHash<QString, int> dbPopulateStatic( const CConfigDatabase* dbConfig, const QList<int>& keys, const int threadID, const QHash<QString, QVariant>& params ) const;
 };
-
-//#pragma GCC diagnostic pop
-
 
 
 template <class T>
