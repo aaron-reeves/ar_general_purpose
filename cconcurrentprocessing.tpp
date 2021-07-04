@@ -479,9 +479,9 @@ void CConcurrentProcessingManager<T>::processStatic(
     int listSize;
     int startIdx = 0;
     int length = 0;
-    while( startIdx < list.count() ) {
+    while( startIdx < list->count() ) {
       listSize = this->maxListSize();
-      length = std::min( listSize, list.count() - startIdx );
+      length = std::min( listSize, list->count() - startIdx );
 
       // If all threads are in use, wait until one finishes before starting another one.
       checkThreadsForUse();
@@ -552,9 +552,9 @@ void CConcurrentProcessingManager<T>::processStatic(
     int listSize;
     int startIdx = 0;
     int length = 0;
-    while( startIdx < vec.count() ) {
+    while( startIdx < vec->count() ) {
       listSize = this->maxListSize();
-      length = std::min( listSize, vec.count() - startIdx );
+      length = std::min( listSize, vec->count() - startIdx );
 
       // If all threads are in use, wait until one finishes before starting another one.
       checkThreadsForUse();
@@ -700,7 +700,7 @@ void CConcurrentProcessingManager<T>::processStatic(
   const QHash<QString, QVariant>& params
 ) {
   if( 0 < hash->count() ) {
-    QList<QString> masterKeys = hash->keys();
+    QList<int> masterKeys = hash->keys();
 
     int listSize;
     int startIdx = 0;
