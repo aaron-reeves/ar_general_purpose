@@ -16,6 +16,15 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QtCore>
 
+#ifdef QSQL_USED
+  #include <QSqlDatabase>
+#endif
+
+extern const QString APP_PASSWORD_KEY;
+
+QString makeEncryptedPassword( const QString& password );
+void appendToMessage( QString* message, const QString& newMessage );
+
 /*
  * Exit codes returned by the application.  Use --help for definitions.
  */
@@ -120,6 +129,123 @@ class CConfigBlock {
 };
 
 
+#ifdef QSQL_USED
+class CConfigDatabase {
+  public:
+    enum DBType {
+      DBTypeUnspecified,
+      DBTypePostgreSQL,
+      DBTypeMySql,
+      DBTypeSQLite
+    };
+    static DBType dbTypeFromString( QString val );
+    static QString dbTypeToString( CConfigDatabase::DBType val );
+
+    CConfigDatabase( const QString& name = QString(), const DBType type = DBTypePostgreSQL );
+    CConfigDatabase( const QStringList& configBlock, const QString& name = QString(), const DBType type = DBTypePostgreSQL );
+    CConfigDatabase( CConfigBlock* block, const QString& name = QString(), const DBType type = DBTypePostgreSQL );
+    CConfigDatabase( const CConfigDatabase& other );
+    CConfigDatabase& operator=( const CConfigDatabase& other );
+    ~CConfigDatabase();
+
+    CConfigDatabase parameters( const int connectionNumber = -1 ) const; // Returns the parameters without an open connection, etc.  Used for concurrent processing when new connections need to be opened.
+
+    // sequenceName is required for Postgres, but not for MySQL
+    int lastInsertID( const QString& sequenceName = QString() );
+
+    void writeToStream( QTextStream* stream );
+    void debug();
+
+    // Getters/setters
+    void setType( const DBType type ) { _type = type; }
+    void setName( const QString& name ) { _name = name; }
+    void setDbHost( const QString& val ) { _dbHost = val; }
+    void setDbPort( const int val ) { _dbPort = val; }
+    void setDbName( const QString& val ) { _dbName = val; }
+    void setDbPath( const QString&val ) { _dbPath = val; }
+    void setDbUser( const QString& val ) { _dbUser = val; }
+    void setDbPassword( const QString& val, const bool useEncryption = true );
+    void setDbSchema( const QString& val ) { _dbSchema = val; }
+    void setDbTable( const QString& val ) { _dbTable = val; }
+
+    DBType type() const { return _type; }
+    QString name() const { return _name; }
+    QString dbHost() const { return _dbHost; }
+    int dbPort() const { return _dbPort; }
+    QString dbName() const { return _dbName; }
+    QString dbPath() const { return _dbPath; }
+    QString dbUser() const { return _dbUser; }
+    //QString dbPassword() const { return _dbPassword; }
+    QString dbSchema() const { return _dbSchema; }
+    QString dbTable() const { return _dbTable; }
+
+    bool openDatabase();
+    bool openSchema();
+    bool openSchema( const QString& schemaName );
+    bool hasTable( QString tableName );
+    void closeDatabase();
+    QSqlDatabase* database();
+
+    bool isValid( QString* errMsg = nullptr ) const;
+    bool isOpen( QString* errMsg = nullptr ) const;
+    bool schemaVersionOK( const QString& db_version, const QString& db_version_application, const QString& db_version_id, QString* errMsg = nullptr );
+
+    QString errorMessage() const { return _errorMsg; }
+
+    QString description() const;
+
+  protected:
+    void initialize();
+    void assign( const CConfigDatabase& other );
+    void processPair( const QString& key, const QString& val );
+
+    QSqlDatabase* _db;
+
+    bool _dbIsOpen;
+    bool _schemaIsOpen;
+
+    DBType _type;
+    QString _name;
+    QString _dbHost;
+    int _dbPort;
+    QString _dbName;
+    QString _dbPath;
+    QString _dbUser;
+    QString _dbPassword;
+    QString _dbSchema;
+    QString _dbTable;
+
+    QString _connectionName;
+
+    QString _errorMsg;
+};
+
+Q_DECLARE_TYPEINFO( CConfigDatabase::DBType, Q_PRIMITIVE_TYPE );
+Q_DECLARE_TYPEINFO( CConfigDatabase, Q_COMPLEX_TYPE );
+
+
+class CConfigDatabaseList : public QVector<CConfigDatabase*> {
+  public:
+    CConfigDatabaseList();
+    CConfigDatabaseList( const CConfigDatabaseList& other );
+    CConfigDatabaseList& operator=( const CConfigDatabaseList& other );
+    ~CConfigDatabaseList();
+
+
+    CConfigDatabase* at( const int i ) const { return QVector<CConfigDatabase*>::at( i ); }
+    CConfigDatabase* at( const QString& name ) const;
+
+    bool isValid( QString* errMsg = nullptr ) const;
+    bool hasDb( const QString& name ) const ;
+    void writeToStream( QTextStream* stream );
+    void debug() const;
+
+  protected:
+    void assign( const CConfigDatabaseList& other );
+};
+#endif
+
+
 class CConfigFile {
   public:
     CConfigFile();
@@ -172,10 +298,25 @@ class CConfigFile {
     QString fileName() const { return _fileName; }
 
     bool setWorkingDirectory();
-
+    
+    virtual bool validate();
+    
+    #ifdef QSQL_USED
+      CConfigDatabaseList dbList() const { return _dbList; }
+      CConfigDatabase* dbConfig() const { if( 0 == _dbList.count() ) return nullptr; else return _dbList.at( 0 ); }
+      CConfigDatabase* dbConfig( const QString& name ) const { if( 0 == _dbList.count() ) return nullptr; else return _dbList.at( name.toLower() ); }
+      bool containsDatabase( const QString& name ) const { return _dbList.hasDb( name.toLower() ); }
+      bool hasDb( const QString& name ) const { return containsDatabase( name ); }
+    #endif
+    
   protected:
     void initialize();
-
+    
+    #ifdef QSQL_USED
+      void buildDatabases();
+      CConfigDatabaseList _dbList;
+    #endif
+    
     void buildBasic( const QString& fn );
     int processBlock( QStringList strList );
     int processFile( QFile* file );
