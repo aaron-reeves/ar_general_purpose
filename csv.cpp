@@ -7,7 +7,14 @@ Author (modified version): Aaron Reeves <aaron.reeves@naadsm.org>
 
 Original code (name space CSV) by Naohiro Hasegawa, https://github.com/hnaohiro/qt-csv/blob/master/csv.h
 Original code (class qCSV) believed to be by Shaun Case, Animal Population Health Institute, Colorado State University.
+
+Modified version Copyright (C) 2014 - 2021 Aaron Reeves
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 */
+
 
 #include "csv.h"
 
@@ -1263,6 +1270,12 @@ bool QCsv::writeFile( const QString &filename, const QString &codec ) {
 
   file.close();
 
+  return true;
+}
+
+
+bool QCsv::displayTable( QTextStream* stream ) {
+  stringListListAsTable( _data, stream, true );
   return true;
 }
 

@@ -7,6 +7,12 @@ Author (modified version): Aaron Reeves <aaron.reeves@naadsm.org>
 
 Original code (name space CSV) by Naohiro Hasegawa, https://github.com/hnaohiro/qt-csv/blob/master/csv.h
 Original code (class qCSV) by Shaun Case, Animal Population Health Institute, Colorado State University.
+
+Modified version Copyright (C) 2014 - 2021 Aaron Reeves
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 */
 
 #ifndef CSV_H
@@ -220,6 +226,7 @@ class QCsv {
     bool setFieldFormat( const int fieldIdx, const ColumnFormat columnFmt, const StrUtilsDateFormat dateFmt, const int defaultCentury = 2000 );
 
     bool writeFile( const QString &filename, const QString &codec = QString() ); // Write contents of the CSV object to a file.
+    bool displayTable( QTextStream* stream ); // Write a nicely formatted plain-text table to the stream.
 
     // Generates a subset of this object, with only rows in which the indicated field contains the indicated value (which may or may not be case-sensitive).
     // These functions work only in entire-file mode.

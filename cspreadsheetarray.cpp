@@ -4,7 +4,7 @@ cspreadsheetarray.h/cpp
 Begin: 2018/09/13
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 --------------------------------------------------
-Copyright (C) 2018 Epidemiology Research Unit, Scotland's Rural College (SRUC)
+Copyright (C) 2018 - 2021 Epidemiology Research Unit, Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -869,6 +869,12 @@ bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderR
     QCsv csv = this->asCsv( containsHeaderRow, delimiter );
     return csv.writeFile( fileName );
   }
+}
+
+
+bool CSpreadsheet::displayTable( QTextStream* stream ) {
+  QCsv csv = this->asCsv( this->hasColNames() );
+  return csv.displayTable( stream );
 }
 
 
@@ -2377,26 +2383,30 @@ QString CSpreadsheetWorkBook::fileFormatAsString( const SpreadsheetFileFormat fm
 }
 
 
-bool CSpreadsheetWorkBook::hasSheet( const int idx ) {
+bool CSpreadsheetWorkBook::hasSheet( const int idx ) const {
   return _sheetNames.containsKey( idx );
 }
 
-bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) {
+bool CSpreadsheetWorkBook::hasSheet( const QString& sheetName ) const {
   return _sheetNames.containsValue( sheetName );
 }
 
-int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) {
+int CSpreadsheetWorkBook::sheetIndex( const QString& sheetName ) const {
   if( this->hasSheet( sheetName ) )
     return _sheetNames.retrieveKey( sheetName );
   else
     return -1;
 }
 
-QString CSpreadsheetWorkBook::sheetName( const int idx ) {
+QString CSpreadsheetWorkBook::sheetName( const int idx ) const {
   if( this->hasSheet( idx ) )
     return _sheetNames.retrieveValue( idx );
   else
     return QString();
+}
+
+QStringList CSpreadsheetWorkBook::sheetNames() const {
+  return _sheetNames.values();
 }
 
 CSpreadsheet& CSpreadsheetWorkBook::sheet( const int idx ) {

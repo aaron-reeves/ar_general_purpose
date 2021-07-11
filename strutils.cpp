@@ -147,12 +147,11 @@ QString titleCase( const QString& strng ){
   }
 
   return result;
+}
 
-//  QStringList list = str.simplified().split( ' ' );
-//  for( int i = 0; i < list.count(); ++i )
-//    list[i] = list.at(i).left(1).toUpper() + list.at(i).mid(1).toLower();
 
-//  return list.join( " " );
+void toTitleCase( QString& str ) {
+  str = titleCase( str );
 }
 
 

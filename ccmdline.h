@@ -155,6 +155,12 @@ class CCmdLine {
     bool isSet( const char* pSwitch ) const { return hasSwitch( QString( pSwitch ) ); }
 
     bool isAmbiguous( const QStringList& pSwitches ) const;
+
+    /* Which switches are allowed? */
+    void setValidSwitches( const QStringList& list );
+    bool switchesAreValid() const;
+    QStringList validSwitches() const;
+    QStringList invalidSwitches() const;
     
     /* Fetch an argument associated with a switch. Return the default if not found. */
     QString safeArgument( const char* pSwitch, const int iIdx, const char* pDefault ) const { return safeArgument( QString( pSwitch ), iIdx, QString( pDefault ) ); }
@@ -179,7 +185,8 @@ class CCmdLine {
     QString value( const QString& pSwitch, const int iIdx, const QString& defaultVal ) { return safeArgument( pSwitch, iIdx, defaultVal ); }
     QString value( const char* pSwitch, const int iIdx, const char* defaultVal ) { return safeArgument( QString( pSwitch ), iIdx, QString( defaultVal ) ); }
 
-    QString argument( const QStringList& pSwitches, int iIdx );
+    QString argument( const QStringList& pSwitches, const int iIdx );
+    QString safeArgument( const QStringList& pSwitches, const int iIdx, const QString& pDefault );
     
     /* Returns the number of arguments found for a given switch, or -1 if not found. */
     int argumentCount(const char* pSwitch ) const { return argumentCount( QString( pSwitch ) ); }
@@ -223,7 +230,11 @@ class CCmdLine {
 
     QString formatArg( QString arg ) const;
 
+    // Key is the switch. Value contains all of the bits.
+    // e.g. "-c configFile.txt plaintext" : "-c" is the key, and stringlist will contain the rest
     QHash<QString, QStringList> _arguments;
+
+    QStringList _validSwitches;
 
     QString _originalString;
 };

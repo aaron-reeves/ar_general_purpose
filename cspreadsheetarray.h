@@ -4,7 +4,7 @@ cspreadsheetarray.h/cpp
 Begin: 2018/09/13
 Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
 --------------------------------------------------
-Copyright (C) 2018 Epidemiology Research Unit, Scotland's Rural College (SRUC)
+Copyright (C) 2018 - 2021 Epidemiology Research Unit, Scotland's Rural College (SRUC)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
@@ -245,6 +245,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     // To generate a multisheet workbook, it's currently necessary to use the QXLSX classes directly.
     bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
     bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
+    bool displayTable( QTextStream* stream );
 
     // Dealing with merged cells
     //--------------------------
@@ -394,10 +395,12 @@ class CSpreadsheetWorkBook : public QObject {
 
     int sheetCount() const { return _sheetNames.count(); }
     int nSheets() const { return _sheetNames.count(); }
-    bool hasSheet( const int idx );
-    bool hasSheet( const QString& sheetName );
-    int sheetIndex( const QString& sheetName );
-    QString sheetName( const int idx );
+    bool hasSheet( const int idx ) const;
+    bool hasSheet( const QString& sheetName ) const;
+    int sheetIndex( const QString& sheetName ) const;
+    QString sheetName( const int idx ) const;
+    QStringList sheetNames() const;
+
     CSpreadsheet& sheet( const int idx );
     CSpreadsheet& sheet( const QString& sheetName );
 
