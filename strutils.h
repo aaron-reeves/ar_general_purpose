@@ -60,6 +60,7 @@ bool isNullOrEmpty( const QVariant& v );
 QString paddedInt( int toPad, const int places, const QChar padChar = '0' );
 QString leftPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
 QString rightPaddedStr( QString toPad, const int places, const QChar padChar = ' ' );
+QString indentedStr( const QString& toIndent, const int nSpaces );
 
 QString splitNear( const int pos, QString& str, const int maxLenAdd = 0, const bool usePunct = true, const bool forceBreak = true );
 QStringList prettyPrintedList( const QString& srcStr, const int prefLineLen = 50, const bool usePunct = true, const bool forceBreak = true, const int indent = 0 );

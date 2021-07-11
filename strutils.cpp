@@ -348,6 +348,18 @@ QString rightPaddedStr( QString toPad, const int places, const QChar padChar /* 
 }
 
 
+
+QString indentedStr( const QString& toIndent, const int nSpaces ) {
+  QString result;
+
+  for( int i = 0; i < nSpaces; ++i ) {
+    result.append( " " );
+  }
+
+  return result.append( toIndent );
+}
+
+
 // Find and remove any instances of str3 from str1,
 // Making sure that str3 isn't just a part of a longer string.
 QString findAndRemove( const QString& str3, QString str1 ) {

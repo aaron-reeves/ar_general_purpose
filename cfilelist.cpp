@@ -207,6 +207,15 @@ CFileList::CFileList( const QString& path, const QString& filter, const bool rec
 }
 
 
+CFileList::CFileList( const QString& path, const QStringList& filters,  const bool recurse ) :
+  QList<CPathString>(),
+  _startingDir( path ),
+  _recurse( recurse )
+{
+  getFileNames( path, filters, recurse );
+}
+
+
 CFileList::CFileList( const CFileList& other ) :
   QList<CPathString>( other ),
   _startingDir( other._startingDir ),
@@ -237,6 +246,13 @@ CFileList::~CFileList() {
 
 void CFileList::omitDir( const QString& dir ) {
   _omittedDirs.insert( dir );
+}
+
+
+void CFileList::getFileNames( const QString& dirName, const QStringList& filters, const bool recurse ) {
+  for( int i = 0; i < filters.count(); ++i ) {
+    getFileNames( dirName, filters.at(i), recurse );
+  }
 }
 
 

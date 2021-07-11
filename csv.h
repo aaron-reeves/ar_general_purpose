@@ -19,6 +19,11 @@ Public License as published by the Free Software Foundation; either version 2 of
 #define CSV_H
 
 #include <QtCore>
+
+#ifdef QSQL_USED
+#include <QtSql>
+#endif
+
 #include <ar_general_purpose/strutils.h>
 
 /*
@@ -142,6 +147,10 @@ class QCsv {
     QCsv( const QStringList& fieldNames, const QList<QStringList>& data ); // Column names and data are provided.
     QCsv( const QStringList& fieldNames, const QStringList& data ); // Column names and a single row of data are provided.
     QCsv( const QList<QStringList>& data ); // Data only without field names.
+    #ifdef QSQL_USED
+    QCsv( QSqlQuery& query ); // Construct a CSV object from a query.  Note that all variants in the query will be treated as strings in the CSV object.
+    #endif
+
 
     QCsv( const QCsv& other ); // Creates a copy of an existing CSV object.
     QCsv& operator=( const QCsv& other ); // Assignment operator

@@ -181,6 +181,8 @@ class CFileList : public QList<CPathString> {
         */
         CFileList( const QString& path, const QString& filter,  const bool recurse );
 
+        CFileList( const QString& path, const QStringList& filters,  const bool recurse );
+
         CFileList( const CFileList& other );
         CFileList& operator=( const CFileList& other );
 
@@ -255,6 +257,8 @@ class CFileList : public QList<CPathString> {
         @param recurse bool indicating whether to list directory contents recursively
         */
         void getFileNames( const QString& dirName, const QString& filter, const bool recurse );
+
+        void getFileNames( const QString& dirName, const QStringList& filters, const bool recurse );
 
         /**
          * @brief getDirectoryNames Generates a list of directories within the indicated directory

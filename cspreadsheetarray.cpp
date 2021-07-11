@@ -1104,14 +1104,6 @@ bool CSpreadsheet::readXlsx(
         val = val.toString().replace( QLatin1String("_x000D_\n"), QLatin1String("\n") );
       }
 
-//      if( val.type() == QVariant::Date ) {
-//        qDebug() << "DATE:" << row << col << val;
-//      }
-
-//      if( val.type() == QVariant::DateTime ) {
-//        qDebug() << "DATETIME:" << row << col << val;
-//      }
-
       CSpreadsheetCell ssCell( val, 0, 0 );
       this->setValue( col - 1, row - 1, ssCell );
     }

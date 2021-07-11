@@ -344,6 +344,55 @@ QCsv::QCsv( const QList<QStringList>& data ) {
 }
 
 
+#ifdef QSQL_USED
+QCsv::QCsv( QSqlQuery& query ) {
+  initialize();
+  _mode = EntireFile;
+
+  int nRows, nCols;
+
+  if( query.driver()->hasFeature( QSqlDriver::QuerySize ) ) {
+    nRows = query.size();
+  }
+  else {
+    // this can be very slow
+    query.last();
+    nRows = query.at() + 1;
+    query.first();
+  }
+
+  if( 1 > nRows ) {
+    return;
+  }
+
+  QStringList fieldNames;
+  QStringList values;
+
+  QSqlRecord rec = query.record();
+  for( int i = 0; i < rec.count(); ++i ) {
+    fieldNames.append( rec.fieldName(i) );
+    values.append( rec.value(i).toString() );
+  }
+
+  this->setFieldNames( fieldNames );
+
+  nCols = fieldNames.count();
+
+  _data.append( values );
+
+  while( query.next() ) {
+    values.clear();
+    for( int i = 0; i < nCols; ++i ) {
+      values.append( query.value(i).toString() );
+    }
+    _data.append( values );
+  }
+
+  _isOpen = true;
+}
+#endif
+
+
 bool QCsv::renameFields( const QStringList& newFieldNames ) {
   if( newFieldNames.count() != _fieldNames.count() )
     return false;
@@ -1275,7 +1324,17 @@ bool QCsv::writeFile( const QString &filename, const QString &codec ) {
 
 
 bool QCsv::displayTable( QTextStream* stream ) {
-  stringListListAsTable( _data, stream, true );
+  QList<QStringList> rows;
+
+  if( containsFieldList() ) {
+    rows.append( this->fieldNames() );
+    rows.append( _data );
+    stringListListAsTable( rows, stream, true );
+  }
+  else {
+    stringListListAsTable( _data, stream, false );
+  }
+
   return true;
 }
 
