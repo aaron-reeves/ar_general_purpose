@@ -206,13 +206,15 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void appendColumn( const QString& colName, const QVector<QVariant>& values );
     void appendColumn( const QString& colName, const QList<QVariant>& values );
 
-    bool isTidy( const bool containsHeaderRow, const int firstRowIdx = 0, const int nRows = -1 );
-    QStringList rowAsStringList( const int rowNumber ) const;
-    QVariantList rowAsVariantList( const int rowNumber ) const;
-    QStringList columnAsStringList( const int colNumber ) const;
-    QVariantList columnAsVariantList( const int colNumber ) const;
 
-    QCsv asCsv( const bool containsHeaderRow, const QChar delimiter = ',', const int firstRowIdx = 0, const int nRows = -1 );
+    void assignColNamesFromRow( const int rowIdx );
+    bool isTidy( const bool firstRowContainsHeader, const int firstRowIdx = 0, const int nRows = -1 );
+    QStringList rowAsStringList(const int rowNumber, const bool removeTrailingBlanks = false ) const;
+    QVariantList rowAsVariantList(const int rowNumber, const bool removeTrailingBlanks = false ) const;
+    QStringList columnAsStringList( const int colNumber, const bool removeTrailingBlanks = false ) const;
+    QVariantList columnAsVariantList(const int colNumber, const bool removeTrailingBlanks = false ) const;
+
+    QCsv asCsv( const bool firstRowContainsHeader, const QChar delimiter = ',', const int firstRowIdx = 0, const int nRows = -1 );
 
     bool readXls(
       const int sheetIdx,
@@ -243,8 +245,9 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     // These functions are for writing single sheets.
     // To generate a multisheet workbook, it's currently necessary to use the QXLSX classes directly.
-    bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull );
-    bool writeCsv( const QString& fileName, const bool containsHeaderRow = true, const QChar delimiter = ',' );
+    // useColNames and useRowNames refer to colNames() and rowNames().  If the first row of data is a header, then set useColNames to false to avoid getting two copies of the header.
+    bool writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull, const bool useColNames, const bool useRowNames );
+    bool writeCsv( const QString& fileName, const bool firstRowContainsHeader = true, const QChar delimiter = ',' );
     bool displayTable( QTextStream* stream );
 
     // Dealing with merged cells
@@ -292,7 +295,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void debugMerges();
 
     void setData( const CTwoDArray<QVariant>& data );
-    CTwoDArray<QVariant> data( const bool containsHeaderRow );
+    CTwoDArray<QVariant> data( const bool firstRowContainsHeader );
 
     bool setDataType( const QMetaType::Type type, const int firstCol = 0, const int firstRow = 0 );
 
@@ -438,6 +441,11 @@ class CSpreadsheetWorkBook : public QObject {
     QXlsx::Document* xlsx() { return _xlsx; }
 
     static SpreadsheetFileFormat guessFileFormat( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
+
+    static bool fileFormatIsExcel( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
+    static bool fileFormatIsExcel( const SpreadsheetFileFormat fmt );
+    static bool fileFormatIsCsv( const QString& fileName, QString* errMsg = nullptr, QString* fileTypeDescr = nullptr,  bool* ok = nullptr );
+    static bool fileFormatIsCsv( const SpreadsheetFileFormat fmt );
 
   signals:
     void readFileStart( int nSheets );

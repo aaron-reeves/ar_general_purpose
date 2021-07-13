@@ -767,6 +767,9 @@ void CTwoDArray<T>::setColNames( const QStringList& names ) {
     this->setSize( names.count(), 0 );
   }
 
+  _colNames.clear();
+  _colNamesLookup.clear();
+
   for( int i = 0; i < names.count(); ++i ) {
     QString name = names.at(i).trimmed();
 
@@ -790,6 +793,9 @@ void CTwoDArray<T>::setRowNames( const QStringList& names ) {
   else {
     this->setSize( 0, names.count() );
   }
+
+  _rowNames.clear();
+  _rowNamesLookup.clear();
 
   for( int i = 0; i < names.count(); ++i ) {
     QString name = names.at(i).trimmed();

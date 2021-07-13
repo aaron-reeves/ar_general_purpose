@@ -105,7 +105,7 @@ class CTwoDArray {
     bool hasRowNames() const { return !_rowNames.isEmpty(); }
 
     bool hasRowName( const QString& rowName ) const { return _rowNamesLookup.contains( rowName.toLower().trimmed() ); }
-    bool hasColumnName( const QString& colName ) const { return _colNamesLookup.contains( colName.toLower().trimmed() ); }
+    bool hasColName( const QString& colName ) const { return _colNamesLookup.contains( colName.toLower().trimmed() ); }
 
     void setColNames( const QStringList& names );
     void setRowNames( const QStringList& names );

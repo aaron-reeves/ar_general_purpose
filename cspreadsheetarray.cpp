@@ -665,10 +665,25 @@ bool CSpreadsheet::subtractFromCellValues( const int val, const int firstCol /* 
 }
 
 
-CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
+void CSpreadsheet::assignColNamesFromRow( const int rowIdx ) {
+  qDebug() << "--- CSpreadsheet::assignColNamesFromRow()";
+
+  Q_ASSERT( rowIdx < this->rowCount() );
+
+  // DO NOT alter the underlying data.  Just set the column names.
+
+  setColNames( rowAsStringList( rowIdx, true ) );
+
+  qDebug() << "--- Done CSpreadsheet::assignColNamesFromRow()";
+}
+
+
+CTwoDArray<QVariant> CSpreadsheet::data(const bool firstRowContainsHeader ) {
   CTwoDArray<QVariant> result;
 
-  if(!this->isTidy( containsHeaderRow ) ) {
+  // firstRowIsHeader indicates whether the first row of a spreadsheet contains column names.
+
+  if(!this->isTidy( firstRowContainsHeader ) ) {
     appLog << "Tidy check failed.";
   }
   else {
@@ -676,20 +691,13 @@ CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
     int nRows = this->nRows();
     int rowOffset = 0;
 
-    if( containsHeaderRow ) {
+    if( firstRowContainsHeader ) {
       --nRows;
       ++rowOffset;
+      assignColNamesFromRow( 0 );
     }
 
     result.setSize( nCols, nRows );
-
-    if( containsHeaderRow ) {
-      QStringList colNames;
-      for( int c = 0; c < nCols; ++c ) {
-        colNames.append( this->cellValue( c, 0 ).toString() );
-      }
-      result.setColNames( colNames );
-    }
 
     for( int c = 0; c < nCols; ++c ) {
       for( int r = 0; r < nRows; ++r ) {
@@ -702,7 +710,7 @@ CTwoDArray<QVariant> CSpreadsheet::data( const bool containsHeaderRow ) {
 }
 
 
-bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
+bool CSpreadsheet::isTidy( const bool firstRowContainsHeader, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
   bool result = true;
 
   // Criteria for tidy spreadsheets:
@@ -715,39 +723,28 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
   if( this->isEmpty() ) {
     // An empty sheet can be tidy if it does not contain a header row.
     // If an empty sheet should have contained a header row, then it isn't tidy.
-    return !containsHeaderRow;
+    return !firstRowContainsHeader;
   }
   else if( this->hasMergedCells() ) {
     appLog << "Worksheet is not tidy: Merged cells are present.";
     result = false;
   }
-  else if( containsHeaderRow ) {
+  else if( firstRowContainsHeader ) {
     // Check the header row
     //---------------------
-    QStringList headers;
-    for( int c = 0; c < this->nCols(); ++c ) {
-      headers.append( this->at( c, firstRowIdx ).value().toString() );
-    }
+    assignColNamesFromRow( firstRowIdx );
 
-    bool ok = false;
-    while( !ok ) {
-      if( 0 < headers.last().trimmed().length() ) {
-        ok = true;
-      }
-      else {
-        headers.removeLast();
-      }
-    }
+    qDebug() << colNames().length();
+    qDebug() << colNames();
 
-    for( int c = 0; c < headers.length(); ++c ) {
-
-      //qDebug()
-      //  << c
-      //  << this->at( c, firstRowIdx ).value()
-      //  << this->at( c, firstRowIdx ).value().isNull()
-      //  << ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
-      //  << this->at( c, firstRowIdx ).value().toString().length()
-      //;
+    for( int c = 0; c < colNames().length(); ++c ) {
+      qDebug()
+        << c
+        << this->at( c, firstRowIdx ).value()
+        << this->at( c, firstRowIdx ).value().isNull()
+        << ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
+        << this->at( c, firstRowIdx ).value().toString().length()
+      ;
 
       if(
             this->at( c, firstRowIdx ).value().isNull()
@@ -775,22 +772,7 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
 
     if( 1 < this->nRows() ) {
       for( int r = firstRowIdx+1; r < lastRowIdxPlusOne; ++r ) {
-        QStringList data;
-        for( int c = 0; c < this->nCols(); ++c ) {
-          data.append( this->at( c, r ).value().toString() );
-        }
-
-        bool ok = false;
-        while( !ok && !data.isEmpty() ) {
-          if( 0 < data.last().trimmed().length() ) {
-            ok = true;
-          }
-          else {
-            data.removeLast();
-          }
-        }
-
-        if( data.length() > headers.length() ) {
+        if( this->rowAsStringList( r, true ).length() > colNames().length() ) {
           appLog <<"Worksheet is not tidy: Header and data row lengths do not match.";
           result = false;
           break;
@@ -804,18 +786,32 @@ bool CSpreadsheet::isTidy( const bool containsHeaderRow, const int firstRowIdx /
 }
 
 
-QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber ) const {
+QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber, const bool removeTrailingBlanks /*= false */ ) const {
   QVariantList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
     list.append( this->at( c, rowNumber ).value() );
   }
 
+  if( removeTrailingBlanks ) {
+    bool ok = false;
+    while( !ok ) {
+      if( !list.last().isNull() ) {
+        ok = true;
+      }
+      else {
+        list.removeLast();
+      }
+    }
+  }
+
   return list;
 }
 
 
-QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) const {
+QStringList CSpreadsheet::rowAsStringList( const int rowNumber, const bool removeTrailingBlanks /*= false */ ) const {
+  qDebug() << "--- CSpreadsheet::rowAsStringList()";
+
   QStringList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
@@ -825,11 +821,24 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber ) const {
       list.append( this->at( c, rowNumber ).value().toString().trimmed() );
   }
 
+  if( removeTrailingBlanks ) {
+    bool ok = false;
+    while( !ok ) {
+      if( 0 < list.last().trimmed().length() ) {
+        ok = true;
+      }
+      else {
+        list.removeLast();
+      }
+    }
+  }
+
+  qDebug() << "--- Done CSpreadsheet::rowAsStringList()";
   return list;
 }
 
 
-QStringList CSpreadsheet::columnAsStringList( const int colNumber ) const {
+QStringList CSpreadsheet::columnAsStringList( const int colNumber, const bool removeTrailingBlanks /*= false */ ) const {
   QStringList list;
 
   for( int r = 0; r < this->nRows(); ++r ) {
@@ -839,34 +848,58 @@ QStringList CSpreadsheet::columnAsStringList( const int colNumber ) const {
       list.append( this->at( colNumber, r ).value().toString().trimmed() );
   }
 
+  if( removeTrailingBlanks ) {
+    bool ok = false;
+    while( !ok ) {
+      if( 0 < list.last().trimmed().length() ) {
+        ok = true;
+      }
+      else {
+        list.removeLast();
+      }
+    }
+  }
+
   return list;
 }
 
 
-QVariantList CSpreadsheet::columnAsVariantList( const int colNumber ) const {
+QVariantList CSpreadsheet::columnAsVariantList( const int colNumber, const bool removeTrailingBlanks /*= false */ ) const {
   QVariantList list;
 
   for( int r = 0; r < this->nRows(); ++r ) {
     list.append( this->at( colNumber, r ).value() );
   }
 
+  if( removeTrailingBlanks ) {
+    bool ok = false;
+    while( !ok ) {
+      if( !list.last().isNull() ) {
+        ok = true;
+      }
+      else {
+        list.removeLast();
+      }
+    }
+  }
+
   return list;
 }
 
 
-bool CSpreadsheet::writeCsv( const QString& fileName, const bool containsHeaderRow /* = true */, const QChar delimiter /* = ',' */ ) {
+bool CSpreadsheet::writeCsv( const QString& fileName, const bool firstRowContainsHeader /* = true */, const QChar delimiter /* = ',' */ ) {
   _errMsg.clear();
 
   if( this->isEmpty() ) {
     _errMsg.append( QStringLiteral("Specified worksheet is empty.\n") );
     return false;
   }
-  else if( !this->isTidy( containsHeaderRow ) ) {
+  else if( !this->isTidy( firstRowContainsHeader ) ) {
     _errMsg.append( QStringLiteral("Specified worksheet does not have a tidy CSV format.\n") );
     return false;
   }
   else {
-    QCsv csv = this->asCsv( containsHeaderRow, delimiter );
+    QCsv csv = this->asCsv( firstRowContainsHeader, delimiter );
     return csv.writeFile( fileName );
   }
 }
@@ -878,32 +911,35 @@ bool CSpreadsheet::displayTable( QTextStream* stream ) {
 }
 
 
-QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /* = ',' */, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
+QCsv CSpreadsheet::asCsv( const bool firstRowContainsHeader, const QChar delimiter /* = ',' */, const int firstRowIdx /* = 0 */, const int nRows /* = -1 */ ) {
   QCsv csv;
 
   if( this->isEmpty() ) {
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet is empty.") );
   }
-  else if( !this->isTidy( containsHeaderRow, firstRowIdx, nRows ) ) {
+
+  // if firstRowContainsHeader, isTidy() will set colNames()
+  else if( !this->isTidy( firstRowContainsHeader, firstRowIdx, nRows ) ) {
     csv.setError( QCsv::ERROR_OTHER, QStringLiteral("Specified worksheet does not have a tidy CSV format.") );
   }
+
   else {
     QStringList firstRow;
     QList<QStringList> data;
+    int nCols;
 
     // Determine how many empty columns to trim from the right end of the sheet
     //-------------------------------------------------------------------------
-    firstRow = this->rowAsStringList( firstRowIdx );
-
-    bool ok = false;
-    while( !ok ) {
-      if( 0 < firstRow.last().trimmed().length() ) {
-        ok = true;
-      }
-      else {
-        firstRow.removeLast();
-      }
+    if( this->hasColNames() ) {
+      nCols = this->colNames().count();
+      firstRow = this->rowAsStringList( firstRowIdx ).mid( 0, nCols );
     }
+    else {
+      firstRow = this->rowAsStringList( firstRowIdx, true );
+      nCols = firstRow.count();
+    }
+
+    qDebug() << "nCols:" << nCols;
 
     // Build the csv object
     //----------------------
@@ -916,10 +952,10 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 
     for( int i = firstRowIdx+1; i < lastRowIdxPlusOne; ++i ) {
       QStringList tmp = this->rowAsStringList( i );
-      data.append( tmp.mid( 0, firstRow.length() ) );
+      data.append( tmp.mid( 0, nCols ) );
     }
 
-    if( !containsHeaderRow ) {
+    if( !firstRowContainsHeader ) {
       data.prepend( firstRow );
     }
 
@@ -928,10 +964,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
       data.removeLast();
     }
 
-    if( containsHeaderRow ) {
-      csv = QCsv( firstRow, data );
-    }
-    else if( this->hasColNames() ) {
+    if( this->hasColNames() ) {
       csv = QCsv( this->colNames(), data );
     }
     else {
@@ -954,7 +987,7 @@ QCsv CSpreadsheet::asCsv( const bool containsHeaderRow, const QChar delimiter /*
 }
 
 
-bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull ) {
+bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStringsAsNull, const bool useColNames, const bool useRowNames ) {
   QXlsx::Document xlsx;
 
   QXlsx::Format format;
@@ -964,14 +997,14 @@ bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStri
   int firstColIdx = 0;
   int firstRowIdx = 0;
 
-  if( this->hasColNames() ) {
+  if( useColNames && this->hasColNames() ) {
     for( int c = 0; c < this->nCols(); ++c ) {
       xlsx.write( 1, c+1, this->colNames().at(c) );
     }
     ++firstRowIdx;
   }
 
-  if( this->hasRowNames() ) {
+  if( useRowNames && this->hasRowNames() ) {
     ++firstColIdx;
   }
 
@@ -983,7 +1016,7 @@ bool CSpreadsheet::writeXlsx( const QString& fileName, const bool treatEmptyStri
         tmp = this->value( c, r ).value();
       }
 
-      if( this->hasRowNames() ) {
+      if( useRowNames && this->hasRowNames() ) {
         xlsx.write( r+1, c+firstColIdx+1, this->rowNames().at(r) );
       }
 
@@ -2272,6 +2305,24 @@ CSpreadsheetWorkBook::SpreadsheetFileFormat CSpreadsheetWorkBook::guessFileForma
 }
 
 
+bool CSpreadsheetWorkBook::fileFormatIsExcel( const QString& fileName, QString* errMsg /*= nullptr*/, QString* fileTypeDescr/* = nullptr*/,  bool* ok /*= nullptr*/ ) {
+  return fileFormatIsExcel( guessFileFormat( fileName, errMsg, fileTypeDescr, ok ) );
+}
+
+bool CSpreadsheetWorkBook::fileFormatIsExcel( const SpreadsheetFileFormat fmt ) {
+  return ( (CSpreadsheetWorkBook::Format97_2003 == fmt) || (CSpreadsheetWorkBook::Format2007 == fmt) );
+}
+
+bool CSpreadsheetWorkBook::fileFormatIsCsv( const QString& fileName, QString* errMsg/* = nullptr*/, QString* fileTypeDescr /*= nullptr*/,  bool* ok /*= nullptr*/ ) {
+  return fileFormatIsCsv( guessFileFormat( fileName, errMsg, fileTypeDescr, ok ) );
+}
+
+bool CSpreadsheetWorkBook::fileFormatIsCsv( const SpreadsheetFileFormat fmt ) {
+  return( CSpreadsheetWorkBook::FormatCSV == fmt );
+}
+
+
+
 bool CSpreadsheetWorkBook::openXlsxWorkbook() {
   _xlsx = new QXlsx::Document( _srcPathName );
 
@@ -2438,8 +2489,8 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
 
   CSpreadsheet sheet( this );
 
-  connect( &sheet, SIGNAL( operationStart( QString, int ) ), this, SIGNAL( operationStart( QString, int ) ) );
-  connect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
+  connect( &sheet, SIGNAL( operationStart(QString,int) ), this, SIGNAL( operationStart(QString,int) ) );
+  connect( &sheet, SIGNAL( operationProgress(int) ), this, SIGNAL( operationProgress(int) ) );
   connect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   connect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
   connect( this, SIGNAL( sigTerminateProcess() ), &sheet, SLOT( terminateProcess() ) );
