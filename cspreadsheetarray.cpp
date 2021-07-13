@@ -666,15 +666,11 @@ bool CSpreadsheet::subtractFromCellValues( const int val, const int firstCol /* 
 
 
 void CSpreadsheet::assignColNamesFromRow( const int rowIdx ) {
-  qDebug() << "--- CSpreadsheet::assignColNamesFromRow()";
-
   Q_ASSERT( rowIdx < this->rowCount() );
 
   // DO NOT alter the underlying data.  Just set the column names.
 
   setColNames( rowAsStringList( rowIdx, true ) );
-
-  qDebug() << "--- Done CSpreadsheet::assignColNamesFromRow()";
 }
 
 
@@ -734,17 +730,14 @@ bool CSpreadsheet::isTidy( const bool firstRowContainsHeader, const int firstRow
     //---------------------
     assignColNamesFromRow( firstRowIdx );
 
-    qDebug() << colNames().length();
-    qDebug() << colNames();
-
     for( int c = 0; c < colNames().length(); ++c ) {
-      qDebug()
-        << c
-        << this->at( c, firstRowIdx ).value()
-        << this->at( c, firstRowIdx ).value().isNull()
-        << ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
-        << this->at( c, firstRowIdx ).value().toString().length()
-      ;
+      //qDebug()
+      //  << c
+      //  << this->at( c, firstRowIdx ).value()
+      //  << this->at( c, firstRowIdx ).value().isNull()
+      //  << ( QVariant::String != this->at( c, firstRowIdx ).value().type() )
+      //  << this->at( c, firstRowIdx ).value().toString().length()
+      //;
 
       if(
             this->at( c, firstRowIdx ).value().isNull()
@@ -810,8 +803,6 @@ QVariantList CSpreadsheet::rowAsVariantList( const int rowNumber, const bool rem
 
 
 QStringList CSpreadsheet::rowAsStringList( const int rowNumber, const bool removeTrailingBlanks /*= false */ ) const {
-  qDebug() << "--- CSpreadsheet::rowAsStringList()";
-
   QStringList list;
 
   for( int c = 0; c < this->nCols(); ++c ) {
@@ -833,7 +824,6 @@ QStringList CSpreadsheet::rowAsStringList( const int rowNumber, const bool remov
     }
   }
 
-  qDebug() << "--- Done CSpreadsheet::rowAsStringList()";
   return list;
 }
 
@@ -938,8 +928,6 @@ QCsv CSpreadsheet::asCsv( const bool firstRowContainsHeader, const QChar delimit
       firstRow = this->rowAsStringList( firstRowIdx, true );
       nCols = firstRow.count();
     }
-
-    qDebug() << "nCols:" << nCols;
 
     // Build the csv object
     //----------------------
@@ -1862,8 +1850,6 @@ bool CSpreadsheet::rowIsEmpty( const int r, const bool trimStrings /* = false */
 
   for( int c = 0; c < this->nCols(); ++c ) {
     QVariant v = this->cellValue( c, r );
-
-    //qDebug() << v;
 
     if( !v.isNull() ) {
       if( QVariant::String == v.type() ) {
