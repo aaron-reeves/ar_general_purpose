@@ -39,6 +39,7 @@ bool magicStringShowsXlsFile( const QString& fileTypeInfo );
  * More versatile, lower-level functions
  * -------------------------------------
  */
+QString getMagicPath( bool* error = nullptr, QString* errorMessage = nullptr );
 struct magic_set;
 magic_set* magicLoadMagic( const QString& magicFile, const int flags, QString& errMsg );
 bool magicProcess( struct magic_set* ms, const QString& fileName, QString& fileTypeInfo, QString& errMsg );

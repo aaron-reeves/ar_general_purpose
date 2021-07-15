@@ -26,7 +26,7 @@ enum CheckFileTypes {
 };
 
 
-QString setMagicPath( bool* error, QString* errorMessage ) {
+QString getMagicPath( bool* error /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   QString magicFile;
 
   QString myLibPath;
@@ -58,7 +58,7 @@ QString setMagicPath( bool* error, QString* errorMessage ) {
 QString magicFileTypeInfo( const QString& fileName, bool* error /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   // Determine which magic file to use
   //----------------------------------
-  QString magicFile = setMagicPath( error, errorMessage );
+  QString magicFile = getMagicPath( error, errorMessage );
 
   if( magicFile.isEmpty() ) {
     if( nullptr != error )
@@ -154,7 +154,7 @@ bool magicStringShowsXlsFile( const QString& fileTypeInfo ) {
 bool _magicIsType( const int type, const QString& fileName, bool* error /* = nullptr */, QString* returnTypeInfo /* = nullptr */, QString* errorMessage /* = nullptr */ ) {
   // Determine which magic file to use
   //----------------------------------
-  QString magicFile = setMagicPath( error, errorMessage );
+  QString magicFile = getMagicPath( error, errorMessage );
 
   if( magicFile.isEmpty() ) {
     return false;
