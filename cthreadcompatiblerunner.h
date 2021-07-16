@@ -28,6 +28,7 @@ class CThreadCompatibleRunner : public QObject {
       void finalize();
 
       int _result;
+      QString _errorMessage;
 
       // Pointers owned and accessible by a GUI object.
       // It must either be treated as read-only by CThreadCompatibleRunner,
