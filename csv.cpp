@@ -635,6 +635,24 @@ QString QCsv::field( const int index ){
   return ret_val;
 }
 
+QString QCsv::field( const int index ) const {
+  const QStringList* dataList;
+  QString ret_val;
+
+  if( LineByLine == _mode )
+    dataList = &_fieldData;
+  else
+    dataList = &( _data[ _currentRowNumber ] );
+
+  if ( dataList->size() > 0 ){
+    if ( dataList->size() > index ){
+      ret_val = dataList->at( index ).trimmed();
+    }
+  }
+
+  return ret_val;
+}
+
 
 QString QCsv::field( const QString& fieldName ){
   QStringList* dataList;
@@ -666,6 +684,29 @@ QString QCsv::field( const QString& fieldName ){
   else {
     _error = ERROR_NO_FIELDLIST;
     _errorMsg = QStringLiteral("The current settings do not include a field list.");
+  }
+
+  return ret_val;
+}
+
+
+QString QCsv::field( const QString& fieldName ) const {
+  const QStringList* dataList;
+  QString ret_val;
+
+  if( LineByLine == _mode )
+    dataList = &_fieldData;
+  else
+    dataList = &( _data[ _currentRowNumber ] );
+
+  if ( _containsFieldList ){
+    if ( dataList->size() > 0 ){
+      if ( _fieldsLookup.contains( fieldName.trimmed().toLower() ) ){
+        int index = _fieldsLookup.value( fieldName.trimmed().toLower() );
+
+        ret_val = field( index );
+      }
+    }
   }
 
   return ret_val;

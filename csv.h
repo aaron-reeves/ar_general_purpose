@@ -197,7 +197,9 @@ class QCsv {
     // The field at position index (starting from 0) or with the name 'fieldName' of the current line.
     // May be used with either line-by-line or entire-file mode.
     QString field( const int index );
+    QString field( const int index ) const; // Same as above, but don't set the error message or otherwise mess with internals.
     QString field( const QString& fieldName );
+    QString field( const QString& fieldName ) const; // Same as above, but don't set the error message or otherwise mess with internals.
 
     // The field at position index (starting from 0) or with the name 'fieldName' of the row at 'rowNumber'.
     // Side-effect: move the current row number to 'rowNumber'.
