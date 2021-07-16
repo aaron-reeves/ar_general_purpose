@@ -23,7 +23,7 @@ bool CThreadCompatibleRunner::checkForTerminated() {
   //Q_ASSERT( nullptr != _progressFunction );
   //std::invoke( _progressFunction, _progressObj, _max );
 
-  if( *_ptrCancelClicked ) {
+  if( ( nullptr != _ptrCancelClicked ) && *_ptrCancelClicked ) {
     emit message( "Processing terminated." );
 
     _result = ( _result | ReturnCode::PROCESSING_INTERRUPTED );
