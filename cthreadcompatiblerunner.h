@@ -10,7 +10,7 @@ class CThreadCompatibleRunner : public QObject {
 
     public:
         CThreadCompatibleRunner( bool* cancelClickedPtr/*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ );
-        ~CThreadCompatibleRunner();
+        virtual ~CThreadCompatibleRunner();
 
         bool processingInterrupted() const { return ( _result & ReturnCode::PROCESSING_INTERRUPTED ); }
 
@@ -24,8 +24,8 @@ class CThreadCompatibleRunner : public QObject {
         void finished();
 
     protected:
-      bool checkForTerminated();
-      void finalize();
+      virtual bool checkForTerminated(); // Always call this from an overridden version, but it's possible to override to do more stuff
+      virtual void finalize(); // Always call this from an overridden version, but it's possible to override to do more stuff
 
       int _result;
       QString _errorMessage;
