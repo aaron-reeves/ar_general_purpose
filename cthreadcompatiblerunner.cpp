@@ -28,7 +28,6 @@ bool CThreadCompatibleRunner::checkForTerminated() {
 
     _result = ( _result | ReturnCode::PROCESSING_INTERRUPTED );
 
-    emit terminated();
     finalize();
     return true;
   }
@@ -39,7 +38,8 @@ bool CThreadCompatibleRunner::checkForTerminated() {
 
 
 void CThreadCompatibleRunner::finalize() {
+  emit finished( _result );
+
   // Reclaim _myWorker to do whatever comes next.
   this->moveToThread( QCoreApplication::instance()->thread() );
-  emit finished();
 }

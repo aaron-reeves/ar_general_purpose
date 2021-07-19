@@ -20,8 +20,7 @@ class CThreadCompatibleRunner : public QObject {
 
     signals:
         void message( QString err );
-        void terminated();
-        void finished();
+        void finished( int result );
 
     protected:
       virtual bool checkForTerminated(); // Always call this from an overridden version, but it's possible to override to do more stuff
@@ -35,8 +34,8 @@ class CThreadCompatibleRunner : public QObject {
       // or guarded by a mutex if its value is changed by CThreadCompatibleRunner.
       const bool* _ptrCancelClicked;
 
-//    ObjectWithFunction* _progressObj;
-//    ReportProgressFn _progressFunction;
+      //ObjectWithFunction* _progressObj;
+      //ReportProgressFn _progressFunction;
 };
 
 #endif // CTHREADCOMPATIBLERUNNER_H
