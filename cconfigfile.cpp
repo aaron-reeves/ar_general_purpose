@@ -729,19 +729,19 @@ void CConfigDatabase::writeToStream( QTextStream* stream ) {
 
 
 void CConfigDatabase::debug() {
-  qDebug() << "  Database configuration:";
-  qDebug() << "    type:" << dbTypeToString( _type );
-  qDebug() << "    name:" << _name;
-  qDebug() << "    dbHost:" << _dbHost;
-  qDebug() << "    dbPort:" << _dbPort;
-  qDebug() << "    dbPath:" << _dbPath;
-  qDebug() << "    dbName:" << _dbName;
-  qDebug() << "    dbUser:" << _dbUser;
-  qDebug() << "    dbPassword:" << _dbPassword;
-  qDebug() << "    dbSchema:" << _dbSchema;
-  qDebug() << "    dbTable:" << _dbTable;
-  qDebug() << "    isOpen:" << this->isOpen();
-  qDebug() << endl;
+  qDb() << "  Database configuration:";
+  qDb() << "    type:" << dbTypeToString( _type );
+  qDb() << "    name:" << _name;
+  qDb() << "    dbHost:" << _dbHost;
+  qDb() << "    dbPort:" << _dbPort;
+  qDb() << "    dbPath:" << _dbPath;
+  qDb() << "    dbName:" << _dbName;
+  qDb() << "    dbUser:" << _dbUser;
+  qDb() << "    dbPassword:" << _dbPassword;
+  qDb() << "    dbSchema:" << _dbSchema;
+  qDb() << "    dbTable:" << _dbTable;
+  qDb() << "    isOpen:" << this->isOpen();
+  qDb() << endl;
 }
 //=============================================================================
 

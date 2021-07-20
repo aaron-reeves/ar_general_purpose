@@ -412,6 +412,9 @@ class QCsvObject : public QObject, public QCsv {
 
   signals:
     void nBytesRead( const int val );
+
+  private:
+    Q_DISABLE_COPY( QCsvObject )
 };
 
 

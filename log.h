@@ -167,6 +167,9 @@ class CAppLog : public QObject {
     QStringList _messageList;
 
     bool _useSpacerLine;
+
+  private:
+    Q_DISABLE_COPY( CAppLog )
 };
 
 
