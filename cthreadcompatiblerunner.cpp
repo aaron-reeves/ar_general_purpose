@@ -40,7 +40,6 @@ bool CThreadCompatibleRunner::checkForTerminated() {
 void CThreadCompatibleRunner::finalize() {
   emit finished( _result );
 
-  // Reclaim _myWorker to do whatever comes next.
-  // This seems to do nothing... in which case, this function is redundant.
+  // Reclaim the runner to do whatever comes next.
   this->moveToThread( QCoreApplication::instance()->thread() );
 }
