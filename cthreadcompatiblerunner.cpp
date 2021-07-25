@@ -3,11 +3,11 @@
 #include <QDebug>
 #include <QCoreApplication>
 
-CThreadCompatibleRunner::CThreadCompatibleRunner(bool* cancelClickedPtr, QObject* parent /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ )
+CThreadCompatibleRunner::CThreadCompatibleRunner( bool* terminatedPtr, QObject* parent /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ )
   : QObject( parent )
 {
   // you could copy data from constructor arguments to internal variables here.
-  _ptrCancelClicked = cancelClickedPtr;
+  _ptrTerminated = terminatedPtr;
   _result = ReturnCode::UNKNOWN_RESULT;
 
 //  _progressObj = progressObj;
@@ -25,7 +25,7 @@ bool CThreadCompatibleRunner::checkForTerminated() {
   //Q_ASSERT( nullptr != _progressFunction );
   //std::invoke( _progressFunction, _progressObj, _max );
 
-  if( ( nullptr != _ptrCancelClicked ) && *_ptrCancelClicked ) {
+  if( ( nullptr != _ptrTerminated ) && *_ptrTerminated ) {
     emit message( "Processing terminated." );
 
     _result = ( _result | ReturnCode::PROCESSING_INTERRUPTED );

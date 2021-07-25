@@ -9,7 +9,7 @@ class CThreadCompatibleRunner : public QObject {
   Q_OBJECT
 
   public:
-      CThreadCompatibleRunner( bool* cancelClickedPtr, QObject* parent = nullptr /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ );
+      CThreadCompatibleRunner( bool* terminatedPtr, QObject* parent = nullptr /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ );
       virtual ~CThreadCompatibleRunner();
 
       int result() const { return _result; }
@@ -33,7 +33,7 @@ class CThreadCompatibleRunner : public QObject {
     // Pointers owned and accessible by a GUI object.
     // It must either be treated as read-only by CThreadCompatibleRunner,
     // or guarded by a mutex if its value is changed by CThreadCompatibleRunner.
-    const bool* _ptrCancelClicked;
+    const bool* _ptrTerminated;
 
     //ObjectWithFunction* _progressObj;
     //ReportProgressFn _progressFunction;
