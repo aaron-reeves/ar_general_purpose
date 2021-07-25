@@ -137,19 +137,22 @@ void CSpreadsheetCell::debug( const int c /* = -1 */, const int r /* = -1 */ ) c
 }
 
 
-CSpreadsheet::CSpreadsheet( QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
+CSpreadsheet::CSpreadsheet( const bool* terminatedPtr /*= nullptr*/, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
+  _terminatedPtr = terminatedPtr;
 }
 
 
-CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
+CSpreadsheet::CSpreadsheet( class CSpreadsheetWorkBook* wb, const bool* terminatedPtr /*= nullptr*/, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
+  _terminatedPtr = terminatedPtr;
   _wb = wb;
 }
 
 
-CSpreadsheet::CSpreadsheet( const QString& fileName, const int sheetIdx, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
+CSpreadsheet::CSpreadsheet( const QString& fileName, const int sheetIdx, const bool* terminatedPtr /*= nullptr*/, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>() {
   initialize();
+  _terminatedPtr = terminatedPtr;
 
   QFileInfo fi( fileName );
   if( !fi.exists() || !fi.isReadable() ) {
@@ -193,15 +196,17 @@ CSpreadsheet::CSpreadsheet( const QString& fileName, const int sheetIdx, QObject
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const bool* terminatedPtr /*= nullptr*/, QObject* parent ) : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows ) {
   initialize();
+  _terminatedPtr = terminatedPtr;
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent )
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, const bool* terminatedPtr /*= nullptr*/, QObject* parent )
   : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows )
 {
   initialize();
+  _terminatedPtr = terminatedPtr;
 
   for( int c = 0; c < nCols; ++c ) {
     for( int r = 0; r < nRows; ++r ) {
@@ -211,28 +216,23 @@ CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const QVariant& de
 }
 
 
-CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent )
+CSpreadsheet::CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, const bool* terminatedPtr /*= nullptr*/, QObject* parent )
   : QObject( parent ), CTwoDArray<CSpreadsheetCell>( nCols, nRows, defaultVal )
 {
   initialize();
+  _terminatedPtr = terminatedPtr;
 }
 
 
-CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data, QObject* parent ) : QObject( parent ) {
+CSpreadsheet::CSpreadsheet( const CTwoDArray<QVariant>& data, const bool* terminatedPtr /*= nullptr*/, QObject* parent ) : QObject( parent ) {
   initialize();
+  _terminatedPtr = terminatedPtr;
   setData( data );
 }
 
 
 void CSpreadsheet::initialize() {
   _wb = nullptr;
-
-  _terminated = false;
-}
-
-
-void CSpreadsheet::terminateProcess() {
-  _terminated = true;
 }
 
 
@@ -1081,15 +1081,13 @@ bool CSpreadsheet::readXlsx(
     , const bool displayVerboseOutput /* = false */
   #endif
 ) {
-  _terminated = false;
-
   if( !xlsx->selectSheet( sheetName ) ) {
     #ifdef DEBUG
       if( displayVerboseOutput )
         cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
     #endif
     emit operationError();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
     return false;
   }
   #ifdef DEBUG
@@ -1101,7 +1099,7 @@ bool CSpreadsheet::readXlsx(
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     qDb() << "Cell range is out of bounds.";
     emit operationError();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
     return false;
   }
   #ifdef DEBUG
@@ -1114,7 +1112,7 @@ bool CSpreadsheet::readXlsx(
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
   emit operationStart( QStringLiteral("Reading rows in sheet"), cellRange.lastRow() + 1 );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
@@ -1130,9 +1128,9 @@ bool CSpreadsheet::readXlsx(
     }
 
     emit operationProgress( row );
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
 
-    if( _terminated ) {
+    if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
     }
   }
@@ -1147,14 +1145,14 @@ bool CSpreadsheet::readXlsx(
 
     this->clear();
     emit operationComplete();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
     return true;
   }
 
   emit operationComplete();
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
-  if( _terminated ) {
+  if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
     return true;
   }
 
@@ -1165,7 +1163,7 @@ bool CSpreadsheet::readXlsx(
 
   if( !mergedCells.isEmpty() ) {
     emit operationStart( QStringLiteral("Handling merged ranges in sheet"), mergedCells.count() );
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
 
     int originCol, originRow;
     int rowSpan, colSpan;
@@ -1186,12 +1184,12 @@ bool CSpreadsheet::readXlsx(
       _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
 
       emit operationProgress( i );
-      QCoreApplication::processEvents();
+      //QCoreApplication::processEvents();
     }
 
     emit operationComplete();
-    QCoreApplication::processEvents();
-    if( _terminated ) {
+    //QCoreApplication::processEvents();
+    if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       return true;
     }
 
@@ -1214,20 +1212,18 @@ bool CSpreadsheet::readXls(
     , const bool displayVerboseOutput /* = false */
   #endif
 ) {
-  _terminated = false;
-
   // Open and parse the sheet
   //=========================
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   // Process all cells of the sheet
   //===============================
   xlsWORD row, col;
 
   emit operationStart( QStringLiteral("Reading rows in sheet"), pWS->rows.lastrow + 1 );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
@@ -1284,13 +1280,13 @@ bool CSpreadsheet::readXls(
     }
 
     emit operationProgress( row );
-    QCoreApplication::processEvents();
-    if( _terminated ) {
+    //QCoreApplication::processEvents();
+    if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
     }
   }
 
-  if( _terminated ) {
+  if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
     return true;
   }
 
@@ -1304,7 +1300,7 @@ bool CSpreadsheet::readXls(
   #endif
 
   emit operationComplete();
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   return true;
 }
@@ -1495,7 +1491,7 @@ void CSpreadsheet::flagMergedCells() {
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
   emit operationStart( QStringLiteral("Handling merged ranges in sheet"), _mergedCellRefs.count() );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   int i = 0;
   foreach( CCellRef ref, _mergedCellRefs ) {
@@ -1537,8 +1533,8 @@ void CSpreadsheet::flagMergedCells() {
     }
 
     emit operationProgress( i );
-    QCoreApplication::processEvents();
-    if( _terminated ) {
+    //QCoreApplication::processEvents();
+    if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
     }
 
@@ -1546,7 +1542,7 @@ void CSpreadsheet::flagMergedCells() {
   }
 
   emit operationComplete();
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 }
 
 void CSpreadsheet::unflagMergedCells() {
@@ -2062,12 +2058,14 @@ CSpreadsheetWorkBook::CSpreadsheetWorkBook(
   const WorkBookOpenMode mode,
   const QString& fileName /* = QString() */,
   const SpreadsheetFileFormat fileFormat /* = FormatUnknown */,
+  const bool* terminatedPtr /* = nullptr */,
   QObject* parent /* = nullptr */
   #ifdef DEBUG
     , const bool displayVerboseOutput = false
   #endif
 ) : QObject( parent ) {
   initialize();
+  _terminatedPtr = terminatedPtr;
 
   #ifdef DEBUG
     _displayVerboseOutput = displayVerboseOutput;
@@ -2176,15 +2174,6 @@ void CSpreadsheetWorkBook::initialize() {
 
   _ok = true;
   _errMsg.clear();
-
-  _terminated = false;
-}
-
-
-void CSpreadsheetWorkBook::terminateProcess() {
-  _terminated = true;
-
-  emit sigTerminateProcess();
 }
 
 
@@ -2471,15 +2460,14 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   }
 
   emit sheetReadName( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
-  CSpreadsheet sheet( this );
+  CSpreadsheet sheet( this, _terminatedPtr );
 
   connect( &sheet, SIGNAL( operationStart(QString,int) ), this, SIGNAL( operationStart(QString,int) ) );
   connect( &sheet, SIGNAL( operationProgress(int) ), this, SIGNAL( operationProgress(int) ) );
   connect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   connect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
-  connect( this, SIGNAL( sigTerminateProcess() ), &sheet, SLOT( terminateProcess() ) );
 
   switch( _fileFormat ) {
     case Format2007:
@@ -2514,7 +2502,6 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   disconnect( &sheet, SIGNAL( operationProgress( int ) ), this, SIGNAL( operationProgress( int ) ) );
   disconnect( &sheet, SIGNAL( operationComplete() ), this, SIGNAL( operationComplete() ) );
   disconnect( &sheet, SIGNAL( operationError() ), this, SIGNAL( operationError() ) );
-  disconnect( this, SIGNAL( sigTerminateProcess() ), &sheet, SLOT( terminateProcess() ) );
 
   return _ok;
 }
@@ -2538,7 +2525,7 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileStart( _sheetNames.count() );
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   bool result = true;
   for( int i = 0; i < _sheetNames.count(); ++i ) {
@@ -2546,7 +2533,7 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileComplete();
-  QCoreApplication::processEvents();
+  //QCoreApplication::processEvents();
 
   return result;
 }
@@ -2980,11 +2967,11 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     _ok = false;
     _errMsg.append( QStringLiteral("Cannot save workbook: is it not writable.\n") );
     emit fileSaveError();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
   }
   else {
     emit fileSaveStart();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
 
     _ok = true; // Until shown otherwise
     _errMsg.clear();
@@ -3009,7 +2996,7 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     }
 
     emit fileSaveComplete();
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
   }
 
   return _ok;

@@ -171,13 +171,15 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
   friend class CSpreadsheetWorkBook;
 
   public:
-    CSpreadsheet( QObject* parent = nullptr );
-    CSpreadsheet( CSpreadsheetWorkBook* wb, QObject* parent = nullptr );
-    CSpreadsheet( const QString& fileName, const int sheetIdx = 0, QObject* parent = nullptr );
-    CSpreadsheet( const int nCols, const int nRows, QObject* parent = nullptr );
-    CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, QObject* parent = nullptr );
-    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, QObject* parent = nullptr );
-    CSpreadsheet( const CTwoDArray<QVariant>& data, QObject* parent = nullptr );
+    CSpreadsheet( const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( CSpreadsheetWorkBook* wb, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( const QString& fileName, const int sheetIdx = 0, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, const QVariant& defaultVal, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( const int nCols, const int nRows, const CSpreadsheetCell& defaultVal, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+    CSpreadsheet( const CTwoDArray<QVariant>& data, const bool* terminatedPtr = nullptr, QObject* parent = nullptr );
+
+    // FIXME: Copying a QObject? That's not going to go well! Rethink this.
     CSpreadsheet( const CSpreadsheet& other );
     CSpreadsheet& operator=( const CSpreadsheet& other );
 
@@ -319,9 +321,6 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
     void operationError();
     void operationComplete();
 
-  protected slots:
-    void terminateProcess();
-
   protected:
     void initialize();
 
@@ -349,7 +348,7 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     QString _errMsg;
 
-    bool _terminated;
+    const bool* _terminatedPtr;
 };
 
 
@@ -373,6 +372,7 @@ class CSpreadsheetWorkBook : public QObject {
       const WorkBookOpenMode mode,
       const QString& fileName = QString(),
       const SpreadsheetFileFormat fileFormat = FormatUnknown,
+      const bool* terminatedPtr = nullptr,
       QObject* parent = nullptr
       #ifdef DEBUG
         , const bool displayVerboseOutput = false
@@ -462,11 +462,6 @@ class CSpreadsheetWorkBook : public QObject {
     void fileSaveError();
     void fileSaveComplete();
 
-    void sigTerminateProcess();
-
-  protected slots:
-    void terminateProcess();
-
   protected:
     void initialize();
 
@@ -499,7 +494,7 @@ class CSpreadsheetWorkBook : public QObject {
     QXlsx::Document* _xlsx;
     xls::xlsWorkBook* _pWB;
 
-    bool _terminated;
+    const bool* _terminatedPtr;
 
     //---------------------------------------------------------------------------------
     // It's not straightforward in old Excel files to distinguish dates and times from
