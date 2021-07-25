@@ -9,9 +9,10 @@ class CThreadCompatibleRunner : public QObject {
   Q_OBJECT
 
   public:
-      CThreadCompatibleRunner( bool* cancelClickedPtr/*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ );
+      CThreadCompatibleRunner( bool* cancelClickedPtr, QObject* parent = nullptr /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ );
       virtual ~CThreadCompatibleRunner();
 
+      int result() const { return _result; }
       bool processingInterrupted() const { return ( _result & ReturnCode::PROCESSING_INTERRUPTED ); }
 
   public slots:

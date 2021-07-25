@@ -3,7 +3,9 @@
 #include <QDebug>
 #include <QCoreApplication>
 
-CThreadCompatibleRunner::CThreadCompatibleRunner( bool* cancelClickedPtr/*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ ) {
+CThreadCompatibleRunner::CThreadCompatibleRunner(bool* cancelClickedPtr, QObject* parent /*, ObjectWithFunction* progressObj, ReportProgressFn progressFunction*/ )
+  : QObject( parent )
+{
   // you could copy data from constructor arguments to internal variables here.
   _ptrCancelClicked = cancelClickedPtr;
   _result = ReturnCode::UNKNOWN_RESULT;
