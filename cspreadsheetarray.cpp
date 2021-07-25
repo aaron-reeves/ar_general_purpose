@@ -1087,7 +1087,11 @@ bool CSpreadsheet::readXlsx(
         cout << QStringLiteral( "Specified worksheet (%1) could not be selected." ).arg( sheetName ) << endl;
     #endif
     emit operationError();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     return false;
   }
   #ifdef DEBUG
@@ -1099,7 +1103,11 @@ bool CSpreadsheet::readXlsx(
   if( (0 >= cellRange.firstRow()) || (0 >= cellRange.firstColumn()) || (0 >= cellRange.lastRow()) || (0 >= cellRange.lastColumn()) ) {
     qDb() << "Cell range is out of bounds.";
     emit operationError();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     return false;
   }
   #ifdef DEBUG
@@ -1112,7 +1120,10 @@ bool CSpreadsheet::readXlsx(
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
   emit operationStart( QStringLiteral("Reading rows in sheet"), cellRange.lastRow() + 1 );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
     for( int col = 1; col < (cellRange.lastColumn() + 1); ++col ) {
@@ -1128,7 +1139,9 @@ bool CSpreadsheet::readXlsx(
     }
 
     emit operationProgress( row );
-    //QCoreApplication::processEvents();
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
 
     if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
@@ -1145,12 +1158,19 @@ bool CSpreadsheet::readXlsx(
 
     this->clear();
     emit operationComplete();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     return true;
   }
 
   emit operationComplete();
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
     return true;
@@ -1163,7 +1183,10 @@ bool CSpreadsheet::readXlsx(
 
   if( !mergedCells.isEmpty() ) {
     emit operationStart( QStringLiteral("Handling merged ranges in sheet"), mergedCells.count() );
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
 
     int originCol, originRow;
     int rowSpan, colSpan;
@@ -1184,11 +1207,18 @@ bool CSpreadsheet::readXlsx(
       _mergedCellRefs.insert( CCellRef( originCol, originRow ) );
 
       emit operationProgress( i );
-      //QCoreApplication::processEvents();
+
+      #ifndef QCONCURRENT_USED
+        QCoreApplication::processEvents();
+      #endif
     }
 
     emit operationComplete();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       return true;
     }
@@ -1216,14 +1246,20 @@ bool CSpreadsheet::readXls(
   //=========================
   xls::xlsWorkSheet* pWS = xls::xls_getWorkSheet( pWB, sheetIdx );
   xls::xls_parseWorkSheet( pWS );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   // Process all cells of the sheet
   //===============================
   xlsWORD row, col;
 
   emit operationStart( QStringLiteral("Reading rows in sheet"), pWS->rows.lastrow + 1 );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
 
@@ -1280,7 +1316,11 @@ bool CSpreadsheet::readXls(
     }
 
     emit operationProgress( row );
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
     }
@@ -1300,7 +1340,10 @@ bool CSpreadsheet::readXls(
   #endif
 
   emit operationComplete();
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   return true;
 }
@@ -1491,7 +1534,10 @@ void CSpreadsheet::flagMergedCells() {
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
   emit operationStart( QStringLiteral("Handling merged ranges in sheet"), _mergedCellRefs.count() );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   int i = 0;
   foreach( CCellRef ref, _mergedCellRefs ) {
@@ -1533,7 +1579,11 @@ void CSpreadsheet::flagMergedCells() {
     }
 
     emit operationProgress( i );
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
+
     if( ( nullptr != _terminatedPtr ) && *_terminatedPtr ) {
       break;
     }
@@ -1542,7 +1592,10 @@ void CSpreadsheet::flagMergedCells() {
   }
 
   emit operationComplete();
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 void CSpreadsheet::unflagMergedCells() {
@@ -2460,7 +2513,10 @@ bool CSpreadsheetWorkBook::readSheet( const int sheetIdx ) {
   }
 
   emit sheetReadName( _sheetNames.retrieveValue( sheetIdx ), sheetIdx );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   CSpreadsheet sheet( this, _terminatedPtr );
 
@@ -2525,7 +2581,10 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileStart( _sheetNames.count() );
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   bool result = true;
   for( int i = 0; i < _sheetNames.count(); ++i ) {
@@ -2533,7 +2592,10 @@ bool CSpreadsheetWorkBook::readAllSheets() {
   }
 
   emit readFileComplete();
-  //QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 
   return result;
 }
@@ -2967,11 +3029,17 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     _ok = false;
     _errMsg.append( QStringLiteral("Cannot save workbook: is it not writable.\n") );
     emit fileSaveError();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
   }
   else {
     emit fileSaveStart();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
 
     _ok = true; // Until shown otherwise
     _errMsg.clear();
@@ -2996,7 +3064,10 @@ bool CSpreadsheetWorkBook::saveAs( const QString& filename ) {
     }
 
     emit fileSaveComplete();
-    //QCoreApplication::processEvents();
+
+    #ifndef QCONCURRENT_USED
+      QCoreApplication::processEvents();
+    #endif
   }
 
   return _ok;
