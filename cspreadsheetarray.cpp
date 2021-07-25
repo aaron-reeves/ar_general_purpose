@@ -1113,7 +1113,7 @@ bool CSpreadsheet::readXlsx(
 
   this->setSize( cellRange.lastColumn(), cellRange.lastRow(), CSpreadsheetCell() );
 
-  emit operationStart( QStringLiteral("ReadRowsInSheet"), cellRange.lastRow() + 1 );
+  emit operationStart( QStringLiteral("Reading rows in sheet"), cellRange.lastRow() + 1 );
   QCoreApplication::processEvents();
 
   for( int row = 1; row < (cellRange.lastRow() + 1); ++row ) {
@@ -1164,7 +1164,7 @@ bool CSpreadsheet::readXlsx(
   _mergedCellRefs.clear();
 
   if( !mergedCells.isEmpty() ) {
-    emit operationStart( QStringLiteral("HandleRangesInSheet"), mergedCells.count() );
+    emit operationStart( QStringLiteral("Handling merged ranges in sheet"), mergedCells.count() );
     QCoreApplication::processEvents();
 
     int originCol, originRow;
@@ -1226,7 +1226,7 @@ bool CSpreadsheet::readXls(
   //===============================
   xlsWORD row, col;
 
-  emit operationStart( QStringLiteral("ReadRowsInSheet"), pWS->rows.lastrow + 1 );
+  emit operationStart( QStringLiteral("Reading rows in sheet"), pWS->rows.lastrow + 1 );
   QCoreApplication::processEvents();
 
   this->setSize( pWS->rows.lastcol, pWS->rows.lastrow + 1, CSpreadsheetCell() );
@@ -1494,7 +1494,7 @@ void CSpreadsheet::flagMergedCells() {
 
   int c, r, firstCol, lastCol, firstRow, lastRow;
 
-  emit operationStart( QStringLiteral("HandleRangesInSheet"), _mergedCellRefs.count() );
+  emit operationStart( QStringLiteral("Handling merged ranges in sheet"), _mergedCellRefs.count() );
   QCoreApplication::processEvents();
 
   int i = 0;
