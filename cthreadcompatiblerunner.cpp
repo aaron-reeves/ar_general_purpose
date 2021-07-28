@@ -26,8 +26,6 @@ bool CThreadCompatibleRunner::checkForTerminated() {
   //std::invoke( _progressFunction, _progressObj, _max );
 
   if( ( nullptr != _ptrTerminated ) && *_ptrTerminated ) {
-    emit message( "Processing terminated." );
-
     _result = ( _result | ReturnCode::PROCESSING_INTERRUPTED );
 
     finalize();
