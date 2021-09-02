@@ -37,7 +37,7 @@ sources.
 #if defined(_WIN32) || defined(WIN32)
   #include <io.h>
 #else
-  #include <bsd/unistd.h>
+  #include <unistd.h>
   #include <string.h>
 #endif
 //-----------------------------------------------------
