@@ -2107,6 +2107,27 @@ void CSpreadsheet::appendRow( const QStringList& values ) {
 }
 
 
+void CSpreadsheet::appendRows( const QList<QVariantList>& list ) {
+  for( int i = 0; i < list.count(); ++i ) {
+    appendRow( list.at(i) );
+  }
+}
+
+
+void CSpreadsheet::appendRows( const QList<QStringList>& list ) {
+  for( int i = 0; i < list.count(); ++i ) {
+    appendRow( list.at(i) );
+  }
+}
+
+
+void CSpreadsheet::appendRows( const CSpreadsheet& other ) {
+  for( int i = 0; i < other.rowCount(); ++i ) {
+    CTwoDArray::appendRow( other.row( i ) );
+  }
+}
+
+
 CSpreadsheetWorkBook::CSpreadsheetWorkBook(
   const WorkBookOpenMode mode,
   const QString& fileName /* = QString() */,

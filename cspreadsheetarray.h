@@ -288,6 +288,9 @@ class CSpreadsheet : public QObject, public CTwoDArray<CSpreadsheetCell> {
 
     void appendRow( const QVariantList& values );
     void appendRow( const QStringList& values );
+    void appendRows( const QList<QVariantList>& list );
+    void appendRows( const QList<QStringList>& list );
+    void appendRows( const CSpreadsheet& other );
 
     bool error() const { return !_errMsg.isEmpty(); }
     QString errorMessage() const { return _errMsg; }
