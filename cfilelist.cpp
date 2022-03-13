@@ -133,8 +133,14 @@ QDir CPathString::dir() const {
   return QFileInfo( *this ).dir();
 }
 
-CPathString CPathString::directory() const {
-  return CPathString( dir().absolutePath().append( "/" ) );
+CPathString CPathString::directory( const bool includeTrailingSlash /* = true */ ) const {
+  CPathString result = CPathString( dir().absolutePath() );
+
+  if( includeTrailingSlash ) {
+    result.append( "/" );
+  }
+
+  return result;
 }
 
 

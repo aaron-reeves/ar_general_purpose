@@ -89,12 +89,13 @@ class CPathString: public QString {
         CPathString longFileName() const;
         CPathString filePath() const { return longFileName(); }
         /**
-        Returns just the directory path associated with a file.  For example, if the path string
-        is '/home/foo/bar.txt', directory returns '/home/foo/'.  Note that the trailing slash is included.
+        Returns just the directory path associated with a file.  For example, if the path
+        string is '/home/foo/bar.txt', directory returns '/home/foo/'. Note that the
+        trailing slash is included if includeTrailingSlash = true (the default).
 
         @return QString containing the directory path.
         */
-        CPathString directory() const;
+        CPathString directory( const bool includeTrailingSlash = true ) const;
         QDir dir() const;
         
         /**
