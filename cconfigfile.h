@@ -90,6 +90,7 @@ inline uint qHash( const CConfigItem &key, uint seed ){
 
 class CConfigBlock {
   public:
+    CConfigBlock();
     CConfigBlock( const QString& name );
     CConfigBlock( const CConfigBlock& other );
     CConfigBlock& operator=( const CConfigBlock& other );

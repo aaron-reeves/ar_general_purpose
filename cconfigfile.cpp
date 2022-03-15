@@ -73,6 +73,12 @@ QString ConfigReturnCode::resultString( const int returnCode ) {
 //=============================================================================
 // CConfigBlock
 //=============================================================================
+CConfigBlock::CConfigBlock() {
+  // _name will be empty
+  _removed = false;
+}
+
+
 CConfigBlock::CConfigBlock( const QString& name ) {
   _name = name;
   _removed = false;
