@@ -91,7 +91,7 @@ class CAppLog : public QObject {
       QObject* parent = nullptr
     );
     
-    bool openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq = OneFile );
+    bool openLog( const QString& fileName, const LogLevel logLevel = LoggingTypical, const FileFrequency freq = OneFile );
     void closeLog();
     
     virtual ~CAppLog();
@@ -104,6 +104,7 @@ class CAppLog : public QObject {
     void setConsoleEcho( const bool val ) { _consoleEcho = val; }
     void setWindowsFriendly( const bool val ) { _windowsFriendly = val; }
     void setUseSpacerLine( const bool val ) { _useSpacerLine = val; }
+    void setUseTimestamp( const bool val ) { _useTimestamp = val; }
 
     void logMessageUnique( const QString& message, const LogLevel logLevel );
     void logMessage( const char* message, const LogLevel logLevel ) { logMessage( QString( message ), logLevel ); }
@@ -158,6 +159,7 @@ class CAppLog : public QObject {
     FileFrequency _freq;
     bool _consoleEcho;
     bool _windowsFriendly;
+    bool _useTimestamp;
     QString _msgInProgress;
 
     QSet<QString> _messagesUniqueTypical;

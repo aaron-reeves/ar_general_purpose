@@ -176,6 +176,8 @@ void CAppLog::initialize() {
 
   _useSpacerLine = true;
 
+  _useTimestamp = true;
+
   setLogLevel( LoggingPending );
 }
 
@@ -191,7 +193,7 @@ CAppLog::~CAppLog() {
 }
 
 
-bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel, const FileFrequency freq /* = OneFile */ ) {
+bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel /* = LoggingTypical */, const FileFrequency freq /* = OneFile */ ) {
   bool result = false;
 
   if( this->isOpen() && ( fileName == _logFileName ) && ( logLevel == _logLevel ) && ( freq == _freq ) ) {
@@ -204,6 +206,7 @@ bool CAppLog::openLog( const QString& fileName, const LogLevel logLevel, const F
 
     result = _logOpen;
   }
+
   return result;
 }
 
@@ -425,8 +428,13 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   }
 
   if( LoggingPending == _logLevel ) {
-    if( !message.isEmpty() ) {      
-      str = QStringLiteral( "%1: %2" ).arg( dt, message );
+    if( !message.isEmpty() ) {
+      if( _useTimestamp ) {
+        str = QStringLiteral( "%1: %2" ).arg( dt, message );
+      }
+      else {
+        str = message;
+      }
     }
     else {
       str = QString();
@@ -437,10 +445,22 @@ void CAppLog::logMessage( QString message, const LogLevel logLevel ) {
   }
   else if( _logOpen && ( logLevel <= _logLevel ) ) {
     if( !message.isEmpty() ) {
-      if( _windowsFriendly )
-        *_logTextStream << "\r\n" << dt << ": " << message << ::flush;
-      else
-        *_logTextStream << ::endl << dt << ": " << message << ::flush;
+      if( _windowsFriendly ) {
+        if( _useTimestamp ) {
+          *_logTextStream << "\r\n" << dt << ": " << message << ::flush;
+        }
+        else {
+          *_logTextStream << "\r\n" << message << ::flush;
+        }
+      }
+      else {
+        if( _useTimestamp ) {
+          *_logTextStream << ::endl << dt << ": " << message << ::flush;
+        }
+        else {
+          *_logTextStream << ::endl << message << ::flush;
+        }
+      }
     }
     else {
       if( _windowsFriendly )
@@ -514,7 +534,7 @@ void CAppLog::processPendingMessages() {
     while( !( _pending->isEmpty() ) ) {
       msg = _pending->takeFirst();
       if( _logOpen ) {
-        if( msg->_level >= _logLevel ) {
+        if( msg->_level <= _logLevel ) {
           if( _windowsFriendly ) {
             *_logTextStream << "\r\n" << msg->_msg << ::flush;
           }
@@ -744,7 +764,7 @@ void CLogFileContents::writeFilteredToStream( QString filter, QTextStream* strea
     gt = filter.startsWith( '>' );
     lt = filter.startsWith( '<' );
     eq = filter.startsWith( '=' );
-    n = filter.right( filter.length() - 1 ).toInt();
+    n = filter.rightRef(1).toInt();
   }
   else if( filter.startsWith( '=' ) ) {
     useStringFilter = true;
