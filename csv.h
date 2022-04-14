@@ -325,6 +325,12 @@ class QCsv {
     static QString csvQuote( QString s, const QChar delimiter = ',' );
     static QString csvQuote( QStringList s, const QChar delimiter = ',' );
 
+    // JFD 2022-04-06
+    // Deals with the situation where a feed file field contains things like NULL or N/A instead of empty strings to indicate a null value
+    // This can be set at any time before the values are invoked by the "field" function (e.g. bound to a prepared SQL statement)
+    // See QCsv::field for where this is used
+    QString toNull = "";
+
   protected:
     void initialize();
     virtual int readNext();

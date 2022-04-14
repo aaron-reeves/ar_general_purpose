@@ -632,6 +632,10 @@ QString QCsv::field( const int index ){
     _errorMsg = "The current line, " + QString::number ( _currentRowNumber ) + " is empty.  Did you read a line first?";
   }
 
+  // JFD 2022-04-06
+  // Deals with the situation where a feed file field contains things like NULL or N/A instead of empty strings to indicate a null value
+  if (0==ret_val.compare(toNull)) { ret_val = nullptr; }
+
   return ret_val;
 }
 
@@ -649,6 +653,10 @@ QString QCsv::field( const int index ) const {
       ret_val = dataList->at( index ).trimmed();
     }
   }
+
+  // JFD 2022-04-06
+  // Deals with the situation where a feed file field contains things like NULL or N/A instead of empty strings to indicate a null value
+  if (0==ret_val.compare(toNull)) { ret_val = nullptr; }
 
   return ret_val;
 }
@@ -686,6 +694,10 @@ QString QCsv::field( const QString& fieldName ){
     _errorMsg = QStringLiteral("The current settings do not include a field list.");
   }
 
+  // JFD 2022-04-06
+  // Deals with the situation where a feed file field contains things like NULL or N/A instead of empty strings to indicate a null value
+  if (0==ret_val.compare(toNull)) { ret_val = nullptr; }
+
   return ret_val;
 }
 
@@ -708,6 +720,10 @@ QString QCsv::field( const QString& fieldName ) const {
       }
     }
   }
+
+  // JFD 2022-04-06
+  // Deals with the situation where a feed file field contains things like NULL or N/A instead of empty strings to indicate a null value
+  if (0==ret_val.compare(toNull)) { ret_val = nullptr; }
 
   return ret_val;
 }
